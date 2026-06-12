@@ -1,0 +1,18 @@
+<UserControl x:Class="CartaPsicometrica.Controls.CartaPsicometricaControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border Background="White"
+            BorderBrush="#CBD5E1"
+            BorderThickness="1"
+            ClipToBounds="True">
+        <Viewbox Stretch="Uniform"
+                 StretchDirection="Both"
+                 HorizontalAlignment="Center"
+                 VerticalAlignment="Center">
+            <Canvas x:Name="ChartCanvas"
+                    Width="1680"
+                    Height="900"
+                    Background="White"/>
+        </Viewbox>
+    </Border>
+</UserControl>

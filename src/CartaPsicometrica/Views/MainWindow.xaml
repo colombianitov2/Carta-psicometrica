@@ -1,0 +1,214 @@
+<Window x:Class="CartaPsicometrica.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:CartaPsicometrica.Controls"
+        Title="Carta psicométrica"
+        Width="1540"
+        Height="920"
+        MinWidth="1260"
+        MinHeight="760"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource ColorFondoAplicacion}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="66"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="34"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0"
+                Background="#142033"
+                Padding="18,0">
+            <DockPanel LastChildFill="True">
+                <TextBlock DockPanel.Dock="Right"
+                           Text="{Binding EstadoTexto}"
+                           Foreground="#B8D7D2"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           Margin="24,0,0,0"/>
+
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Carta psicométrica"
+                               Foreground="White"
+                               FontSize="24"
+                               FontWeight="Bold"/>
+                    <TextBlock Text="Motor SI, dos puntos y proceso A→B"
+                               Foreground="#C9D3DF"
+                               FontSize="13"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Row="1"
+              Margin="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="360"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="410"/>
+            </Grid.ColumnDefinitions>
+
+            <ScrollViewer Grid.Column="0"
+                          VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <Border Style="{StaticResource PanelAplicacion}"
+                            Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Condición base"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,0,10"/>
+
+                            <TextBlock Text="Presión atmosférica [kPa]"/>
+                            <TextBox Text="{Binding PresionKPaTexto, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <TextBlock Text="Flujo de aire seco [kg/s]"/>
+                            <TextBox Text="{Binding FlujoAireSecoTexto, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource PanelAplicacion}"
+                            Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Punto A"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,0,10"/>
+
+                            <TextBlock Text="Temperatura de bulbo seco [°C]"/>
+                            <TextBox Text="{Binding PuntoATbsTexto, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <TextBlock Text="Humedad relativa [%]"/>
+                            <TextBox Text="{Binding PuntoAHrTexto, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource PanelAplicacion}"
+                            Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Punto B"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,0,10"/>
+
+                            <TextBlock Text="Temperatura de bulbo seco [°C]"/>
+                            <TextBox Text="{Binding PuntoBTbsTexto, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <TextBlock Text="Humedad relativa [%]"/>
+                            <TextBox Text="{Binding PuntoBHrTexto, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource PanelAplicacion}">
+                        <StackPanel>
+                            <WrapPanel>
+                                <Button Content="Calcular"
+                                        Command="{Binding CalcularCommand}"
+                                        Background="{StaticResource ColorPrimario}"
+                                        BorderBrush="{StaticResource ColorPrimario}"/>
+                                <Button Content="Limpiar"
+                                        Command="{Binding LimpiarCommand}"
+                                        Background="{StaticResource ColorSecundario}"
+                                        BorderBrush="{StaticResource ColorSecundario}"/>
+                                <Button Content="Exportar resultados"
+                                        Command="{Binding ExportarResultadosCommand}"
+                                        Background="{StaticResource ColorAcento}"
+                                        BorderBrush="{StaticResource ColorAcento}"/>
+                                <Button Content="Guardar configuración"
+                                        Command="{Binding GuardarConfiguracionCommand}"
+                                        Background="{StaticResource ColorPrimarioOscuro}"
+                                        BorderBrush="{StaticResource ColorPrimarioOscuro}"/>
+                            </WrapPanel>
+
+                            <TextBlock Text="{Binding MensajeError}"
+                                       Foreground="{StaticResource ColorPeligro}"
+                                       FontWeight="SemiBold"
+                                       Margin="0,6,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Border Grid.Column="1"
+                    Style="{StaticResource PanelAplicacion}"
+                    Margin="14,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Carta SI inicial"
+                               FontSize="20"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,12"/>
+
+                    <controls:CartaPsicometricaControl Grid.Row="1"
+                                                       EstadoA="{Binding PuntoA}"
+                                                       EstadoB="{Binding PuntoB}"
+                                                       Proceso="{Binding Proceso}"
+                                                       PresionPa="{Binding PresionPaActual}"/>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2"
+                    Style="{StaticResource PanelAplicacion}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Resultados"
+                               FontSize="20"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,12"/>
+
+                    <TabControl Grid.Row="1">
+                        <TabItem Header="Punto A">
+                            <DataGrid ItemsSource="{Binding ResultadosPuntoA}"
+                                      IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Propiedad" Binding="{Binding Propiedad}" Width="2*"/>
+                                    <DataGridTextColumn Header="Valor" Binding="{Binding Valor}" Width="*"/>
+                                    <DataGridTextColumn Header="Unidad" Binding="{Binding Unidad}" Width="1.4*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+
+                        <TabItem Header="Punto B">
+                            <DataGrid ItemsSource="{Binding ResultadosPuntoB}"
+                                      IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Propiedad" Binding="{Binding Propiedad}" Width="2*"/>
+                                    <DataGridTextColumn Header="Valor" Binding="{Binding Valor}" Width="*"/>
+                                    <DataGridTextColumn Header="Unidad" Binding="{Binding Unidad}" Width="1.4*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+
+                        <TabItem Header="Proceso">
+                            <DataGrid ItemsSource="{Binding ResultadosProceso}"
+                                      IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Propiedad" Binding="{Binding Propiedad}" Width="2*"/>
+                                    <DataGridTextColumn Header="Valor" Binding="{Binding Valor}" Width="*"/>
+                                    <DataGridTextColumn Header="Unidad" Binding="{Binding Unidad}" Width="1.4*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                    </TabControl>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="2"
+                Background="#E7EDF4"
+                Padding="16,0">
+            <TextBlock Text="Primera versión funcional: TBS + HR, presión editable, flujo de aire seco, propiedades completas, proceso A→B y trazado base."
+                       Foreground="{StaticResource ColorTextoSecundario}"
+                       VerticalAlignment="Center"/>
+        </Border>
+    </Grid>
+</Window>

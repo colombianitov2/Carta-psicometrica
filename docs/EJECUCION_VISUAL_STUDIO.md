@@ -1,34 +1,78 @@
 # Ejecución desde Visual Studio
 
-Requisitos: Windows 10/11, Visual Studio 2022, carga de trabajo .NET desktop development y SDK de .NET 8.
+## Requisitos
 
-Abrir el archivo:
+- Windows 10/11.
+- Visual Studio 2022.
+- Carga de trabajo `.NET desktop development`.
+- SDK `.NET 8`.
+- Runtime `Microsoft.WindowsDesktop.App 8`.
 
-CartaPsicometrica.sln
+## Abrir la solución
+
+1. Abrir Visual Studio.
+2. Seleccionar `Open a project or solution`.
+3. Abrir:
+
+```text
+D:\Proyectos de desarrollo de Software\Proyecto Refrigeración\Carta psicométrica\CartaPsicometrica.sln
+```
+
+## Restaurar paquetes
+
+El proyecto no usa paquetes NuGet externos en esta versión. Visual Studio restaurará automáticamente los proyectos al abrir la solución.
+
+También puede ejecutarse desde PowerShell:
+
+```powershell
+dotnet restore
+```
+
+## Compilar
 
 En Visual Studio:
 
-1. Seleccionar el proyecto CartaPsicometrica como proyecto de inicio.
-2. Usar Build > Build Solution.
-3. Ejecutar con F5.
-4. Ejecutar sin depuración con Ctrl + F5.
+1. Seleccionar configuración `Debug`.
+2. Seleccionar plataforma `Any CPU`.
+3. Ejecutar `Build > Build Solution`.
 
-Comandos alternativos:
+Desde PowerShell:
 
-    git clone https://github.com/colombianitov2/Carta-psicometrica.git
-    cd Carta-psicometrica
-    dotnet build .\CartaPsicometrica.sln
-    dotnet run --project .\src\CartaPsicometrica\CartaPsicometrica.csproj
+```powershell
+dotnet build .\CartaPsicometrica.sln
+```
 
-## Qué hace la base actual
+## Ejecutar
 
-- Abre una interfaz WPF independiente.
-- Calcula dos puntos psicrométricos usando TBS + HR.
-- Usa presión atmosférica definida por el usuario.
-- Calcula bulbo húmedo, punto de rocío, razón de humedad, entalpía, presión de vapor, presión de vapor saturado, calor específico aproximado, volumen específico, densidad y grado de saturación.
-- Calcula el proceso A a B: delta de temperatura, delta de humedad, delta de entalpía, carga total, sensible, latente, SHR, condensado y humidificación.
-- Dibuja una carta psicrométrica inicial con grilla, curva de saturación, curvas de HR, puntos A/B y línea de proceso.
+En Visual Studio:
 
-## Nota técnica
+1. Seleccionar `CartaPsicometrica` como proyecto de inicio.
+2. Ejecutar con `F5` para depurar.
+3. Ejecutar con `Ctrl+F5` sin depuración.
 
-El paquete anterior disponible en los documentos del proyecto es una publicación compilada de Windows x64, no un proyecto fuente completo. Por eso la base subida al repositorio es una reconstrucción limpia en C#/.NET 8, usando la función psicrométrica previa como referencia funcional, pero preparada para ampliarse como proyecto independiente.
+Desde PowerShell:
+
+```powershell
+dotnet run --project .\src\CartaPsicometrica\CartaPsicometrica.csproj
+```
+
+## Verificación básica
+
+El proyecto incluye una verificación de consola sin paquetes externos:
+
+```powershell
+dotnet run --project .\tests\CartaPsicometrica.Tests\CartaPsicometrica.Tests.csproj
+```
+
+Salida esperada:
+
+```text
+Verificaciones psicrométricas básicas correctas.
+```
+
+## Errores comunes
+
+- Si Visual Studio no reconoce WPF, instalar `.NET desktop development`.
+- Si aparece un error de SDK, confirmar que `.NET 8 SDK` esté instalado con `dotnet --info`.
+- Si el proyecto de inicio no ejecuta la ventana, seleccionar manualmente `CartaPsicometrica`.
+- Si una entrada no calcula, revisar rangos: presión entre `50` y `120` kPa, HR entre `0` y `100%`, y temperaturas entre `-40` y `90 °C`.
