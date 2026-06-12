@@ -4,8 +4,7 @@ Carta psicométrica para cálculo avanzado de propiedades del aire húmedo, proc
 
 ## Descripción completa del alcance
 
-Este proyecto desarrollará una carta psicométrica avanzada capaz de calcular puntos, procesos, ciclos de aire, datos climáticos, confort térmico, exportaciones y cambios entre estados dentro de la misma carta. El alcance inicial se basa en una lista fusionada de funciones tomadas como referencia funcional de herramientas psicrométricas interactivas existentes, eliminando duplicados y agregando el cálculo de ciclos multiestado.
-
+Este proyecto desarrollará una carta psicométrica avanzada capaz de calcular puntos, procesos, ciclos de aire, datos climáticos, confort térmico, exportaciones y cambios entre estados dentro de la misma carta. El alcance inicial se basa en una lista fusionada de funciones tomadas como referencia funcional de herramientas psicrométricas interactivas.
 ## Alcance funcional completo
 
 ### A. Carta psicrométrica e interfaz gráfica
