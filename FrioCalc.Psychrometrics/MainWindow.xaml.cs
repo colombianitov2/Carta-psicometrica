@@ -44,6 +44,9 @@ public partial class MainWindow : Window
         ChartMetricsPanel.SpecificVolumeVisibilityChanged +=
             OnSpecificVolumeVisibilityChanged;
 
+        ChartMetricsPanel.EnthalpyDeviationVisibilityChanged +=
+            OnEnthalpyDeviationVisibilityChanged;
+
         PsychrometricChart.SetPressure(
             AtmosphericPressure.StandardSeaLevelKPa);
     }
@@ -157,6 +160,18 @@ public partial class MainWindow : Window
     }
 
     // ------------------------------ Fin de sección 5.1C.7.3 ------------------------------
+
+
+    // ------------------------------ Sección 5.1C.7.4 - Visibilidad de desviación de entalpía ------------------------------
+
+    private void OnEnthalpyDeviationVisibilityChanged(
+        bool isVisible)
+    {
+        PsychrometricChart.SetEnthalpyDeviationVisible(
+            isVisible);
+    }
+
+    // ------------------------------ Fin de sección 5.1C.7.4 ------------------------------
 
 
     // ------------------------------ Sección 5.1C.8 - Cierre ------------------------------
