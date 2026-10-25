@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -22,6 +22,12 @@ public partial class ChartMetricsPanel : UserControl
 
     public event Action<bool>? EnthalpyVisibilityChanged;
 
+    public event Action<bool>? RelativeHumidityVisibilityChanged;
+
+    public event Action<bool>? WetBulbVisibilityChanged;
+
+    public event Action<bool>? SpecificVolumeVisibilityChanged;
+
     // ------------------------------ Fin de sección 5.3C.2 ------------------------------
 
 
@@ -42,6 +48,15 @@ public partial class ChartMetricsPanel : UserControl
 
         EnthalpyCheckBox.IsChecked =
             false;
+
+        RelativeHumidityCheckBox.IsChecked =
+            false;
+
+        WetBulbCheckBox.IsChecked =
+            false;
+
+        SpecificVolumeCheckBox.IsChecked =
+            false;
     }
 
     // ------------------------------ Fin de sección 5.3C.3 ------------------------------
@@ -60,7 +75,7 @@ public partial class ChartMetricsPanel : UserControl
     // ------------------------------ Fin de sección 5.3C.4 ------------------------------
 
 
-    // ------------------------------ Sección 5.3C.5 - Razón de humedad ------------------------------
+    // ------------------------------ Sección 5.3C.5 - Humedad absoluta ------------------------------
 
     private void HumidityRatioCheckBox_Changed(
         object sender,
@@ -99,6 +114,45 @@ public partial class ChartMetricsPanel : UserControl
     // ------------------------------ Fin de sección 5.3C.7 ------------------------------
 
 
+    // ------------------------------ Sección 5.3C.7.1 - Humedad relativa ------------------------------
+
+    private void RelativeHumidityCheckBox_Changed(
+        object sender,
+        RoutedEventArgs e)
+    {
+        RelativeHumidityVisibilityChanged?.Invoke(
+            RelativeHumidityCheckBox.IsChecked == true);
+    }
+
+    // ------------------------------ Fin de sección 5.3C.7.1 ------------------------------
+
+
+    // ------------------------------ Sección 5.3C.7.2 - Temperatura de bulbo húmedo ------------------------------
+
+    private void WetBulbCheckBox_Changed(
+        object sender,
+        RoutedEventArgs e)
+    {
+        WetBulbVisibilityChanged?.Invoke(
+            WetBulbCheckBox.IsChecked == true);
+    }
+
+    // ------------------------------ Fin de sección 5.3C.7.2 ------------------------------
+
+
+    // ------------------------------ Sección 5.3C.7.3 - Volumen específico ------------------------------
+
+    private void SpecificVolumeCheckBox_Changed(
+        object sender,
+        RoutedEventArgs e)
+    {
+        SpecificVolumeVisibilityChanged?.Invoke(
+            SpecificVolumeCheckBox.IsChecked == true);
+    }
+
+    // ------------------------------ Fin de sección 5.3C.7.3 ------------------------------
+
+
     // ------------------------------ Sección 5.3C.8 - Configuración Default ------------------------------
 
     private void DefaultButton_Click(
@@ -115,6 +169,15 @@ public partial class ChartMetricsPanel : UserControl
             true;
 
         EnthalpyCheckBox.IsChecked =
+            true;
+
+        RelativeHumidityCheckBox.IsChecked =
+            true;
+
+        WetBulbCheckBox.IsChecked =
+            true;
+
+        SpecificVolumeCheckBox.IsChecked =
             true;
     }
 
@@ -137,6 +200,15 @@ public partial class ChartMetricsPanel : UserControl
             false;
 
         EnthalpyCheckBox.IsChecked =
+            false;
+
+        RelativeHumidityCheckBox.IsChecked =
+            false;
+
+        WetBulbCheckBox.IsChecked =
+            false;
+
+        SpecificVolumeCheckBox.IsChecked =
             false;
     }
 
