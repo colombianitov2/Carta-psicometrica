@@ -1,0 +1,88 @@
+﻿<UserControl x:Class="FrioCalc.Psychrometrics.UI.ChartMetricsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Border Padding="18"
+            BorderBrush="#D0D0D0"
+            BorderThickness="1"
+            CornerRadius="8"
+            Background="#FAFAFA">
+
+        <StackPanel>
+
+            <TextBlock Text="VARIABLES DE LA CARTA"
+                       FontSize="17"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,5"/>
+
+            <TextBlock Text="Seleccione las familias de líneas que desea mostrar."
+                       TextWrapping="Wrap"
+                       Foreground="#606060"
+                       Margin="0,0,0,16"/>
+
+
+            <CheckBox x:Name="DryBulbCheckBox"
+                      Content="Temperatura de bulbo seco"
+                      FontSize="14"
+                      VerticalContentAlignment="Center"
+                      Checked="DryBulbCheckBox_Changed"
+                      Unchecked="DryBulbCheckBox_Changed"
+                      Margin="0,4,0,12"/>
+
+
+            <CheckBox x:Name="HumidityRatioCheckBox"
+                      Content="Razón de humedad"
+                      FontSize="14"
+                      VerticalContentAlignment="Center"
+                      Checked="HumidityRatioCheckBox_Changed"
+                      Unchecked="HumidityRatioCheckBox_Changed"
+                      Margin="0,4,0,12"/>
+
+
+            <CheckBox x:Name="SaturationCurveCheckBox"
+                      Content="Curva de saturación"
+                      FontSize="14"
+                      VerticalContentAlignment="Center"
+                      Checked="SaturationCurveCheckBox_Changed"
+                      Unchecked="SaturationCurveCheckBox_Changed"
+                      Margin="0,4,0,12"/>
+
+
+            <!-- Sección 5.3X.1 - Selector de entalpía -->
+
+            <CheckBox x:Name="EnthalpyCheckBox"
+                      Content="Entalpía"
+                      FontSize="14"
+                      VerticalContentAlignment="Center"
+                      Checked="EnthalpyCheckBox_Changed"
+                      Unchecked="EnthalpyCheckBox_Changed"
+                      Margin="0,4,0,12"/>
+
+            <!-- Fin de sección 5.3X.1 -->
+
+
+            <Grid Margin="0,8,0,0">
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0"
+                        Content="Default"
+                        Height="34"
+                        Click="DefaultButton_Click"/>
+
+                <Button Grid.Column="2"
+                        Content="None"
+                        Height="34"
+                        Click="NoneButton_Click"/>
+
+            </Grid>
+
+        </StackPanel>
+
+    </Border>
+
+</UserControl>

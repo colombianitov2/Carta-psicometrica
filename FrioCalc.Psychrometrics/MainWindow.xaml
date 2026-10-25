@@ -1,0 +1,67 @@
+﻿<Window x:Class="FrioCalc.Psychrometrics.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:FrioCalc.Psychrometrics.UI"
+        xmlns:chart="clr-namespace:FrioCalc.Psychrometrics.Chart"
+        Title="FrioCalc — Carta psicrométrica"
+        Width="1400"
+        Height="850"
+        MinWidth="1000"
+        MinHeight="650"
+        WindowStartupLocation="CenterScreen">
+
+    <!-- ======================================================== -->
+    <!-- [5.1X.1] INICIO - Contenedor general                    -->
+    <!-- ======================================================== -->
+
+    <Grid Margin="16">
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="330"/>
+            <ColumnDefinition Width="16"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ==================================================== -->
+        <!-- [5.1X.2] INICIO - Panel lateral                     -->
+        <!-- ==================================================== -->
+
+        <ScrollViewer Grid.Column="0"
+              VerticalScrollBarVisibility="Auto"
+              HorizontalScrollBarVisibility="Disabled">
+
+            <StackPanel>
+
+                <ui:PressureSelector x:Name="PressureSelector"
+                             Margin="0,0,0,12"/>
+
+                <ui:ChartMetricsPanel x:Name="ChartMetricsPanel"/>
+
+            </StackPanel>
+
+        </ScrollViewer>
+
+        <!-- ==================================================== -->
+        <!-- [5.1X.2] FIN - Panel lateral                        -->
+        <!-- ==================================================== -->
+
+
+
+        <!-- ==================================================== -->
+        <!-- [5.1X.3] INICIO - Área de carta                     -->
+        <!-- ==================================================== -->
+
+        <chart:PsychrometricChartView x:Name="PsychrometricChart"
+                                      Grid.Column="2"/>
+
+        <!-- ==================================================== -->
+        <!-- [5.1X.3] FIN - Área de carta                        -->
+        <!-- ==================================================== -->
+
+    </Grid>
+
+    <!-- ======================================================== -->
+    <!-- [5.1X.1] FIN - Contenedor general                       -->
+    <!-- ======================================================== -->
+
+</Window>
