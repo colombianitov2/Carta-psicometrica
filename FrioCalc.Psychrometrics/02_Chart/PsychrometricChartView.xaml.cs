@@ -33,6 +33,8 @@ public partial class PsychrometricChartView : UserControl
 
     private bool _specificVolumeVisible;
 
+    private bool _enthalpyDeviationVisible;
+
     private double _pressureKPa =
         101.325;
 
@@ -190,6 +192,20 @@ public partial class PsychrometricChartView : UserControl
     // ------------------------------ Fin de sección 2.1C.8.3 ------------------------------
 
 
+    // ------------------------------ Sección 2.1C.8.4 - Visibilidad de desviación de entalpía ------------------------------
+
+    public void SetEnthalpyDeviationVisible(
+        bool isVisible)
+    {
+        _enthalpyDeviationVisible =
+            isVisible;
+
+        RefreshChart();
+    }
+
+    // ------------------------------ Fin de sección 2.1C.8.4 ------------------------------
+
+
     // ------------------------------ Sección 2.1C.9 - Regeneración de la carta ------------------------------
 
     public void RefreshChart()
@@ -249,6 +265,18 @@ public partial class PsychrometricChartView : UserControl
                 _geometry,
                 _pressureKPa);
         }
+
+        if (_enthalpyDeviationVisible)
+        {
+            EnthalpyDeviationLayer.Draw(
+                ChartCanvas,
+                _geometry,
+                _pressureKPa);
+        }
+
+        SensibleHeatFactorScaleLayer.Draw(
+            ChartCanvas,
+            _geometry);
 
         UpdateScrollBars();
     }
