@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.Windows;
 using FrioCalc.Psychrometrics.Core;
+using FrioCalc.Psychrometrics.Points;
 
 namespace FrioCalc.Psychrometrics;
 
@@ -22,6 +24,12 @@ public partial class MainWindow : Window
 
         PressureSelector.StandardChartModeChanged +=
             OnStandardChartModeChanged;
+
+        PressureSelector.PointSelectionModeChanged +=
+            OnPointSelectionModeChanged;
+
+        PsychrometricChart.PointsChanged +=
+            OnPointsChanged;
 
         ChartMetricsPanel.DryBulbVisibilityChanged +=
             OnDryBulbVisibilityChanged;
@@ -172,6 +180,25 @@ public partial class MainWindow : Window
     }
 
     // ------------------------------ Fin de sección 5.1C.7.4 ------------------------------
+
+
+    // ------------------------------ Sección 5.1C.7.5 - Selección y propiedades de puntos ------------------------------
+
+    private void OnPointSelectionModeChanged(
+        bool isEnabled)
+    {
+        PsychrometricChart.SetPointSelectionMode(
+            isEnabled);
+    }
+
+    private void OnPointsChanged(
+        IReadOnlyList<ChartPoint> points)
+    {
+        PointPropertiesPanel.SetPoints(
+            points);
+    }
+
+    // ------------------------------ Fin de sección 5.1C.7.5 ------------------------------
 
 
     // ------------------------------ Sección 5.1C.8 - Cierre ------------------------------
