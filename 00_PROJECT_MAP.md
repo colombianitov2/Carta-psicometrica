@@ -9,12 +9,21 @@
   - `PressurePresetCatalog.cs`
   - `SaturationHumidityRatio.cs`
   - `SaturationVaporPressure.cs`
+  - `1.7` — `RelativeHumidity.cs`
+  - `1.8` — `WetBulbHumidityRatio.cs`
+  - `1.9` — `MoistAirSpecificVolume.cs`
 
 ## 2. Carta psicrométrica
 
 - `2.1` — `PsychrometricChartView.xaml/.cs`
 - `2.2` — `ChartGeometry.cs`
-- Capas: `DryBulbLayer`, `HumidityRatioLayer`, `SaturationCurveLayer`, `EnthalpyLayer`.
+- `2.3` — `DryBulbLayer.cs`
+- `2.4` — `HumidityRatioLayer.cs` (nombre visible: Humedad absoluta)
+- `2.5` — `SaturationCurveLayer.cs`
+- `2.6` — `EnthalpyLayer.cs`
+- `2.7` — `RelativeHumidityLayer.cs`
+- `2.8` — `WetBulbLayer.cs`
+- `2.9` — `SpecificVolumeLayer.cs`
 
 ## 5. Interfaz
 
