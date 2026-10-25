@@ -31,6 +31,8 @@ public partial class PressureSelector : UserControl
 
     public event Action<bool>? StandardChartModeChanged;
 
+    public event Action<bool>? PointSelectionModeChanged;
+
     // ============================================================
     // [5.2C.2] FIN - Estado y evento público
     // ============================================================
@@ -153,6 +155,31 @@ public partial class PressureSelector : UserControl
 
     // ============================================================
     // [5.2C.5.1] FIN - Cambio de Carta estándar
+    // ============================================================
+
+
+    // ============================================================
+    // [5.2C.5.2] INICIO - Cambio de selección de puntos
+    // ============================================================
+
+    private void SelectPointsToggle_Checked(
+        object sender,
+        RoutedEventArgs e)
+    {
+        PointSelectionModeChanged?.Invoke(
+            true);
+    }
+
+    private void SelectPointsToggle_Unchecked(
+        object sender,
+        RoutedEventArgs e)
+    {
+        PointSelectionModeChanged?.Invoke(
+            false);
+    }
+
+    // ============================================================
+    // [5.2C.5.2] FIN - Cambio de selección de puntos
     // ============================================================
 
 
