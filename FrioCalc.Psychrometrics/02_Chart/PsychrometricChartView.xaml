@@ -80,7 +80,7 @@
                        Grid.Column="1"
                        Orientation="Vertical"
                        Width="17"
-                       Margin="11,30,0,62"
+                       Margin="11,30,0,90"
                        ValueChanged="VerticalChartScrollBar_ValueChanged"/>
 
         </Grid>
