@@ -7,7 +7,7 @@ using System.Windows.Shapes;
 
 namespace FrioCalc.Psychrometrics.Chart;
 
-// ------------------------------ Sección 2.4.1 - Definición de capa de razón de humedad ------------------------------
+// ------------------------------ Sección 2.4.1 - Definición de capa de humedad absoluta ------------------------------
 
 public static class HumidityRatioLayer
 {
@@ -173,7 +173,7 @@ public static class HumidityRatioLayer
         TextBlock title =
             new()
             {
-                Text = "Razón de humedad (g/kg aire seco)",
+                Text = "Humedad absoluta (g/kg aire seco)",
                 FontSize = 12.0,
                 FontWeight = FontWeights.SemiBold,
                 Foreground = Brushes.DimGray
