@@ -166,7 +166,8 @@ public static class WetBulbLayer
         DrawLabel(
             canvas,
             wetBulbC,
-            line.Points[0]);
+            line.Points[0],
+            line.Points[1]);
     }
 
     // ------------------------------ Fin de sección 2.8.3 ------------------------------
@@ -177,7 +178,8 @@ public static class WetBulbLayer
     private static void DrawLabel(
         Canvas canvas,
         double wetBulbC,
-        Point point)
+        Point firstPoint,
+        Point secondPoint)
     {
         TextBlock label =
             new()
@@ -192,6 +194,47 @@ public static class WetBulbLayer
                 Background = Brushes.White
             };
 
+        double deltaX =
+            secondPoint.X - firstPoint.X;
+
+        double deltaY =
+            secondPoint.Y - firstPoint.Y;
+
+        double length =
+            Math.Sqrt(
+                deltaX * deltaX
+                + deltaY * deltaY);
+
+        double normalX =
+            length > 1e-9
+                ? deltaY / length
+                : 0.0;
+
+        double normalY =
+            length > 1e-9
+                ? -deltaX / length
+                : -1.0;
+
+        if (normalY > 0.0)
+        {
+            normalX =
+                -normalX;
+
+            normalY =
+                -normalY;
+        }
+
+        const double labelOffset =
+            11.0;
+
+        double anchorX =
+            firstPoint.X
+            + normalX * labelOffset;
+
+        double anchorY =
+            firstPoint.Y
+            + normalY * labelOffset;
+
         canvas.Children.Add(label);
 
         label.Measure(
@@ -201,13 +244,13 @@ public static class WetBulbLayer
 
         Canvas.SetLeft(
             label,
-            point.X + 3.0);
+            anchorX
+            - label.DesiredSize.Width / 2.0);
 
         Canvas.SetTop(
             label,
-            point.Y
-            - label.DesiredSize.Height
-            - 1.0);
+            anchorY
+            - label.DesiredSize.Height);
     }
 
     // ------------------------------ Fin de sección 2.8.4 ------------------------------
