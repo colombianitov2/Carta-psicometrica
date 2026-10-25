@@ -9,6 +9,10 @@
   - `PressurePresetCatalog.cs`
   - `SaturationHumidityRatio.cs`
   - `SaturationVaporPressure.cs`
+  - `RelativeHumidity.cs` — [1.7]
+  - `WetBulbHumidityRatio.cs` — [1.8]
+  - `MoistAirSpecificVolume.cs` — [1.9]
+  - `EnthalpyDeviation.cs` — [1.10]
   - `1.7` — `RelativeHumidity.cs`
   - `1.8` — `WetBulbHumidityRatio.cs`
   - `1.9` — `MoistAirSpecificVolume.cs`
