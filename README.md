@@ -1,6 +1,6 @@
 # FrioCalc.Psychrometrics
 
-Módulo dedicado a la carta psicrométrica de FrioCalc, desarrollado en C# / WPF sobre .NET 8 para Windows.
+Módulo dedicado a la carta psicrométrica de FrioCalc, desarrollado en C# / WPF sobre .NET 10 para Windows.
 
 ## Foco actual
 
