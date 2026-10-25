@@ -51,8 +51,29 @@
         <!-- [5.1X.3] INICIO - Área de carta                     -->
         <!-- ==================================================== -->
 
-        <chart:PsychrometricChartView x:Name="PsychrometricChart"
-                                      Grid.Column="2"/>
+        <Grid Grid.Column="2">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="12"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <chart:PsychrometricChartView x:Name="PsychrometricChart"
+                                          Grid.Row="0"/>
+
+            <!-- ==================================================== -->
+            <!-- [5.1X.3.1] INICIO - Propiedades del punto           -->
+            <!-- ==================================================== -->
+
+            <ui:PointPropertiesPanel x:Name="PointPropertiesPanel"
+                                     Grid.Row="2"/>
+
+            <!-- ==================================================== -->
+            <!-- [5.1X.3.1] FIN - Propiedades del punto              -->
+            <!-- ==================================================== -->
+
+        </Grid>
 
         <!-- ==================================================== -->
         <!-- [5.1X.3] FIN - Área de carta                        -->
