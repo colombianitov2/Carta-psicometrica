@@ -51,10 +51,27 @@ public static class SpecificVolumeLayer
                 geometry,
                 totalPressureKPa);
 
-        double volumeStep =
-            GetNiceStep(
-                (maximumVolume - minimumVolume)
-                / 12.0);
+        double volumeStep;
+        double labelStep;
+
+        if (geometry.IsStandardChartMode)
+        {
+            volumeStep =
+                0.01;
+
+            labelStep =
+                0.05;
+        }
+        else
+        {
+            volumeStep =
+                GetNiceStep(
+                    (maximumVolume - minimumVolume)
+                    / 24.0);
+
+            labelStep =
+                volumeStep * 5.0;
+        }
 
         double firstVolume =
             Math.Ceiling(
@@ -66,13 +83,23 @@ public static class SpecificVolumeLayer
             specificVolume <= maximumVolume + 1e-9;
             specificVolume += volumeStep)
         {
+            bool showLabel =
+                IsMultipleOfStep(
+                    specificVolume,
+                    labelStep);
+
             DrawSpecificVolumeLine(
                 canvas,
                 geometry,
                 plotRect,
                 totalPressureKPa,
-                specificVolume);
+                specificVolume,
+                showLabel);
         }
+
+        DrawAxisTitle(
+            canvas,
+            plotRect);
     }
 
     // ------------------------------ Fin de sección 2.9.2 ------------------------------
@@ -85,13 +112,20 @@ public static class SpecificVolumeLayer
         ChartGeometry geometry,
         Rect plotRect,
         double totalPressureKPa,
-        double specificVolumeM3PerKgDryAir)
+        double specificVolumeM3PerKgDryAir,
+        bool showLabel)
     {
         Polyline line =
             new()
             {
-                Stroke = Brushes.SlateGray,
-                StrokeThickness = 0.65,
+                Stroke =
+                    showLabel
+                        ? Brushes.SlateGray
+                        : Brushes.LightSlateGray,
+                StrokeThickness =
+                    showLabel
+                        ? 0.85
+                        : 0.45,
                 StrokeLineJoin = PenLineJoin.Round,
                 Clip = new RectangleGeometry(plotRect)
             };
@@ -175,12 +209,15 @@ public static class SpecificVolumeLayer
 
         canvas.Children.Add(line);
 
-        DrawBottomLabel(
-            canvas,
-            geometry,
-            plotRect,
-            totalPressureKPa,
-            specificVolumeM3PerKgDryAir);
+        if (showLabel)
+        {
+            DrawBottomLabel(
+                canvas,
+                geometry,
+                plotRect,
+                totalPressureKPa,
+                specificVolumeM3PerKgDryAir);
+        }
     }
 
     // ------------------------------ Fin de sección 2.9.3 ------------------------------
@@ -352,7 +389,69 @@ public static class SpecificVolumeLayer
 
         Canvas.SetTop(
             label,
-            plotRect.Bottom + 38.0);
+            plotRect.Bottom + 48.0);
+    }
+
+    private static void DrawAxisTitle(
+        Canvas canvas,
+        Rect plotRect)
+    {
+        TextBlock title =
+            new()
+            {
+                Text =
+                    "Volumen específico (m³/kg aire seco)",
+                FontSize =
+                    10.0,
+                FontWeight =
+                    FontWeights.SemiBold,
+                Foreground =
+                    Brushes.DimGray,
+                Background =
+                    Brushes.White
+            };
+
+        canvas.Children.Add(
+            title);
+
+        title.Measure(
+            new Size(
+                double.PositiveInfinity,
+                double.PositiveInfinity));
+
+        Canvas.SetLeft(
+            title,
+            plotRect.Left
+            + (
+                plotRect.Width
+                - title.DesiredSize.Width)
+            / 2.0);
+
+        Canvas.SetTop(
+            title,
+            plotRect.Bottom + 66.0);
+    }
+
+    private static bool IsMultipleOfStep(
+        double value,
+        double step)
+    {
+        if (!double.IsFinite(value)
+            || !double.IsFinite(step)
+            || step <= 0.0)
+        {
+            return false;
+        }
+
+        double multiple =
+            value / step;
+
+        return
+            Math.Abs(
+                multiple
+                - Math.Round(
+                    multiple))
+            < 1e-7;
     }
 
     private static double GetDryBulbAtHumidityRatio(
