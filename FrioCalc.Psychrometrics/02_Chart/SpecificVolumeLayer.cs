@@ -293,7 +293,7 @@ public static class SpecificVolumeLayer
         }
 
         Point lastPoint =
-            line.Points[^1];
+            line.Points[line.Points.Count - 1];
 
         if (Math.Abs(lastPoint.X - bottomPoint.X) > 0.25
             || Math.Abs(lastPoint.Y - bottomPoint.Y) > 0.25)
