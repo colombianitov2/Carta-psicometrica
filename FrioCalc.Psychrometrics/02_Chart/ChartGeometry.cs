@@ -84,9 +84,9 @@ public sealed class ChartGeometry
 
     public double TopMargin { get; set; } = 30.0;
 
-    public double RightMargin { get; set; } = 95.0;
+    public double RightMargin { get; set; } = 125.0;
 
-    public double BottomMargin { get; set; } = 62.0;
+    public double BottomMargin { get; set; } = 90.0;
 
     // ------------------------------ Fin de sección 2.2.5 ------------------------------
 
