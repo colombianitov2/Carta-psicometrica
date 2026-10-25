@@ -504,14 +504,67 @@ public static class EnthalpyDeviationLayer
         double deviationKJPerKg,
         Polyline curve)
     {
+        if (curve.Points.Count < 2)
+        {
+            return;
+        }
+
+        double normalizedMagnitude =
+            Math.Clamp(
+                Math.Abs(deviationKJPerKg) / 1.20,
+                0.0,
+                1.0);
+
+        double labelFraction =
+            0.22
+            + normalizedMagnitude * 0.52;
+
         int index =
             Math.Clamp(
-                curve.Points.Count / 2,
+                (int)Math.Round(
+                    (curve.Points.Count - 2)
+                    * labelFraction),
                 0,
-                curve.Points.Count - 1);
+                curve.Points.Count - 2);
 
         Point point =
             curve.Points[index];
+
+        Point nextPoint =
+            curve.Points[index + 1];
+
+        double deltaX =
+            nextPoint.X - point.X;
+
+        double deltaY =
+            nextPoint.Y - point.Y;
+
+        double length =
+            Math.Sqrt(
+                deltaX * deltaX
+                + deltaY * deltaY);
+
+        double normalX =
+            length > 1e-9
+                ? deltaY / length
+                : 0.0;
+
+        double normalY =
+            length > 1e-9
+                ? -deltaX / length
+                : -1.0;
+
+        if (normalY > 0.0)
+        {
+            normalX =
+                -normalX;
+
+            normalY =
+                -normalY;
+        }
+
+        const double offset =
+            10.0;
 
         TextBlock label =
             new()
@@ -541,13 +594,16 @@ public static class EnthalpyDeviationLayer
 
         Canvas.SetLeft(
             label,
-            point.X + 5.0);
+            point.X
+            + normalX * offset
+            - label.DesiredSize.Width / 2.0);
 
         Canvas.SetTop(
             label,
             point.Y
+            + normalY * offset
             - label.DesiredSize.Height
-            - 3.0);
+            - 1.0);
     }
 
     private static void DrawScaleTitle(
