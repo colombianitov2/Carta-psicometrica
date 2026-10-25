@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="FrioCalc.Psychrometrics.UI.ChartMetricsPanel"
+<UserControl x:Class="FrioCalc.Psychrometrics.UI.ChartMetricsPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
@@ -31,7 +31,7 @@
 
 
             <CheckBox x:Name="HumidityRatioCheckBox"
-                      Content="Razón de humedad"
+                      Content="Humedad absoluta"
                       FontSize="14"
                       VerticalContentAlignment="Center"
                       Checked="HumidityRatioCheckBox_Changed"
@@ -59,6 +59,45 @@
                       Margin="0,4,0,12"/>
 
             <!-- Fin de sección 5.3X.1 -->
+
+
+            <!-- Sección 5.3X.2 - Selector de humedad relativa -->
+
+            <CheckBox x:Name="RelativeHumidityCheckBox"
+                      Content="Humedad relativa"
+                      FontSize="14"
+                      VerticalContentAlignment="Center"
+                      Checked="RelativeHumidityCheckBox_Changed"
+                      Unchecked="RelativeHumidityCheckBox_Changed"
+                      Margin="0,4,0,12"/>
+
+            <!-- Fin de sección 5.3X.2 -->
+
+
+            <!-- Sección 5.3X.3 - Selector de temperatura de bulbo húmedo -->
+
+            <CheckBox x:Name="WetBulbCheckBox"
+                      Content="Temperatura de bulbo húmedo"
+                      FontSize="14"
+                      VerticalContentAlignment="Center"
+                      Checked="WetBulbCheckBox_Changed"
+                      Unchecked="WetBulbCheckBox_Changed"
+                      Margin="0,4,0,12"/>
+
+            <!-- Fin de sección 5.3X.3 -->
+
+
+            <!-- Sección 5.3X.4 - Selector de volumen específico -->
+
+            <CheckBox x:Name="SpecificVolumeCheckBox"
+                      Content="Volumen específico"
+                      FontSize="14"
+                      VerticalContentAlignment="Center"
+                      Checked="SpecificVolumeCheckBox_Changed"
+                      Unchecked="SpecificVolumeCheckBox_Changed"
+                      Margin="0,4,0,12"/>
+
+            <!-- Fin de sección 5.3X.4 -->
 
 
             <Grid Margin="0,8,0,0">
