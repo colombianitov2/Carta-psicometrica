@@ -27,6 +27,12 @@ public partial class PsychrometricChartView : UserControl
 
     private bool _enthalpyVisible;
 
+    private bool _relativeHumidityVisible;
+
+    private bool _wetBulbVisible;
+
+    private bool _specificVolumeVisible;
+
     private double _pressureKPa =
         101.325;
 
@@ -71,6 +77,7 @@ public partial class PsychrometricChartView : UserControl
 
     // ------------------------------ Fin de sección 2.1C.4 ------------------------------
 
+
     // ------------------------------ Sección 2.1C.4.1 - Carta estándar ------------------------------
 
     public void SetStandardChartMode(
@@ -99,7 +106,7 @@ public partial class PsychrometricChartView : UserControl
     // ------------------------------ Fin de sección 2.1C.5 ------------------------------
 
 
-    // ------------------------------ Sección 2.1C.6 - Visibilidad de razón de humedad ------------------------------
+    // ------------------------------ Sección 2.1C.6 - Visibilidad de humedad absoluta ------------------------------
 
     public void SetHumidityRatioVisible(
         bool isVisible)
@@ -141,6 +148,48 @@ public partial class PsychrometricChartView : UserControl
     // ------------------------------ Fin de sección 2.1C.8 ------------------------------
 
 
+    // ------------------------------ Sección 2.1C.8.1 - Visibilidad de humedad relativa ------------------------------
+
+    public void SetRelativeHumidityVisible(
+        bool isVisible)
+    {
+        _relativeHumidityVisible =
+            isVisible;
+
+        RefreshChart();
+    }
+
+    // ------------------------------ Fin de sección 2.1C.8.1 ------------------------------
+
+
+    // ------------------------------ Sección 2.1C.8.2 - Visibilidad de temperatura de bulbo húmedo ------------------------------
+
+    public void SetWetBulbVisible(
+        bool isVisible)
+    {
+        _wetBulbVisible =
+            isVisible;
+
+        RefreshChart();
+    }
+
+    // ------------------------------ Fin de sección 2.1C.8.2 ------------------------------
+
+
+    // ------------------------------ Sección 2.1C.8.3 - Visibilidad de volumen específico ------------------------------
+
+    public void SetSpecificVolumeVisible(
+        bool isVisible)
+    {
+        _specificVolumeVisible =
+            isVisible;
+
+        RefreshChart();
+    }
+
+    // ------------------------------ Fin de sección 2.1C.8.3 ------------------------------
+
+
     // ------------------------------ Sección 2.1C.9 - Regeneración de la carta ------------------------------
 
     public void RefreshChart()
@@ -161,9 +210,33 @@ public partial class PsychrometricChartView : UserControl
                 _geometry);
         }
 
+        if (_relativeHumidityVisible)
+        {
+            RelativeHumidityLayer.Draw(
+                ChartCanvas,
+                _geometry,
+                _pressureKPa);
+        }
+
+        if (_specificVolumeVisible)
+        {
+            SpecificVolumeLayer.Draw(
+                ChartCanvas,
+                _geometry,
+                _pressureKPa);
+        }
+
         if (_enthalpyVisible)
         {
             EnthalpyLayer.Draw(
+                ChartCanvas,
+                _geometry,
+                _pressureKPa);
+        }
+
+        if (_wetBulbVisible)
+        {
+            WetBulbLayer.Draw(
                 ChartCanvas,
                 _geometry,
                 _pressureKPa);
@@ -230,6 +303,7 @@ public partial class PsychrometricChartView : UserControl
                     _geometry.MinDryBulbC,
                     HorizontalChartScrollBar.Minimum,
                     HorizontalChartScrollBar.Maximum);
+
 
             double humiditySpan =
                 _geometry.MaxHumidityRatioKgPerKg
