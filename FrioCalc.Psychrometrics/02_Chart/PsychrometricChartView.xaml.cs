@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using FrioCalc.Psychrometrics.Points;
 
 namespace FrioCalc.Psychrometrics.Chart;
 
@@ -34,6 +36,16 @@ public partial class PsychrometricChartView : UserControl
     private bool _specificVolumeVisible;
 
     private bool _enthalpyDeviationVisible;
+
+    private bool _pointSelectionEnabled;
+
+    private readonly List<ChartPoint> _chartPoints =
+        new();
+
+    private int _nextPointId =
+        1;
+
+    public event Action<IReadOnlyList<ChartPoint>>? PointsChanged;
 
     private double _pressureKPa =
         101.325;
@@ -68,11 +80,22 @@ public partial class PsychrometricChartView : UserControl
     public void SetPressure(
         double pressureKPa)
     {
+        bool pressureChanged =
+            Math.Abs(
+                pressureKPa
+                - _pressureKPa)
+            > 1e-9;
+
         _pressureKPa =
             pressureKPa;
 
         PressureValueText.Text =
             $"Presión: {pressureKPa.ToString("0.###", CultureInfo.CurrentCulture)} kPa abs";
+
+        if (pressureChanged)
+        {
+            ClearPoints();
+        }
 
         RefreshChart();
     }
@@ -206,6 +229,23 @@ public partial class PsychrometricChartView : UserControl
     // ------------------------------ Fin de sección 2.1C.8.4 ------------------------------
 
 
+    // ------------------------------ Sección 2.1C.8.5 - Modo de selección de puntos ------------------------------
+
+    public void SetPointSelectionMode(
+        bool isEnabled)
+    {
+        _pointSelectionEnabled =
+            isEnabled;
+
+        ChartCanvas.Cursor =
+            isEnabled
+                ? Cursors.Cross
+                : Cursors.Hand;
+    }
+
+    // ------------------------------ Fin de sección 2.1C.8.5 ------------------------------
+
+
     // ------------------------------ Sección 2.1C.9 - Regeneración de la carta ------------------------------
 
     public void RefreshChart()
@@ -277,6 +317,11 @@ public partial class PsychrometricChartView : UserControl
         SensibleHeatFactorScaleLayer.Draw(
             ChartCanvas,
             _geometry);
+
+        PointLayer.Draw(
+            ChartCanvas,
+            _geometry,
+            _chartPoints);
 
         UpdateScrollBars();
     }
@@ -458,7 +503,9 @@ public partial class PsychrometricChartView : UserControl
         ChartCanvas.CaptureMouse();
 
         ChartCanvas.Cursor =
-            Cursors.Hand;
+            _pointSelectionEnabled
+                ? Cursors.Cross
+                : Cursors.Hand;
 
         e.Handled =
             true;
@@ -569,6 +616,174 @@ public partial class PsychrometricChartView : UserControl
     }
 
     // ------------------------------ Fin de sección 2.1C.14 ------------------------------
+
+
+    // ------------------------------ Sección 2.1C.14.1 - Selección de puntos con clic derecho ------------------------------
+
+    private void ChartCanvas_MouseRightButtonDown(
+        object sender,
+        MouseButtonEventArgs e)
+    {
+        if (!_pointSelectionEnabled)
+        {
+            return;
+        }
+
+        Rect plotRect =
+            _geometry.GetPlotRect(
+                ChartCanvas.ActualWidth,
+                ChartCanvas.ActualHeight);
+
+        if (plotRect.IsEmpty)
+        {
+            return;
+        }
+
+        Point mousePoint =
+            e.GetPosition(
+                ChartCanvas);
+
+        if (!plotRect.Contains(
+                mousePoint))
+        {
+            return;
+        }
+
+        int existingPointIndex =
+            FindPointAt(
+                mousePoint,
+                plotRect);
+
+        if (existingPointIndex >= 0)
+        {
+            _chartPoints.RemoveAt(
+                existingPointIndex);
+
+            NotifyPointsChanged();
+
+            RefreshChart();
+
+            e.Handled =
+                true;
+
+            return;
+        }
+
+        double dryBulbC =
+            _geometry.DryBulbCFromX(
+                mousePoint.X,
+                plotRect);
+
+        double humidityRatioKgPerKg =
+            _geometry.HumidityRatioKgPerKgFromY(
+                mousePoint.Y,
+                plotRect);
+
+        int pointId =
+            _nextPointId;
+
+        string pointName =
+            $"P{pointId}";
+
+        string colorHex =
+            PointColorPalette.GetColorHex(
+                pointId);
+
+        if (PointPropertyCalculator.TryCreatePoint(
+                pointId,
+                pointName,
+                colorHex,
+                _pressureKPa,
+                dryBulbC,
+                humidityRatioKgPerKg,
+                out ChartPoint? point)
+            && point is not null)
+        {
+            _chartPoints.Add(
+                point);
+
+            _nextPointId++;
+
+            NotifyPointsChanged();
+
+            RefreshChart();
+        }
+
+        e.Handled =
+            true;
+    }
+
+    // ------------------------------ Fin de sección 2.1C.14.1 ------------------------------
+
+
+    // ------------------------------ Sección 2.1C.14.2 - Colección de puntos activos ------------------------------
+
+    private int FindPointAt(
+        Point mousePoint,
+        Rect plotRect)
+    {
+        const double hitRadius =
+            10.0;
+
+        double hitRadiusSquared =
+            hitRadius * hitRadius;
+
+        for (int index = _chartPoints.Count - 1;
+             index >= 0;
+             index--)
+        {
+            ChartPoint point =
+                _chartPoints[index];
+
+            double x =
+                _geometry.XFromDryBulbC(
+                    point.DryBulbC,
+                    plotRect);
+
+            double y =
+                _geometry.YFromHumidityRatioKgPerKg(
+                    point.HumidityRatioKgPerKg,
+                    plotRect);
+
+            double deltaX =
+                mousePoint.X - x;
+
+            double deltaY =
+                mousePoint.Y - y;
+
+            double distanceSquared =
+                deltaX * deltaX
+                + deltaY * deltaY;
+
+            if (distanceSquared
+                <= hitRadiusSquared)
+            {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+
+    private void NotifyPointsChanged()
+    {
+        PointsChanged?.Invoke(
+            _chartPoints);
+    }
+
+    private void ClearPoints()
+    {
+        if (_chartPoints.Count == 0)
+        {
+            return;
+        }
+
+        _chartPoints.Clear();
+
+        NotifyPointsChanged();
+    }
+
+    // ------------------------------ Fin de sección 2.1C.14.2 ------------------------------
 
 
     // ------------------------------ Sección 2.1C.15 - Barra horizontal ------------------------------
