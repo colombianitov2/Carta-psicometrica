@@ -163,11 +163,17 @@ public static class WetBulbLayer
 
         canvas.Children.Add(line);
 
+        int labelIndex =
+            Math.Clamp(
+                line.Points.Count / 10,
+                1,
+                line.Points.Count - 2);
+
         DrawLabel(
             canvas,
             wetBulbC,
-            line.Points[0],
-            line.Points[1]);
+            line.Points[labelIndex],
+            line.Points[labelIndex + 1]);
     }
 
     // ------------------------------ Fin de sección 2.8.3 ------------------------------
@@ -225,7 +231,7 @@ public static class WetBulbLayer
         }
 
         const double labelOffset =
-            11.0;
+            18.0;
 
         double anchorX =
             firstPoint.X
@@ -250,7 +256,8 @@ public static class WetBulbLayer
         Canvas.SetTop(
             label,
             anchorY
-            - label.DesiredSize.Height);
+            - label.DesiredSize.Height
+            - 2.0);
     }
 
     // ------------------------------ Fin de sección 2.8.4 ------------------------------
