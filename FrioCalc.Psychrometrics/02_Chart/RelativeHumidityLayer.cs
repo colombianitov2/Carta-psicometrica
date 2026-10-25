@@ -136,16 +136,23 @@ public static class RelativeHumidityLayer
 
         canvas.Children.Add(curve);
 
+        double labelFraction =
+            0.78
+            - relativeHumidityFraction * 0.48;
+
         int labelIndex =
             Math.Clamp(
-                (curve.Points.Count * 2) / 3,
-                0,
-                curve.Points.Count - 1);
+                (int)Math.Round(
+                    (curve.Points.Count - 2)
+                    * labelFraction),
+                1,
+                curve.Points.Count - 2);
 
         DrawLabel(
             canvas,
             relativeHumidityFraction,
-            curve.Points[labelIndex]);
+            curve.Points[labelIndex],
+            curve.Points[labelIndex + 1]);
     }
 
     // ------------------------------ Fin de sección 2.7.3 ------------------------------
@@ -156,7 +163,8 @@ public static class RelativeHumidityLayer
     private static void DrawLabel(
         Canvas canvas,
         double relativeHumidityFraction,
-        Point point)
+        Point point,
+        Point nextPoint)
     {
         TextBlock label =
             new()
@@ -172,6 +180,47 @@ public static class RelativeHumidityLayer
                 Background = Brushes.White
             };
 
+        double deltaX =
+            nextPoint.X - point.X;
+
+        double deltaY =
+            nextPoint.Y - point.Y;
+
+        double length =
+            Math.Sqrt(
+                deltaX * deltaX
+                + deltaY * deltaY);
+
+        double normalX =
+            length > 1e-9
+                ? deltaY / length
+                : 0.0;
+
+        double normalY =
+            length > 1e-9
+                ? -deltaX / length
+                : -1.0;
+
+        if (normalY > 0.0)
+        {
+            normalX =
+                -normalX;
+
+            normalY =
+                -normalY;
+        }
+
+        const double offset =
+            9.0;
+
+        double anchorX =
+            point.X
+            + normalX * offset;
+
+        double anchorY =
+            point.Y
+            + normalY * offset;
+
         canvas.Children.Add(label);
 
         label.Measure(
@@ -181,11 +230,12 @@ public static class RelativeHumidityLayer
 
         Canvas.SetLeft(
             label,
-            point.X + 3.0);
+            anchorX
+            - label.DesiredSize.Width / 2.0);
 
         Canvas.SetTop(
             label,
-            point.Y
+            anchorY
             - label.DesiredSize.Height
             - 1.0);
     }
