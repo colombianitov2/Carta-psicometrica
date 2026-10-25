@@ -90,6 +90,8 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="6"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="6"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
@@ -142,12 +144,60 @@
                 <!-- ======================================================== -->
 
 
+                <!-- ======================================================== -->
+                <!-- [5.2X.4.2] INICIO - Seleccionar puntos                  -->
+                <!-- ======================================================== -->
+
+                <ToggleButton x:Name="SelectPointsToggle"
+                              Grid.Row="4"
+                              Content="Seleccionar puntos"
+                              Height="38"
+                              Margin="0"
+                              Padding="10,0"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Center"
+                              VerticalContentAlignment="Center"
+                              FontWeight="SemiBold"
+                              Cursor="Hand"
+                              IsChecked="False"
+                              Checked="SelectPointsToggle_Checked"
+                              Unchecked="SelectPointsToggle_Unchecked"
+                              ToolTip="Activa el clic derecho sobre la carta para agregar o quitar puntos">
+
+                    <ToggleButton.Style>
+                        <Style TargetType="ToggleButton">
+                            <Setter Property="Background" Value="#F3F4F6"/>
+                            <Setter Property="Foreground" Value="#303030"/>
+                            <Setter Property="BorderBrush" Value="#BFC3C8"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#E8EDF5"/>
+                                </Trigger>
+
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter Property="Background" Value="#2563EB"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter Property="BorderBrush" Value="#1D4ED8"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ToggleButton.Style>
+
+                </ToggleButton>
+
+                <!-- ======================================================== -->
+                <!-- [5.2X.4.2] FIN - Seleccionar puntos                     -->
+                <!-- ======================================================== -->
+
+
                 <!-- ================================================= -->
                 <!-- [5.2X.5] INICIO - Validación                      -->
                 <!-- ================================================= -->
 
                 <TextBlock x:Name="ValidationTextBlock"
-                           Grid.Row="3"
+                           Grid.Row="5"
                            Margin="0,6,0,0"
                            TextWrapping="Wrap"
                            Foreground="#B00020"/>
