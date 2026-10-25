@@ -28,6 +28,8 @@ public partial class ChartMetricsPanel : UserControl
 
     public event Action<bool>? SpecificVolumeVisibilityChanged;
 
+    public event Action<bool>? EnthalpyDeviationVisibilityChanged;
+
     // ------------------------------ Fin de sección 5.3C.2 ------------------------------
 
 
@@ -56,6 +58,9 @@ public partial class ChartMetricsPanel : UserControl
             false;
 
         SpecificVolumeCheckBox.IsChecked =
+            false;
+
+        EnthalpyDeviationCheckBox.IsChecked =
             false;
     }
 
@@ -153,6 +158,19 @@ public partial class ChartMetricsPanel : UserControl
     // ------------------------------ Fin de sección 5.3C.7.3 ------------------------------
 
 
+    // ------------------------------ Sección 5.3C.7.4 - Desviación de entalpía ------------------------------
+
+    private void EnthalpyDeviationCheckBox_Changed(
+        object sender,
+        RoutedEventArgs e)
+    {
+        EnthalpyDeviationVisibilityChanged?.Invoke(
+            EnthalpyDeviationCheckBox.IsChecked == true);
+    }
+
+    // ------------------------------ Fin de sección 5.3C.7.4 ------------------------------
+
+
     // ------------------------------ Sección 5.3C.8 - Configuración Default ------------------------------
 
     private void DefaultButton_Click(
@@ -178,6 +196,9 @@ public partial class ChartMetricsPanel : UserControl
             true;
 
         SpecificVolumeCheckBox.IsChecked =
+            true;
+
+        EnthalpyDeviationCheckBox.IsChecked =
             true;
     }
 
@@ -209,6 +230,9 @@ public partial class ChartMetricsPanel : UserControl
             false;
 
         SpecificVolumeCheckBox.IsChecked =
+            false;
+
+        EnthalpyDeviationCheckBox.IsChecked =
             false;
     }
 
