@@ -52,6 +52,49 @@ public static class EnthalpyDeviation
             return double.NaN;
         }
 
+        return
+            FromDryBulbAndWetBulb(
+                dryBulbC,
+                wetBulbC,
+                totalPressureKPa);
+    }
+
+    // Fuente conceptual:
+    // Carta psicrométrica Carrier/VALCON: desviación de entalpía.
+    // La desviación corrige la lectura obtenida al prolongar una línea de
+    // bulbo húmedo hasta la escala de entalpía. Es cero en saturación.
+
+    // ------------------------------ Fin de sección 1.10.2 ------------------------------
+
+
+    // ------------------------------ Sección 1.10.2.1 - Desviación directa desde bulbo seco y bulbo húmedo ------------------------------
+
+    public static double FromDryBulbAndWetBulb(
+        double dryBulbC,
+        double wetBulbC,
+        double totalPressureKPa)
+    {
+        if (!double.IsFinite(dryBulbC)
+            || !double.IsFinite(wetBulbC)
+            || wetBulbC > dryBulbC
+            || !double.IsFinite(totalPressureKPa)
+            || totalPressureKPa <= 0.0)
+        {
+            return double.NaN;
+        }
+
+        double humidityRatio =
+            WetBulbHumidityRatio.FromDryBulbAndWetBulb(
+                dryBulbC,
+                wetBulbC,
+                totalPressureKPa);
+
+        if (!double.IsFinite(humidityRatio)
+            || humidityRatio < 0.0)
+        {
+            return double.NaN;
+        }
+
         double saturationPressureAtWetBulbKPa =
             SaturationVaporPressure.GetPressureKPa(
                 wetBulbC);
@@ -70,7 +113,7 @@ public static class EnthalpyDeviation
         double actualEnthalpy =
             MoistAirEnthalpy.FromDryBulbAndHumidityRatio(
                 dryBulbC,
-                humidityRatioKgPerKg);
+                humidityRatio);
 
         double saturatedEnthalpyAtWetBulb =
             MoistAirEnthalpy.FromDryBulbAndHumidityRatio(
@@ -82,12 +125,7 @@ public static class EnthalpyDeviation
             - saturatedEnthalpyAtWetBulb;
     }
 
-    // Fuente conceptual:
-    // Carta psicrométrica Carrier/VALCON: desviación de entalpía.
-    // La desviación corrige la lectura obtenida al prolongar una línea de
-    // bulbo húmedo hasta la escala de entalpía. Es cero en saturación.
-
-    // ------------------------------ Fin de sección 1.10.2 ------------------------------
+    // ------------------------------ Fin de sección 1.10.2.1 ------------------------------
 
 
     // ------------------------------ Sección 1.10.3 - Inversión numérica de bulbo húmedo ------------------------------
