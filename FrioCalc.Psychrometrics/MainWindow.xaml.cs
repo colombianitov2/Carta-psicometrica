@@ -35,6 +35,15 @@ public partial class MainWindow : Window
         ChartMetricsPanel.EnthalpyVisibilityChanged +=
             OnEnthalpyVisibilityChanged;
 
+        ChartMetricsPanel.RelativeHumidityVisibilityChanged +=
+            OnRelativeHumidityVisibilityChanged;
+
+        ChartMetricsPanel.WetBulbVisibilityChanged +=
+            OnWetBulbVisibilityChanged;
+
+        ChartMetricsPanel.SpecificVolumeVisibilityChanged +=
+            OnSpecificVolumeVisibilityChanged;
+
         PsychrometricChart.SetPressure(
             AtmosphericPressure.StandardSeaLevelKPa);
     }
@@ -52,6 +61,7 @@ public partial class MainWindow : Window
     }
 
     // ------------------------------ Fin de sección 5.1C.3 ------------------------------
+
 
     // ------------------------------ Sección 5.1C.3.1 - Aplicación de Carta estándar ------------------------------
 
@@ -77,7 +87,7 @@ public partial class MainWindow : Window
     // ------------------------------ Fin de sección 5.1C.4 ------------------------------
 
 
-    // ------------------------------ Sección 5.1C.5 - Visibilidad de razón de humedad ------------------------------
+    // ------------------------------ Sección 5.1C.5 - Visibilidad de humedad absoluta ------------------------------
 
     private void OnHumidityRatioVisibilityChanged(
         bool isVisible)
@@ -111,6 +121,42 @@ public partial class MainWindow : Window
     }
 
     // ------------------------------ Fin de sección 5.1C.7 ------------------------------
+
+
+    // ------------------------------ Sección 5.1C.7.1 - Visibilidad de humedad relativa ------------------------------
+
+    private void OnRelativeHumidityVisibilityChanged(
+        bool isVisible)
+    {
+        PsychrometricChart.SetRelativeHumidityVisible(
+            isVisible);
+    }
+
+    // ------------------------------ Fin de sección 5.1C.7.1 ------------------------------
+
+
+    // ------------------------------ Sección 5.1C.7.2 - Visibilidad de temperatura de bulbo húmedo ------------------------------
+
+    private void OnWetBulbVisibilityChanged(
+        bool isVisible)
+    {
+        PsychrometricChart.SetWetBulbVisible(
+            isVisible);
+    }
+
+    // ------------------------------ Fin de sección 5.1C.7.2 ------------------------------
+
+
+    // ------------------------------ Sección 5.1C.7.3 - Visibilidad de volumen específico ------------------------------
+
+    private void OnSpecificVolumeVisibilityChanged(
+        bool isVisible)
+    {
+        PsychrometricChart.SetSpecificVolumeVisible(
+            isVisible);
+    }
+
+    // ------------------------------ Fin de sección 5.1C.7.3 ------------------------------
 
 
     // ------------------------------ Sección 5.1C.8 - Cierre ------------------------------
