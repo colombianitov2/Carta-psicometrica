@@ -503,9 +503,7 @@ public partial class PsychrometricChartView : UserControl
         ChartCanvas.CaptureMouse();
 
         ChartCanvas.Cursor =
-            _pointSelectionEnabled
-                ? Cursors.Cross
-                : Cursors.Hand;
+            Cursors.Hand;
 
         e.Handled =
             true;
@@ -597,6 +595,11 @@ public partial class PsychrometricChartView : UserControl
     {
         _isPanning =
             false;
+
+        ChartCanvas.Cursor =
+            _pointSelectionEnabled
+                ? Cursors.Cross
+                : Cursors.Hand;
     }
 
     private void EndPanning()
@@ -612,7 +615,9 @@ public partial class PsychrometricChartView : UserControl
         ChartCanvas.ReleaseMouseCapture();
 
         ChartCanvas.Cursor =
-            Cursors.Hand;
+            _pointSelectionEnabled
+                ? Cursors.Cross
+                : Cursors.Hand;
     }
 
     // ------------------------------ Fin de sección 2.1C.14 ------------------------------
