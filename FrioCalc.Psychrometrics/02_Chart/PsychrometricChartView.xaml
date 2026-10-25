@@ -60,6 +60,7 @@
                         MouseWheel="ChartCanvas_MouseWheel"
                         MouseLeftButtonDown="ChartCanvas_MouseLeftButtonDown"
                         MouseLeftButtonUp="ChartCanvas_MouseLeftButtonUp"
+                        MouseRightButtonDown="ChartCanvas_MouseRightButtonDown"
                         MouseMove="ChartCanvas_MouseMove"
                         LostMouseCapture="ChartCanvas_LostMouseCapture"/>
 
