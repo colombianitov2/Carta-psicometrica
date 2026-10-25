@@ -232,14 +232,10 @@ public static class EnthalpyLayer
         return new Polyline
         {
             Stroke =
-                isMajor
-                    ? Brushes.DimGray
-                    : Brushes.LightGray,
+                Brushes.DimGray,
 
             StrokeThickness =
-                isMajor
-                    ? 1.0
-                    : 0.55,
+                0.85,
 
             StrokeLineJoin =
                 PenLineJoin.Round,
