@@ -109,26 +109,11 @@ public static class EnthalpyDeviationLayer
                     totalPressureKPa,
                     out double humidityRatio))
             {
-                if (currentSegment is not null
-                    && currentSegment.Points.Count >= 2)
-                {
-                    canvas.Children.Add(
-                        currentSegment);
-
-                    if (!labelDrawn)
-                    {
-                        DrawCurveLabel(
-                            canvas,
-                            targetDeviationKJPerKg,
-                            currentSegment);
-
-                        labelDrawn =
-                            true;
-                    }
-                }
-
-                currentSegment =
-                    null;
+                AddCompletedSegment(
+                    canvas,
+                    targetDeviationKJPerKg,
+                    ref currentSegment,
+                    ref labelDrawn);
 
                 continue;
             }
@@ -147,26 +132,17 @@ public static class EnthalpyDeviationLayer
                         plotRect)));
         }
 
-        if (currentSegment is not null
-            && currentSegment.Points.Count >= 2)
-        {
-            canvas.Children.Add(
-                currentSegment);
-
-            if (!labelDrawn)
-            {
-                DrawCurveLabel(
-                    canvas,
-                    targetDeviationKJPerKg,
-                    currentSegment);
-            }
-        }
+        AddCompletedSegment(
+            canvas,
+            targetDeviationKJPerKg,
+            ref currentSegment,
+            ref labelDrawn);
     }
 
     // ------------------------------ Fin de sección 2.10.4 ------------------------------
 
 
-    // ------------------------------ Sección 2.10.5 - Resolución de humedad para desviación constante ------------------------------
+    // ------------------------------ Sección 2.10.5 - Resolución directa sobre bulbo húmedo ------------------------------
 
     private static bool TryGetHumidityRatioForDeviation(
         double dryBulbC,
@@ -178,90 +154,112 @@ public static class EnthalpyDeviationLayer
         humidityRatioKgPerKg =
             double.NaN;
 
-        double saturationPressureKPa =
-            SaturationVaporPressure.GetPressureKPa(
-                dryBulbC);
-
-        if (saturationPressureKPa
-            >= totalPressureKPa)
-        {
-            return false;
-        }
-
-        double saturationHumidityRatio =
-            SaturationHumidityRatio.FromPressuresKPa(
-                totalPressureKPa,
-                saturationPressureKPa);
-
-        double lowerHumidityRatio =
-            Math.Max(
-                0.0,
-                geometry.MinHumidityRatioKgPerKg);
-
-        double upperHumidityRatio =
+        double maximumWetBulbC =
             Math.Min(
-                saturationHumidityRatio,
-                geometry.MaxHumidityRatioKgPerKg);
+                dryBulbC,
+                GetMaximumWetBulbBelowPressure(
+                    totalPressureKPa));
 
-        if (upperHumidityRatio
-            <= lowerHumidityRatio)
+        double minimumCandidateWetBulbC =
+            Math.Min(
+                maximumWetBulbC,
+                SaturationVaporPressure.MinSupportedTemperatureC);
+
+        if (!TrySolveWetBulbForHumidityRatio(
+                dryBulbC,
+                geometry.MinHumidityRatioKgPerKg,
+                totalPressureKPa,
+                minimumCandidateWetBulbC,
+                maximumWetBulbC,
+                out double minimumVisibleWetBulbC))
         {
             return false;
         }
 
-        double lowerDeviation =
-            EnthalpyDeviation.FromDryBulbAndHumidityRatio(
+        double maximumHumidityAtWetBulb =
+            WetBulbHumidityRatio.FromDryBulbAndWetBulb(
                 dryBulbC,
-                lowerHumidityRatio,
+                maximumWetBulbC,
                 totalPressureKPa);
 
-        double upperDeviation =
-            EnthalpyDeviation.FromDryBulbAndHumidityRatio(
-                dryBulbC,
-                upperHumidityRatio,
-                totalPressureKPa);
-
-        if (!double.IsFinite(lowerDeviation)
-            || !double.IsFinite(upperDeviation))
+        if (!double.IsFinite(maximumHumidityAtWetBulb)
+            || maximumHumidityAtWetBulb < 0.0)
         {
             return false;
+        }
+
+        double maximumVisibleWetBulbC =
+            maximumWetBulbC;
+
+        if (geometry.MaxHumidityRatioKgPerKg
+            < maximumHumidityAtWetBulb)
+        {
+            if (!TrySolveWetBulbForHumidityRatio(
+                    dryBulbC,
+                    geometry.MaxHumidityRatioKgPerKg,
+                    totalPressureKPa,
+                    minimumVisibleWetBulbC,
+                    maximumWetBulbC,
+                    out maximumVisibleWetBulbC))
+            {
+                return false;
+            }
         }
 
         double minimumDeviation =
-            Math.Min(
-                lowerDeviation,
-                upperDeviation);
+            EnthalpyDeviation.FromDryBulbAndWetBulb(
+                dryBulbC,
+                minimumVisibleWetBulbC,
+                totalPressureKPa);
 
         double maximumDeviation =
-            Math.Max(
-                lowerDeviation,
-                upperDeviation);
+            EnthalpyDeviation.FromDryBulbAndWetBulb(
+                dryBulbC,
+                maximumVisibleWetBulbC,
+                totalPressureKPa);
 
-        if (targetDeviationKJPerKg
-                < minimumDeviation - 1e-6
-            || targetDeviationKJPerKg
-                > maximumDeviation + 1e-6)
+        if (!double.IsFinite(minimumDeviation)
+            || !double.IsFinite(maximumDeviation))
         {
             return false;
         }
 
-        double lower =
-            lowerHumidityRatio;
+        double rangeMinimum =
+            Math.Min(
+                minimumDeviation,
+                maximumDeviation);
 
-        double upper =
-            upperHumidityRatio;
+        double rangeMaximum =
+            Math.Max(
+                minimumDeviation,
+                maximumDeviation);
+
+        if (targetDeviationKJPerKg
+                < rangeMinimum - 1e-6
+            || targetDeviationKJPerKg
+                > rangeMaximum + 1e-6)
+        {
+            return false;
+        }
+
+        double lowerWetBulbC =
+            minimumVisibleWetBulbC;
+
+        double upperWetBulbC =
+            maximumVisibleWetBulbC;
 
         for (int iteration = 0;
              iteration < 34;
              iteration++)
         {
-            double middle =
-                (lower + upper) / 2.0;
+            double middleWetBulbC =
+                (lowerWetBulbC + upperWetBulbC)
+                / 2.0;
 
             double middleDeviation =
-                EnthalpyDeviation.FromDryBulbAndHumidityRatio(
+                EnthalpyDeviation.FromDryBulbAndWetBulb(
                     dryBulbC,
-                    middle,
+                    middleWetBulbC,
                     totalPressureKPa);
 
             if (!double.IsFinite(middleDeviation))
@@ -271,6 +269,105 @@ public static class EnthalpyDeviationLayer
 
             if (middleDeviation
                 < targetDeviationKJPerKg)
+            {
+                lowerWetBulbC =
+                    middleWetBulbC;
+            }
+            else
+            {
+                upperWetBulbC =
+                    middleWetBulbC;
+            }
+        }
+
+        double wetBulbC =
+            (lowerWetBulbC + upperWetBulbC)
+            / 2.0;
+
+        humidityRatioKgPerKg =
+            WetBulbHumidityRatio.FromDryBulbAndWetBulb(
+                dryBulbC,
+                wetBulbC,
+                totalPressureKPa);
+
+        return
+            double.IsFinite(
+                humidityRatioKgPerKg)
+            && humidityRatioKgPerKg
+                >= geometry.MinHumidityRatioKgPerKg - 1e-9
+            && humidityRatioKgPerKg
+                <= geometry.MaxHumidityRatioKgPerKg + 1e-9;
+    }
+
+    private static bool TrySolveWetBulbForHumidityRatio(
+        double dryBulbC,
+        double targetHumidityRatioKgPerKg,
+        double totalPressureKPa,
+        double minimumWetBulbC,
+        double maximumWetBulbC,
+        out double wetBulbC)
+    {
+        wetBulbC =
+            double.NaN;
+
+        if (targetHumidityRatioKgPerKg < 0.0
+            || maximumWetBulbC < minimumWetBulbC)
+        {
+            return false;
+        }
+
+        double lower =
+            minimumWetBulbC;
+
+        double upper =
+            maximumWetBulbC;
+
+        double lowerHumidity =
+            WetBulbHumidityRatio.FromDryBulbAndWetBulb(
+                dryBulbC,
+                lower,
+                totalPressureKPa);
+
+        double upperHumidity =
+            WetBulbHumidityRatio.FromDryBulbAndWetBulb(
+                dryBulbC,
+                upper,
+                totalPressureKPa);
+
+        if (!double.IsFinite(lowerHumidity)
+            || !double.IsFinite(upperHumidity))
+        {
+            return false;
+        }
+
+        if (targetHumidityRatioKgPerKg
+                < lowerHumidity - 1e-9
+            || targetHumidityRatioKgPerKg
+                > upperHumidity + 1e-9)
+        {
+            return false;
+        }
+
+        for (int iteration = 0;
+             iteration < 40;
+             iteration++)
+        {
+            double middle =
+                (lower + upper) / 2.0;
+
+            double middleHumidity =
+                WetBulbHumidityRatio.FromDryBulbAndWetBulb(
+                    dryBulbC,
+                    middle,
+                    totalPressureKPa);
+
+            if (!double.IsFinite(middleHumidity))
+            {
+                return false;
+            }
+
+            if (middleHumidity
+                < targetHumidityRatioKgPerKg)
             {
                 lower =
                     middle;
@@ -282,14 +379,59 @@ public static class EnthalpyDeviationLayer
             }
         }
 
-        humidityRatioKgPerKg =
+        wetBulbC =
             (lower + upper) / 2.0;
 
-        return
-            humidityRatioKgPerKg
-                >= geometry.MinHumidityRatioKgPerKg
-            && humidityRatioKgPerKg
-                <= geometry.MaxHumidityRatioKgPerKg;
+        return true;
+    }
+
+    private static double GetMaximumWetBulbBelowPressure(
+        double totalPressureKPa)
+    {
+        double maximumSupportedC =
+            SaturationVaporPressure.MaxSupportedTemperatureC;
+
+        if (SaturationVaporPressure.GetPressureKPa(
+                maximumSupportedC)
+            < totalPressureKPa)
+        {
+            return maximumSupportedC;
+        }
+
+        double lower =
+            SaturationVaporPressure.MinSupportedTemperatureC;
+
+        double upper =
+            maximumSupportedC;
+
+        double targetPressureKPa =
+            totalPressureKPa * 0.999999;
+
+        for (int iteration = 0;
+             iteration < 60;
+             iteration++)
+        {
+            double middle =
+                (lower + upper) / 2.0;
+
+            double saturationPressureKPa =
+                SaturationVaporPressure.GetPressureKPa(
+                    middle);
+
+            if (saturationPressureKPa
+                < targetPressureKPa)
+            {
+                lower =
+                    middle;
+            }
+            else
+            {
+                upper =
+                    middle;
+            }
+        }
+
+        return lower;
     }
 
     // ------------------------------ Fin de sección 2.10.5 ------------------------------
@@ -324,16 +466,44 @@ public static class EnthalpyDeviationLayer
         };
     }
 
+    private static void AddCompletedSegment(
+        Canvas canvas,
+        double deviationKJPerKg,
+        ref Polyline? segment,
+        ref bool labelDrawn)
+    {
+        if (segment is null
+            || segment.Points.Count < 2)
+        {
+            segment =
+                null;
+
+            return;
+        }
+
+        canvas.Children.Add(
+            segment);
+
+        if (!labelDrawn)
+        {
+            DrawCurveLabel(
+                canvas,
+                deviationKJPerKg,
+                segment);
+
+            labelDrawn =
+                true;
+        }
+
+        segment =
+            null;
+    }
+
     private static void DrawCurveLabel(
         Canvas canvas,
         double deviationKJPerKg,
         Polyline curve)
     {
-        if (curve.Points.Count == 0)
-        {
-            return;
-        }
-
         int index =
             Math.Clamp(
                 curve.Points.Count / 2,
