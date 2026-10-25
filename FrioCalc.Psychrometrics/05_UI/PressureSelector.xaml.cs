@@ -84,8 +84,16 @@ public partial class PressureSelector : UserControl
             return;
         }
 
-        SetPressureText(preset.PressureKPa);
+        SetPressureText(
+            preset.PressureKPa);
+
         ValidateCurrentInput();
+
+        CurrentPressureKPa =
+            preset.PressureKPa;
+
+        PressureApplied?.Invoke(
+            preset.PressureKPa);
     }
 
     // ============================================================
@@ -110,7 +118,8 @@ public partial class PressureSelector : UserControl
             && !preset.IsCustom)
         {
             _updatingUi = true;
-            PresetComboBox.SelectedItem = PressurePresetCatalog.Custom;
+            PresetComboBox.SelectedItem =
+                PressurePresetCatalog.Custom;
             _updatingUi = false;
         }
 
@@ -121,6 +130,7 @@ public partial class PressureSelector : UserControl
     // [5.2C.5] FIN - Edición manual
     // ============================================================
 
+
     // ============================================================
     // [5.2C.5.1] INICIO - Cambio de Carta estándar
     // ============================================================
@@ -129,14 +139,16 @@ public partial class PressureSelector : UserControl
         object sender,
         RoutedEventArgs e)
     {
-        StandardChartModeChanged?.Invoke(true);
+        StandardChartModeChanged?.Invoke(
+            true);
     }
 
     private void StandardChartToggle_Unchecked(
         object sender,
         RoutedEventArgs e)
     {
-        StandardChartModeChanged?.Invoke(false);
+        StandardChartModeChanged?.Invoke(
+            false);
     }
 
     // ============================================================
@@ -152,14 +164,16 @@ public partial class PressureSelector : UserControl
         object sender,
         RoutedEventArgs e)
     {
-        if (!TryReadPressure(out double pressureKPa))
+        if (!TryReadPressure(
+                out double pressureKPa))
         {
             ValidateCurrentInput();
             return;
         }
 
         string? error =
-            AtmosphericPressure.GetValidationError(pressureKPa);
+            AtmosphericPressure.GetValidationError(
+                pressureKPa);
 
         if (error is not null)
         {
@@ -167,9 +181,11 @@ public partial class PressureSelector : UserControl
             return;
         }
 
-        CurrentPressureKPa = pressureKPa;
+        CurrentPressureKPa =
+            pressureKPa;
 
-        PressureApplied?.Invoke(pressureKPa);
+        PressureApplied?.Invoke(
+            pressureKPa);
     }
 
     // ============================================================
@@ -181,7 +197,8 @@ public partial class PressureSelector : UserControl
     // [5.2C.7] INICIO - Lectura robusta del número
     // ============================================================
 
-    private bool TryReadPressure(out double pressureKPa)
+    private bool TryReadPressure(
+        out double pressureKPa)
     {
         string input =
             PressureTextBox.Text.Trim();
@@ -196,7 +213,9 @@ public partial class PressureSelector : UserControl
         }
 
         string normalized =
-            input.Replace(',', '.');
+            input.Replace(
+                ',',
+                '.');
 
         return double.TryParse(
             normalized,
@@ -216,17 +235,21 @@ public partial class PressureSelector : UserControl
 
     private void ValidateCurrentInput()
     {
-        if (!TryReadPressure(out double pressureKPa))
+        if (!TryReadPressure(
+                out double pressureKPa))
         {
             ValidationTextBlock.Text =
                 "Introduzca un valor numérico de presión.";
 
-            ApplyButton.IsEnabled = false;
+            ApplyButton.IsEnabled =
+                false;
+
             return;
         }
 
         string? error =
-            AtmosphericPressure.GetValidationError(pressureKPa);
+            AtmosphericPressure.GetValidationError(
+                pressureKPa);
 
         ValidationTextBlock.Text =
             error ?? string.Empty;
@@ -244,16 +267,19 @@ public partial class PressureSelector : UserControl
     // [5.2C.9] INICIO - Escritura controlada en interfaz
     // ============================================================
 
-    private void SetPressureText(double pressureKPa)
+    private void SetPressureText(
+        double pressureKPa)
     {
-        _updatingUi = true;
+        _updatingUi =
+            true;
 
         PressureTextBox.Text =
             pressureKPa.ToString(
                 "0.###",
                 CultureInfo.CurrentCulture);
 
-        _updatingUi = false;
+        _updatingUi =
+            false;
     }
 
     // ============================================================
@@ -269,4 +295,4 @@ public partial class PressureSelector : UserControl
 
 // ============================================================
 // [5.2C.10] FIN - Cierre del selector
-// ============================================================ 
+// ============================================================
