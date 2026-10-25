@@ -166,12 +166,21 @@ public static class SpecificVolumeLayer
             return;
         }
 
+        AddBottomIntersectionPoint(
+            line,
+            geometry,
+            plotRect,
+            totalPressureKPa,
+            specificVolumeM3PerKgDryAir);
+
         canvas.Children.Add(line);
 
-        DrawLabel(
+        DrawBottomLabel(
             canvas,
-            specificVolumeM3PerKgDryAir,
-            line.Points[0]);
+            geometry,
+            plotRect,
+            totalPressureKPa,
+            specificVolumeM3PerKgDryAir);
     }
 
     // ------------------------------ Fin de sección 2.9.3 ------------------------------
@@ -248,21 +257,83 @@ public static class SpecificVolumeLayer
     // ------------------------------ Fin de sección 2.9.4 ------------------------------
 
 
-    // ------------------------------ Sección 2.9.5 - Etiquetas y paso de escala ------------------------------
+    // ------------------------------ Sección 2.9.5 - Etiquetas ASHRAE en el borde inferior y paso de escala ------------------------------
 
-    private static void DrawLabel(
-        Canvas canvas,
-        double specificVolumeM3PerKgDryAir,
-        Point point)
+    private static void AddBottomIntersectionPoint(
+        Polyline line,
+        ChartGeometry geometry,
+        Rect plotRect,
+        double totalPressureKPa,
+        double specificVolumeM3PerKgDryAir)
     {
+        double bottomDryBulbC =
+            GetDryBulbAtHumidityRatio(
+                specificVolumeM3PerKgDryAir,
+                geometry.MinHumidityRatioKgPerKg,
+                totalPressureKPa);
+
+        if (!double.IsFinite(bottomDryBulbC)
+            || bottomDryBulbC < geometry.MinDryBulbC
+            || bottomDryBulbC > geometry.MaxDryBulbC)
+        {
+            return;
+        }
+
+        Point bottomPoint =
+            new(
+                geometry.XFromDryBulbC(
+                    bottomDryBulbC,
+                    plotRect),
+                plotRect.Bottom);
+
+        if (line.Points.Count == 0)
+        {
+            line.Points.Add(bottomPoint);
+            return;
+        }
+
+        Point lastPoint =
+            line.Points[^1];
+
+        if (Math.Abs(lastPoint.X - bottomPoint.X) > 0.25
+            || Math.Abs(lastPoint.Y - bottomPoint.Y) > 0.25)
+        {
+            line.Points.Add(bottomPoint);
+        }
+    }
+
+    private static void DrawBottomLabel(
+        Canvas canvas,
+        ChartGeometry geometry,
+        Rect plotRect,
+        double totalPressureKPa,
+        double specificVolumeM3PerKgDryAir)
+    {
+        double bottomDryBulbC =
+            GetDryBulbAtHumidityRatio(
+                specificVolumeM3PerKgDryAir,
+                geometry.MinHumidityRatioKgPerKg,
+                totalPressureKPa);
+
+        if (!double.IsFinite(bottomDryBulbC)
+            || bottomDryBulbC < geometry.MinDryBulbC
+            || bottomDryBulbC > geometry.MaxDryBulbC)
+        {
+            return;
+        }
+
+        double x =
+            geometry.XFromDryBulbC(
+                bottomDryBulbC,
+                plotRect);
+
         TextBlock label =
             new()
             {
                 Text =
                     specificVolumeM3PerKgDryAir.ToString(
                         "0.00",
-                        CultureInfo.CurrentCulture)
-                    + " m³/kg",
+                        CultureInfo.CurrentCulture),
                 FontSize = 9.5,
                 Foreground = Brushes.DimGray,
                 Background = Brushes.White
@@ -277,13 +348,34 @@ public static class SpecificVolumeLayer
 
         Canvas.SetLeft(
             label,
-            point.X + 3.0);
+            x - (label.DesiredSize.Width / 2.0));
 
         Canvas.SetTop(
             label,
-            point.Y
-            - label.DesiredSize.Height
-            - 1.0);
+            plotRect.Bottom + 38.0);
+    }
+
+    private static double GetDryBulbAtHumidityRatio(
+        double specificVolumeM3PerKgDryAir,
+        double humidityRatioKgPerKg,
+        double totalPressureKPa)
+    {
+        double pressurePa =
+            totalPressureKPa * 1000.0;
+
+        double temperatureK =
+            specificVolumeM3PerKgDryAir
+            * pressurePa
+            / (
+                MoistAirSpecificVolume.DryAirGasConstantJPerKgK
+                * (
+                    1.0
+                    + MoistAirSpecificVolume.WaterVaporVolumeFactor
+                    * humidityRatioKgPerKg));
+
+        return
+            temperatureK
+            - MoistAirSpecificVolume.KelvinOffset;
     }
 
     private static double GetNiceStep(
