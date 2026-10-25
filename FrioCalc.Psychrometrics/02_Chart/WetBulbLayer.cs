@@ -105,7 +105,13 @@ public static class WetBulbLayer
             new()
             {
                 Stroke = Brushes.DarkGray,
-                StrokeThickness = 0.7,
+                StrokeThickness = 0.75,
+                StrokeDashArray =
+                    new DoubleCollection
+                    {
+                        2.0,
+                        2.0
+                    },
                 StrokeLineJoin = PenLineJoin.Round,
                 Clip = new RectangleGeometry(plotRect)
             };
