@@ -41,3 +41,14 @@
 - `C` identifica bloques code-behind C#.
 - Ejemplo: `5.2X.4.1` es un bloque XAML dentro de `PressureSelector`; `5.2C.5.1` es su lógica asociada.
 - No renumerar secciones existentes por insertar nuevas responsabilidades.
+
+
+## 3. Puntos
+
+- `3.1` — `03_Points/ChartPoint.cs`
+- `3.2` — `03_Points/PointPropertyCalculator.cs`
+- `3.3` — `03_Points/PointColorPalette.cs`
+- `2.12` — `02_Chart/PointLayer.cs`
+- `5.4X / 5.4C` — `05_UI/PointPropertiesPanel.xaml/.cs`
+
+Interacción: el modo se activa desde `5.2X.4.2`; el clic derecho agrega un punto válido o elimina el punto existente seleccionado.
