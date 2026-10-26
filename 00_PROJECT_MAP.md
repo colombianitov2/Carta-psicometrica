@@ -52,3 +52,21 @@
 - `5.4X / 5.4C` — `05_UI/PointPropertiesPanel.xaml/.cs`
 
 Interacción: el modo se activa desde `5.2X.4.2`; el clic derecho agrega un punto válido o elimina el punto existente seleccionado.
+
+
+## 7. Motor de selección y dimensionamiento
+
+- `7.1` — `07_SelectionEngine/01_ColdRoom/ColdRoomEnums.cs`
+- `7.2` — `07_SelectionEngine/01_ColdRoom/ColdRoomInputModel.cs`
+- `7.3` — `07_SelectionEngine/01_ColdRoom/ColdRoomDocumentedRelations.cs`
+- `7.4` — `07_SelectionEngine/01_ColdRoom/ColdRoomQuestionFlow.cs`
+- `7.5` — `07_SelectionEngine/02_Common/SelectionDomainEnums.cs`
+- `7.6` — `07_SelectionEngine/02_Common/DocumentedEngineeringRelations.cs`
+- `7.7` — `07_SelectionEngine/01_ColdRoom/ColdRoomCatalogModels.cs`
+
+Documentación:
+- `07_SelectionEngine/README.md`
+- `07_SelectionEngine/SOURCE_MATRIX.md`
+- `07_SelectionEngine/MODULE_ROADMAP.md`
+
+Regla: reconstrucción funcional con código propio. DFM/TD32 sirven para estructura y vocabulario; las ecuaciones solo se implementan cuando existe fuente verificable suficiente.
