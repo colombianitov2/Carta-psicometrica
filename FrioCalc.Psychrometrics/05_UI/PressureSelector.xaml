@@ -1,0 +1,254 @@
+<UserControl x:Class="FrioCalc.Psychrometrics.UI.PressureSelector"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ======================================================== -->
+    <!-- [5.2X.1] INICIO - Contenedor principal                  -->
+    <!-- ======================================================== -->
+
+    <Border Padding="18"
+            BorderBrush="#D0D0D0"
+            BorderThickness="1"
+            CornerRadius="8"
+            Background="#FAFAFA">
+
+        <StackPanel>
+
+            <!-- ================================================= -->
+            <!-- [5.2X.2] INICIO - Encabezado                      -->
+            <!-- ================================================= -->
+
+            <TextBlock Text="PRESIÓN DE TRABAJO"
+                       FontSize="17"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,5"/>
+
+            <TextBlock Text="Presión barométrica absoluta utilizada para construir toda la carta."
+                       TextWrapping="Wrap"
+                       Foreground="#606060"
+                       Margin="0,0,0,18"/>
+
+            <!-- ================================================= -->
+            <!-- [5.2X.2] FIN - Encabezado                         -->
+            <!-- ================================================= -->
+
+
+            <!-- ================================================= -->
+            <!-- [5.2X.3] INICIO - Selector de preset              -->
+            <!-- ================================================= -->
+
+            <TextBlock Text="Condición de referencia"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,5"/>
+
+            <ComboBox x:Name="PresetComboBox"
+                      Height="34"
+                      SelectionChanged="PresetComboBox_SelectionChanged"
+                      Margin="0,0,0,16"/>
+
+            <!-- ================================================= -->
+            <!-- [5.2X.3] FIN - Selector de preset                 -->
+            <!-- ================================================= -->
+
+
+            <!-- ================================================= -->
+            <!-- [5.2X.4] INICIO - Entrada de presión              -->
+            <!-- ================================================= -->
+
+            <TextBlock Text="Presión"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,5"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox x:Name="PressureTextBox"
+                         Grid.Column="0"
+                         Height="34"
+                         VerticalContentAlignment="Center"
+                         Padding="8,0"
+                         TextChanged="PressureTextBox_TextChanged"/>
+
+                <TextBlock Grid.Column="1"
+                           Text="kPa abs"
+                           VerticalAlignment="Center"
+                           Margin="10,0,0,0"
+                           FontWeight="SemiBold"/>
+            </Grid>
+
+            <!-- ================================================= -->
+            <!-- [5.2X.4] FIN - Entrada de presión                 -->
+            <!-- ================================================= -->
+
+
+            <Grid Margin="0,10,0,0">
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="6"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="6"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+
+                <!-- ======================================================== -->
+                <!-- [5.2X.4.1] INICIO - Carta estándar                      -->
+                <!-- ======================================================== -->
+
+                <ToggleButton x:Name="StandardChartToggle"
+                              Grid.Row="2"
+                              Content="Carta estándar"
+                              Height="38"
+                              Margin="0"
+                              Padding="10,0"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Center"
+                              VerticalContentAlignment="Center"
+                              FontWeight="SemiBold"
+                              Cursor="Hand"
+                              IsChecked="False"
+                              Checked="StandardChartToggle_Checked"
+                              Unchecked="StandardChartToggle_Unchecked"
+                              ToolTip="Limita la visualización al rango de la carta psicrométrica convencional">
+
+                    <ToggleButton.Style>
+                        <Style TargetType="ToggleButton">
+                            <Setter Property="Background" Value="#F3F4F6"/>
+                            <Setter Property="Foreground" Value="#303030"/>
+                            <Setter Property="BorderBrush" Value="#BFC3C8"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#E8EDF5"/>
+                                </Trigger>
+
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter Property="Background" Value="#2563EB"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter Property="BorderBrush" Value="#1D4ED8"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ToggleButton.Style>
+
+                </ToggleButton>
+
+                <!-- ======================================================== -->
+                <!-- [5.2X.4.1] FIN - Carta estándar                         -->
+                <!-- ======================================================== -->
+
+
+                <!-- ======================================================== -->
+                <!-- [5.2X.4.2] INICIO - Seleccionar puntos                  -->
+                <!-- ======================================================== -->
+
+                <ToggleButton x:Name="SelectPointsToggle"
+                              Grid.Row="4"
+                              Content="Seleccionar puntos"
+                              Height="38"
+                              Margin="0"
+                              Padding="10,0"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Center"
+                              VerticalContentAlignment="Center"
+                              FontWeight="SemiBold"
+                              Cursor="Hand"
+                              IsChecked="False"
+                              Checked="SelectPointsToggle_Checked"
+                              Unchecked="SelectPointsToggle_Unchecked"
+                              ToolTip="Activa el clic derecho sobre la carta para agregar o quitar puntos">
+
+                    <ToggleButton.Style>
+                        <Style TargetType="ToggleButton">
+                            <Setter Property="Background" Value="#F3F4F6"/>
+                            <Setter Property="Foreground" Value="#303030"/>
+                            <Setter Property="BorderBrush" Value="#BFC3C8"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#E8EDF5"/>
+                                </Trigger>
+
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter Property="Background" Value="#2563EB"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter Property="BorderBrush" Value="#1D4ED8"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ToggleButton.Style>
+
+                </ToggleButton>
+
+                <!-- ======================================================== -->
+                <!-- [5.2X.4.2] FIN - Seleccionar puntos                     -->
+                <!-- ======================================================== -->
+
+
+                <!-- ================================================= -->
+                <!-- [5.2X.5] INICIO - Validación                      -->
+                <!-- ================================================= -->
+
+                <TextBlock x:Name="ValidationTextBlock"
+                           Grid.Row="5"
+                           Margin="0,6,0,0"
+                           TextWrapping="Wrap"
+                           Foreground="#B00020"/>
+
+                <!-- ================================================= -->
+                <!-- [5.2X.5] FIN - Validación                         -->
+                <!-- ================================================= -->
+
+
+                <!-- ================================================= -->
+                <!-- [5.2X.6] INICIO - Aplicación de presión           -->
+                <!-- ================================================= -->
+
+                <Button x:Name="ApplyButton"
+                        Grid.Row="0"
+                        Content="Aplicar presión"
+                        Height="38"
+                        Margin="0"
+                        Click="ApplyButton_Click"/>
+
+                <!-- ================================================= -->
+                <!-- [5.2X.6] FIN - Aplicación de presión              -->
+                <!-- ================================================= -->
+
+            </Grid>
+
+
+            <!-- ================================================= -->
+            <!-- [5.2X.7] INICIO - Nota técnica                    -->
+            <!-- ================================================= -->
+
+            <TextBlock Margin="0,18,0,0"
+                       TextWrapping="Wrap"
+                       FontSize="12"
+                       Foreground="#707070">
+                La presión utilizada por la carta es absoluta.
+                No introduzca presión manométrica.
+                Los valores asociados a altitud corresponden
+                a una atmósfera estándar; para una medición real
+                utilice la opción personalizada.
+            </TextBlock>
+
+            <!-- ================================================= -->
+            <!-- [5.2X.7] FIN - Nota técnica                       -->
+            <!-- ================================================= -->
+
+        </StackPanel>
+    </Border>
+
+    <!-- ======================================================== -->
+    <!-- [5.2X.1] FIN - Contenedor principal                     -->
+    <!-- ======================================================== -->
+
+</UserControl>
