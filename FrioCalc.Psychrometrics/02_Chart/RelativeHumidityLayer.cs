@@ -136,15 +136,32 @@ public static class RelativeHumidityLayer
 
         canvas.Children.Add(curve);
 
-        double labelFraction =
-            0.78
-            - relativeHumidityFraction * 0.48;
+        double targetDryBulbC =
+            18.0
+            + (
+                (0.90 - relativeHumidityFraction)
+                / 0.10)
+            * 2.25;
+
+        targetDryBulbC =
+            Math.Clamp(
+                targetDryBulbC,
+                geometry.MinDryBulbC,
+                geometry.MaxDryBulbC);
+
+        double targetX =
+            geometry.XFromDryBulbC(
+                targetDryBulbC,
+                plotRect);
 
         int labelIndex =
+            FindNearestPointIndex(
+                curve,
+                targetX);
+
+        labelIndex =
             Math.Clamp(
-                (int)Math.Round(
-                    (curve.Points.Count - 2)
-                    * labelFraction),
+                labelIndex,
                 1,
                 curve.Points.Count - 2);
 
@@ -159,6 +176,39 @@ public static class RelativeHumidityLayer
 
 
     // ------------------------------ Sección 2.7.4 - Etiquetas de porcentaje ------------------------------
+
+    private static int FindNearestPointIndex(
+        Polyline curve,
+        double targetX)
+    {
+        int nearestIndex =
+            0;
+
+        double nearestDistance =
+            double.PositiveInfinity;
+
+        for (int index = 0;
+             index < curve.Points.Count;
+             index++)
+        {
+            double distance =
+                Math.Abs(
+                    curve.Points[index].X
+                    - targetX);
+
+            if (distance
+                < nearestDistance)
+            {
+                nearestDistance =
+                    distance;
+
+                nearestIndex =
+                    index;
+            }
+        }
+
+        return nearestIndex;
+    }
 
     private static void DrawLabel(
         Canvas canvas,
@@ -211,7 +261,7 @@ public static class RelativeHumidityLayer
         }
 
         const double offset =
-            9.0;
+            11.0;
 
         double anchorX =
             point.X
@@ -220,6 +270,17 @@ public static class RelativeHumidityLayer
         double anchorY =
             point.Y
             + normalY * offset;
+
+        double angleDegrees =
+            Math.Atan2(
+                deltaY,
+                deltaX)
+            * 180.0
+            / Math.PI;
+
+        label.LayoutTransform =
+            new RotateTransform(
+                angleDegrees);
 
         canvas.Children.Add(label);
 
