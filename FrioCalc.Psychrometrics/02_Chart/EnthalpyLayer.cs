@@ -233,13 +233,13 @@ public static class EnthalpyLayer
         {
             Stroke =
                 isMajor
-                    ? Brushes.DimGray
-                    : Brushes.Gray,
+                    ? Brushes.Black
+                    : Brushes.DimGray,
 
             StrokeThickness =
                 isMajor
-                    ? 1.15
-                    : 0.65,
+                    ? 1.45
+                    : 0.75,
 
             StrokeLineJoin =
                 PenLineJoin.Round,
