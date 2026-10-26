@@ -516,8 +516,8 @@ public static class EnthalpyDeviationLayer
                 1.0);
 
         double labelFraction =
-            0.22
-            + normalizedMagnitude * 0.52;
+            0.30
+            + normalizedMagnitude * 0.45;
 
         int index =
             Math.Clamp(
@@ -581,7 +581,15 @@ public static class EnthalpyDeviationLayer
                     Brushes.DimGray,
 
                 Background =
-                    Brushes.White
+                    Brushes.White,
+
+                LayoutTransform =
+                    new RotateTransform(
+                        Math.Atan2(
+                            deltaY,
+                            deltaX)
+                        * 180.0
+                        / Math.PI)
             };
 
         canvas.Children.Add(
