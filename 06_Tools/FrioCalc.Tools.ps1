@@ -25,7 +25,6 @@ function Update-FrioCalcSafely {
     catch [System.Threading.AbandonedMutexException] { $acquired = $true }
     if (!$acquired) { throw 'Ya hay otra actualizacion de FrioCalc en curso.' }
     $expectedRoot = 'D:\Proyectos de desarrollo de Software\FrioCalc_Psychrometrics_Git'
-    $branch = 'chatgpt/friocalc-psychrometrics'
     $root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
     if ($root -ne $expectedRoot) { throw "Ruta incorrecta: $root" }
     Set-Location -LiteralPath $root
@@ -37,7 +36,13 @@ function Update-FrioCalcSafely {
         throw "El remoto origin no es el autorizado: $origin"
     }
     $actualBranch = (Invoke-FrioCalcGit @('branch', '--show-current') | Out-String).Trim()
-    if ($actualBranch -ne $branch) { throw "Rama incorrecta: '$actualBranch'. Abre la rama $branch antes de actualizar." }
+    if ([string]::IsNullOrWhiteSpace($actualBranch)) {
+        throw 'No hay una rama Git activa.'
+    }
+    if (!$actualBranch.StartsWith('chatgpt/', [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "Rama no autorizada para actualización automática: '$actualBranch'. Usa una rama de trabajo chatgpt/..."
+    }
+    $branch = $actualBranch
     foreach ($state in @('MERGE_HEAD', 'CHERRY_PICK_HEAD', 'REVERT_HEAD', 'rebase-merge', 'rebase-apply')) {
         $statePath = (Invoke-FrioCalcGit @('rev-parse', '--git-path', $state) | Out-String).Trim()
         if (Test-Path -LiteralPath $statePath) { throw "Hay una operacion Git pendiente: $state" }
