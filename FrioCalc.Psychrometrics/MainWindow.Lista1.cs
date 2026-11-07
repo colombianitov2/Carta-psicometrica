@@ -47,6 +47,7 @@ public partial class MainWindow
         PsychrometricChart.SetSensibleHeatFactorVisible(false);
         ProcessChart.SetPressure(PressureSelector.CurrentPressureKPa);
         ProcessChart.SetPointSelectionMode(false);
+        ProcessChart.SetProcessMemberColorMode(true);
         ProcessChart.SetDryBulbVisible(true);
         ProcessChart.SetHumidityRatioVisible(true);
         ProcessChart.SetSaturationCurveVisible(true);

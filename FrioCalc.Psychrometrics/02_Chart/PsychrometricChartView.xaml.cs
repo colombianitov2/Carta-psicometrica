@@ -40,6 +40,7 @@ public partial class PsychrometricChartView : UserControl
     private bool _enthalpyDeviationVisible;
 
     private bool _sensibleHeatFactorVisible;
+    private bool _processMemberColorMode;
     private readonly List<PsychrometricProcess> _processes = new();
 
     private bool _pointSelectionEnabled;
@@ -330,6 +331,9 @@ public partial class PsychrometricChartView : UserControl
             ChartCanvas,
             _geometry,
             _chartPoints);
+
+        if (_processMemberColorMode)
+            ProcessLayer.DrawMemberColors(ChartCanvas, _geometry, _chartPoints, _processes);
 
         UpdateScrollBars();
     }
@@ -861,6 +865,12 @@ public partial class PsychrometricChartView : UserControl
     // ------------------------------ Fin de sección 2.1C.17 ------------------------------
 
 
+
+    public void SetProcessMemberColorMode(bool enabled)
+    {
+        _processMemberColorMode = enabled;
+        RefreshChart();
+    }
 
     public void SetDisplayUnits(UnitSystem units)
     {
