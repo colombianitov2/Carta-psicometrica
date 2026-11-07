@@ -19,4 +19,5 @@ public sealed record PsychrometricProcess(
     double? DryAirMassFlowKgS,
     double? SaturationEffectiveness = null,
     double? BypassFactor = null,
-    string Method = "Balances de masa y energía");
+    string Method = "Balances de masa y energía",
+    bool Visible = true);

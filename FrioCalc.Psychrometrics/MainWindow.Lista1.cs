@@ -314,13 +314,53 @@ public partial class MainWindow
         }
         ChartPoint initial = selected[0]!;
         int processId = _nextProcessId++;
+        string name=string.IsNullOrWhiteSpace(NewProcessNameTextBox.Text)
+            ? $"PR{processId}" : NewProcessNameTextBox.Text.Trim();
         RememberHistory();
         _savedProcesses.Add(new PsychrometricProcess(
-            processId,$"PR{processId}",initial.ColorHex,type,ids,massFlow));
+            processId,name,initial.ColorHex,type,ids,massFlow));
         UpdateProcessesInCharts();
         ProcessResultText.Text = description;
         PointPropertiesPanel.ClearSelection();
         WorkspaceTabs.SelectedIndex = 1;
+    }
+
+    private void RenameProcess_Click(object sender, RoutedEventArgs e)
+    {
+        int index=SavedProcessesList.SelectedIndex;
+        if(index<0||index>=_savedProcesses.Count||string.IsNullOrWhiteSpace(RenameProcessTextBox.Text)) return;
+        RememberHistory();
+        _savedProcesses[index]=_savedProcesses[index] with {Name=RenameProcessTextBox.Text.Trim()};
+        UpdateProcessesInCharts();
+        SavedProcessesList.SelectedIndex=index;
+    }
+
+    private void ToggleProcessVisibility_Click(object sender, RoutedEventArgs e)
+    {
+        int index=SavedProcessesList.SelectedIndex;
+        if(index<0||index>=_savedProcesses.Count) return;
+        RememberHistory();
+        _savedProcesses[index]=_savedProcesses[index] with {Visible=!_savedProcesses[index].Visible};
+        UpdateProcessesInCharts();
+        SavedProcessesList.SelectedIndex=index;
+    }
+
+    private void EditProcess_Click(object sender, RoutedEventArgs e)
+    {
+        int index=SavedProcessesList.SelectedIndex;
+        if(index<0||index>=_savedProcesses.Count) return;
+        var process=_savedProcesses[index];
+        _selectedPointIds.Clear();
+        _selectedPointIds.AddRange(process.PointIds);
+        // Si la mezcla incluye salida calculada, solo cargar entradas.
+        if(process.Type==ProcessType.AdiabaticMixing && _selectedPointIds.Count>2)
+            _selectedPointIds.RemoveAt(_selectedPointIds.Count-1);
+        RefreshSelectionList();
+        NewProcessNameTextBox.Text=process.Name;
+        foreach(ComboBoxItem item in ProcessTypeComboBox.Items)
+            if(item.Tag?.ToString()==process.Type.ToString())
+                {ProcessTypeComboBox.SelectedItem=item;break;}
+        ProcessResultText.Text="Los puntos y tipo se cargaron para edición. Al graficar se crea una nueva versión; el original se conserva hasta que se elimine explícitamente.";
     }
 
     private void DeleteProcess_Click(object sender, RoutedEventArgs e)
@@ -338,7 +378,7 @@ public partial class MainWindow
         PsychrometricChart.SetProcesses(_savedProcesses);
         ProcessChart.SetProcesses(_savedProcesses);
         SavedProcessesList.ItemsSource = _savedProcesses.Select(p =>
-            $"{p.Name} · {p.Type} · {string.Join(" → ",p.PointIds.Select(id => "P"+id))}").ToArray();
+            $"{p.Name} {(p.Visible ? "" : "[Oculto]")} · {p.Type} · {string.Join(" → ",p.PointIds.Select(id => "P"+id))}").ToArray();
     }
 
     private static bool TryReadPositiveOrZero(string raw, out double value)

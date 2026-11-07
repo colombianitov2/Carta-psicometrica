@@ -20,6 +20,7 @@ public static class ProcessLayer
         if (plot.IsEmpty) return;
         foreach (var process in processes)
         {
+            if (!process.Visible) continue;
             var color = (Color)ColorConverter.ConvertFromString(process.ColorHex);
             Brush brush = new SolidColorBrush(color);
             var states = process.PointIds.Select(id => points.FirstOrDefault(p => p.Id == id))
@@ -71,6 +72,7 @@ public static class ProcessLayer
         if (rect.IsEmpty) return;
         foreach (var process in processes)
         {
+            if (!process.Visible) continue;
             var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(process.ColorHex));
             foreach (int id in process.PointIds)
             {

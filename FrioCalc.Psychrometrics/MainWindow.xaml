@@ -92,10 +92,22 @@
                             <TextBox x:Name="SteamEnthalpyTextBox" Height="27" Margin="0,0,0,10"/>
                             <TextBlock Text="Estos métodos generan un estado de salida usando exactamente los datos del equipo indicados. No hay parámetros predeterminados ocultos."
                                        TextWrapping="Wrap" FontSize="11" Foreground="#666" Margin="0,0,0,9"/>
+                            <TextBlock Text="Nombre del nuevo proceso (opcional)" FontSize="12" Margin="0,0,0,3"/>
+                            <TextBox x:Name="NewProcessNameTextBox" Height="27" Margin="0,0,0,8"/>
                             <Button Content="GRAFICAR PROCESO" Padding="8" FontWeight="SemiBold"
                                     Click="PlotProcess_Click" Margin="0,0,0,10"/>
                             <TextBlock Text="Procesos guardados" FontWeight="SemiBold" Margin="0,0,0,3"/>
                             <ListBox x:Name="SavedProcessesList" Height="95" Margin="0,0,0,7"/>
+                            <TextBlock Text="Nombre para renombrar el proceso seleccionado" FontSize="11"
+                                       TextWrapping="Wrap" Margin="0,0,0,3"/>
+                            <TextBox x:Name="RenameProcessTextBox" Height="27" Margin="0,0,0,7"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Button Content="Renombrar" Click="RenameProcess_Click"
+                                        Padding="6" Margin="0,0,6,0"/>
+                                <Button Content="Mostrar / ocultar" Click="ToggleProcessVisibility_Click" Padding="6"/>
+                            </StackPanel>
+                            <Button Content="Cargar para editar" Click="EditProcess_Click"
+                                    Padding="6" Margin="0,0,0,7"/>
                             <Button Content="Deshacer última acción" Click="UndoLastAction_Click"
                                     Padding="6" Margin="0,0,0,7"/>
                             <Button Content="Eliminar proceso seleccionado" Click="DeleteProcess_Click"
