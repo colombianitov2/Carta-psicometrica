@@ -21,6 +21,16 @@ La carta y el motor de puntos/procesos están integrados para una auditoría con
 - Zona de teoría con laboratorio gráfico interactivo, ejemplos docentes y registro de 20 propiedades/métodos.
 - Exportación de resultados CSV, Markdown, PNG, sesiones JSON y bibliografía CSV.
 
+## Integración verificada al cierre
+
+**GitHub Actions #42425602980** — ejecución Windows con resultado satisfactorio.
+
+- Compilación `net10.0-windows` con advertencias como errores: **0 errores y 0 advertencias**.
+- **65 pruebas numéricas**: estados inversos, conservación, modelos, unidades, contraste ASHRAE 2025 y condiciones imposibles.
+- **25 pruebas de inicialización WPF y sincronización de puntos**, más capturas de las tres zonas de la interfaz.
+- La validación se realizó sobre la rama aislada; no hubo fusión.
+- Consultar [evidencias de la compilación y PNG](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42425602980).
+
 ## Verificación técnica
 
 El flujo `.github/workflows/wpf-build.yml` compila WPF en Windows .NET 10 con advertencias como errores, ejecuta pruebas numéricas y pruebas de inicialización de la interfaz, y captura tres imágenes PNG cuando el entorno lo permite.

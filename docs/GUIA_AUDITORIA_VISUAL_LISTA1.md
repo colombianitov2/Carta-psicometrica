@@ -38,8 +38,8 @@ Los informes se guardan en **Documentos\FrioCalc_Auditorias\Lista1_aaaaMMdd_HHmm
 | A14 | Seleccionar P1→P2→P3, variar orden | Flechas y cálculo corresponden a orden real |
 | A15 | Crear dos procesos de colores diferentes | Conservar ambos y sus leyendas; borrar solo el seleccionado |
 | A16 | Dibujar FCS 0,75 desde estado de habitación | Guía geométrica sin punto de impulsión inventado |
-| A17 | Mezclar 3000 y 500 m³/h | Transformar individualmente por v y conservar masa/energía |
-| A18 | Humidificar con vapor añadido y entalpía | Registrar parámetros, HR, h y agua aportada |
+| A17 | Mezclar 3000 y 500 m³/h; dividir un flujo en dos ramas | Convertir por v; verificar masa y energía de mezcla; introducir fracción de rama y verificar balance de cada salida |
+| A18 | Humidificar con vapor y usar desecante | Registrar parámetros, HR, h y agua aportada; desecante requiere humedad retirada y Tbs de salida proporcionadas, sin inferir regeneración |
 | A19 | Humidificar evaporativamente con ε=0,70 y ε=1 | A ε=1 alcanzar saturación, sin valores fuera de 100% |
 | A20 | Deshumidificar con y sin temperatura de condensado | Q de aire y Q de serpentín diferenciadas |
 | A21 | BF=0,2 y ADP definido | Obtener salida ideal solo con suficientes datos |
@@ -50,7 +50,7 @@ Los informes se guardan en **Documentos\FrioCalc_Auditorias\Lista1_aaaaMMdd_HHmm
 | A26 | Zona 2: visor bibliográfico 18 entradas | Referencias y enlaces oficiales; exportar CSV |
 | A27 | Diapositivas A03 6,7,14,15,22,23,24 | Cifras, unidades e hipótesis reproducibles |
 | A28 | Auditorio sin carga de envolvente | Advertencia de carga total indeterminada |
-| A29 | Capturas de toda la UI a diferentes resoluciones | Sin controles cortados ni superposición |
+| A29 | Capturas y navegación a 1150×788 y 1540×900 | Sin controles cortados; scroll, divisores ajustables, modo estándar, leyendas y controles de capas legibles |
 | A30 | Abrir nuevamente versión anterior | Sin alteraciones por la rama de auditoría |
 
 ## 2. Límites que deben indicarse en el informe final

@@ -12,7 +12,11 @@
 
 ### Evidencia de integración
 
-- Validación Windows GitHub Actions **#42416024445**: 0 errores, 0 advertencias, **49 pruebas numéricas** y **18 pruebas de inicialización UI** correctas.
+- Auditoría de WPF visual (capturas generadas automáticamente): tres zonas inspeccionadas en 1150×788. Se corrigieron la distribución y la carta estándar antes de la ejecución final.
+- [Artefacto con capturas en Actions #42425602980](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42425602980): descargar desde los artefactos de la ejecución.
+
+
+- Validación Windows GitHub Actions **#42425602980**: 0 errores, 0 advertencias, **65 pruebas numéricas** y **25 pruebas de inicialización UI** correctas.
 - Enlace: https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42416024445
 - Flujo controlado: solo se ejecuta mediante solicitud manual o al modificar `.github/validation-request.txt`; los commits ordinarios no desencadenan compilación.
 - Carpeta de auditoría local: `06_Tools/Auditar-FrioCalc-Lista1.ps1` con evidencias fuera del repositorio.
