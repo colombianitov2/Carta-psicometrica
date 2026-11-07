@@ -45,7 +45,7 @@ public static class DryBulbLayer
 
         DrawAxisTitle(
             canvas,
-            plotRect);
+            plotRect, geometry);
     }
 
     // ------------------------------ Fin de sección 2.3.2 ------------------------------

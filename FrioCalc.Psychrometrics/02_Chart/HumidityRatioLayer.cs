@@ -45,7 +45,7 @@ public static class HumidityRatioLayer
 
         DrawAxisTitle(
             canvas,
-            plotRect);
+            plotRect, geometry);
     }
 
     // ------------------------------ Fin de sección 2.4.2 ------------------------------
