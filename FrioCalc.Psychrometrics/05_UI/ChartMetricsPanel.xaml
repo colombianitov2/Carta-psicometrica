@@ -31,6 +31,12 @@
                     <ComboBoxItem Content="IP"/>
                 </ComboBox>
             </StackPanel>
+            <TextBlock Text="Método para resolver puntos" FontWeight="SemiBold" Margin="0,0,0,4"/>
+            <ComboBox x:Name="StateMethodComboBox" SelectedIndex="0" Margin="0,0,0,12">
+                <ComboBoxItem Content="Automático: directo cuando sea posible" Tag="Automatic"/>
+                <ComboBoxItem Content="Directo (requiere Tbs)" Tag="Direct"/>
+                <ComboBoxItem Content="Iterativo: búsqueda de raíces" Tag="Iterative"/>
+            </ComboBox>
             <TextBlock Text="Las casillas muestran curvas. Los valores escritos son restricciones del punto aunque su casilla esté apagada."
                        Foreground="#666666" TextWrapping="Wrap" FontSize="11"
                        Margin="0,0,0,12"/>

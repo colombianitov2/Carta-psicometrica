@@ -68,7 +68,7 @@ public partial class MainWindow
         {
             MessageBox.Show(error, "Valor inválido", MessageBoxButton.OK, MessageBoxImage.Warning); return;
         }
-        if (!PsychrometricChart.TryAddPointFromConditions(conditions, out error))
+        if (!PsychrometricChart.TryAddPointFromConditions(conditions, ChartMetricsPanel.SelectedSolveMethod, out error))
         {
             MessageBox.Show(error, "No se pudo ubicar el punto", MessageBoxButton.OK, MessageBoxImage.Warning); return;
         }

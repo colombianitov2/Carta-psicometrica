@@ -13,6 +13,7 @@ public sealed record ChartPoint(
     double WetBulbC,
     double DewPointC,
     double EnthalpyKJPerKgDryAir,
-    double SpecificVolumeM3PerKgDryAir);
+    double SpecificVolumeM3PerKgDryAir,
+    string Method = "Automático");
 
 // ------------------------------ Fin de sección 3.1.1 ------------------------------

@@ -888,9 +888,14 @@ public partial class PsychrometricChartView : UserControl
     // [2.1C.20] Creación de punto con restricciones, sin alterar otros puntos.
     public bool TryAddPointFromConditions(
         IReadOnlyDictionary<StateProperty, double> conditions, out string diagnostic)
+        => TryAddPointFromConditions(conditions,StateSolveMethod.Automatic,out diagnostic);
+
+    public bool TryAddPointFromConditions(
+        IReadOnlyDictionary<StateProperty, double> conditions, StateSolveMethod method,
+        out string diagnostic)
     {
         string color = PointColorPalette.GetColorHex(_nextPointId);
-        if (!StateInputSolver.TrySolve(conditions, _pressureKPa, _nextPointId, color,
+        if (!StateInputSolver.TrySolve(conditions, _pressureKPa, _nextPointId, color, method,
             out ChartPoint? point, out diagnostic) || point == null) return false;
         if (point.DryBulbC < _geometry.ActiveMinDryBulbC ||
             point.DryBulbC > _geometry.ActiveMaxDryBulbC ||

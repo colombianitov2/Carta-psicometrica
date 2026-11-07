@@ -37,6 +37,9 @@ public partial class ChartMetricsPanel : UserControl
     public event Action<bool>? SensibleHeatFactorVisibilityChanged;
     public event Action<UnitSystem>? UnitsChanged;
     public UnitSystem CurrentUnits { get; private set; } = UnitSystem.SI;
+    public StateSolveMethod SelectedSolveMethod =>
+        Enum.TryParse((StateMethodComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString(),
+            out StateSolveMethod method) ? method : StateSolveMethod.Automatic;
     private bool _initialized;
 
     // ------------------------------ Fin de sección 5.3C.2 ------------------------------

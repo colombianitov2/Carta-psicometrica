@@ -11,11 +11,17 @@ public enum StateProperty
     DryBulb, WetBulb, DewPoint, RelativeHumidity, HumidityRatio, Enthalpy, SpecificVolume
 }
 
+public enum StateSolveMethod { Automatic, Direct, Iterative }
+
 public static class StateInputSolver
 {
+    public static bool TrySolve(IReadOnlyDictionary<StateProperty, double> conditions,
+        double pressureKPa, int id, string colorHex, out ChartPoint? point, out string diagnostic)
+        => TrySolve(conditions,pressureKPa,id,colorHex,StateSolveMethod.Automatic,out point,out diagnostic);
+
     public static bool TrySolve(
         IReadOnlyDictionary<StateProperty, double> conditions,
-        double pressureKPa, int id, string colorHex,
+        double pressureKPa, int id, string colorHex, StateSolveMethod method,
         out ChartPoint? point, out string diagnostic)
     {
         point = null;
@@ -53,7 +59,7 @@ public static class StateInputSolver
         for (int i = 0; i < pairs.Length && candidates.Count == 0; i++)
         for (int j = i + 1; j < pairs.Length && candidates.Count == 0; j++)
         {
-            FindForPair(pairs[i], pairs[j], pressureKPa, id, colorHex, candidates);
+            FindForPair(pairs[i], pairs[j], pressureKPa, id, colorHex, method, candidates);
         }
         if (candidates.Count == 0)
         {
@@ -77,7 +83,7 @@ public static class StateInputSolver
                 return false;
             }
         }
-        point = solution;
+        point = solution with { Method = method.ToString() };
         diagnostic = "Estado calculado y comprobado con todas las propiedades introducidas.";
         return true;
     }
@@ -85,14 +91,20 @@ public static class StateInputSolver
     private static void FindForPair(
         KeyValuePair<StateProperty, double> a,
         KeyValuePair<StateProperty, double> b,
-        double pressure, int id, string color, List<ChartPoint> results)
+        double pressure, int id, string color, StateSolveMethod method, List<ChartPoint> results)
     {
         if (a.Key == b.Key) return;
-        if (a.Key == StateProperty.DryBulb || b.Key == StateProperty.DryBulb)
+        bool hasDry = a.Key == StateProperty.DryBulb || b.Key == StateProperty.DryBulb;
+        if (method == StateSolveMethod.Direct && !hasDry) return;
+        if (hasDry)
         {
             var dry = a.Key == StateProperty.DryBulb ? a : b;
             var other = a.Key == StateProperty.DryBulb ? b : a;
-            if (TryHumidityRatioAtTemperature(other.Key, other.Value, dry.Value, pressure, out double humidity)
+            if (method == StateSolveMethod.Iterative)
+            {
+                SolveOrientation(other,dry,pressure,id,color,results);
+            }
+            else if (TryHumidityRatioAtTemperature(other.Key, other.Value, dry.Value, pressure, out double humidity)
                 && PointPropertyCalculator.TryCreatePoint(id, $"P{id}", color, pressure, dry.Value, humidity, out ChartPoint? p)
                 && p != null)
             {

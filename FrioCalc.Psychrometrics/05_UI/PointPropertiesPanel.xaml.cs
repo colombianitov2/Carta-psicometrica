@@ -199,6 +199,8 @@ public partial class PointPropertiesPanel : UserControl
             FormatValue(PsychrometricUnits.VolumeFromSI(point.SpecificVolumeM3PerKgDryAir, _currentUnits), "0.000",
                 _currentUnits == UnitSystem.SI ? "m³/kg aire seco" : "ft³/lb aire seco"));
 
+        AddProperty(content,"Método",point.Method);
+
         AddProperty(
             content,
             "Presión",
