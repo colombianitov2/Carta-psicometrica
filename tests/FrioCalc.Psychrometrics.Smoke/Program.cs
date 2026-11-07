@@ -124,7 +124,7 @@ static class Program
             Check(!ProcessCycleAnalyzer.TryAnalyze(new ChartPoint[]{p,Create(31,22,75,90.0)},
                 1.0,out _,out _),"Rechazo de ciclo a presión contradictoria");
             Check(BibliographyCatalog.Entries.Count>=18,"Catálogo bibliográfico");
-            Check(BibliographyCatalog.ExportCsv().Contains("GetMoistAirEnthalpy"),
+            Check(BibliographyCatalog.ExportCsv().Contains("MoistAirEnthalpy.FromDryBulbAndHumidityRatio"),
                 "Exportación bibliográfica con método");
 
             // [T4.3] Ramas y desecante con datos suficientes.
