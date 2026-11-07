@@ -6,3 +6,5 @@ No ejecutar en cada commit.
 Solicitud 2: validar guardias de método predictivo y seguimiento Lista 1 v1.1.
 
 Solicitud final de prueba 3: ramas, desecantes, edición, ASHRAE 2025 y capturas de ventanas.
+
+Solicitud #4: corrección constantes de bibliografía, reconstrucción WPF completa y capturas.
