@@ -52,6 +52,7 @@ public partial class PsychrometricChartView : UserControl
         1;
 
     public event Action<IReadOnlyList<ChartPoint>>? PointsChanged;
+    public event Action? PointsAboutToChange;
 
     private double _pressureKPa =
         101.325;
@@ -673,6 +674,7 @@ public partial class PsychrometricChartView : UserControl
 
         if (existingPointIndex >= 0)
         {
+            PointsAboutToChange?.Invoke();
             _chartPoints.RemoveAt(
                 existingPointIndex);
 
@@ -716,6 +718,7 @@ public partial class PsychrometricChartView : UserControl
                 out ChartPoint? point)
             && point is not null)
         {
+            PointsAboutToChange?.Invoke();
             _chartPoints.Add(
                 point);
 
@@ -905,6 +908,7 @@ public partial class PsychrometricChartView : UserControl
             diagnostic = "Punto físico válido, pero fuera de los límites activos de la carta. Amplíe los límites o desactive Carta estándar.";
             return false;
         }
+        PointsAboutToChange?.Invoke();
         _chartPoints.Add(point);
         _nextPointId++;
         NotifyPointsChanged();
@@ -945,6 +949,7 @@ public partial class PsychrometricChartView : UserControl
         {
             diagnostic = "El punto editado está fuera de los límites activos de la carta."; return false;
         }
+        PointsAboutToChange?.Invoke();
         _chartPoints[index] = newPoint with { Name=previous.Name };
         NotifyPointsChanged();
         RefreshChart();
@@ -955,6 +960,7 @@ public partial class PsychrometricChartView : UserControl
     {
         int index = _chartPoints.FindIndex(p => p.Id == id);
         if (index < 0) return false;
+        PointsAboutToChange?.Invoke();
         _chartPoints.RemoveAt(index);
         NotifyPointsChanged();
         RefreshChart();

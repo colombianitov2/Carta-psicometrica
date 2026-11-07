@@ -21,10 +21,13 @@ public partial class MainWindow
     private readonly List<PsychrometricProcess> _savedProcesses = new();
     private int _nextProcessId = 1;
     private int? _editingPointId;
+    private readonly Stack<SessionV1> _undoHistory = new();
+    private bool _restoringHistory;
 
     private void InitializeLista1()
     {
         PointPropertiesPanel.AddPointRequested += AddStatePoint;
+        PsychrometricChart.PointsAboutToChange += RememberHistory;
         PointPropertiesPanel.OpenProcessesRequested += () => WorkspaceTabs.SelectedIndex = 1;
         PointPropertiesPanel.DeletePointRequested += DeleteStatePoint;
         PointPropertiesPanel.EditPointRequested += BeginPointEdit;
@@ -140,6 +143,7 @@ public partial class MainWindow
         _selectedPointIds.Clear();
         _nextProcessId = 1;
         _editingPointId = null;
+        _undoHistory.Clear();
         PointPropertiesPanel.ClearSelection();
         ProcessResultText.Text = "La presión cambió; puntos y procesos anteriores se descartan para evitar estados inconsistentes.";
         UpdateProcessesInCharts();
@@ -298,6 +302,7 @@ public partial class MainWindow
         }
         ChartPoint initial = selected[0]!;
         int processId = _nextProcessId++;
+        RememberHistory();
         _savedProcesses.Add(new PsychrometricProcess(
             processId,$"PR{processId}",initial.ColorHex,type,ids,massFlow));
         UpdateProcessesInCharts();
@@ -310,6 +315,7 @@ public partial class MainWindow
     {
         int index = SavedProcessesList.SelectedIndex;
         if (index < 0 || index >= _savedProcesses.Count) return;
+        RememberHistory();
         _savedProcesses.RemoveAt(index);
         UpdateProcessesInCharts();
         ProcessResultText.Text = "Proceso eliminado. Los puntos originales se conservan.";
@@ -350,6 +356,37 @@ public partial class MainWindow
         return true;
     }
 
+
+
+    // [5.1C.15] Deshacer cambios de puntos o procesos; historial de sesión.
+    private void RememberHistory()
+    {
+        if (_restoringHistory) return;
+        _undoHistory.Push(new SessionV1(1,PressureSelector.CurrentPressureKPa,
+            ChartMetricsPanel.CurrentUnits,PsychrometricChart.ActivePoints.ToList(),
+            new List<PsychrometricProcess>(_savedProcesses)));
+    }
+
+    private void UndoLastAction_Click(object sender, RoutedEventArgs e)
+    {
+        if (_undoHistory.Count==0)
+        {
+            ProcessResultText.Text="No existen acciones para deshacer."; return;
+        }
+        SessionV1 previous=_undoHistory.Pop();
+        _restoringHistory=true;
+        try
+        {
+            PsychrometricChart.SetSharedPoints(previous.Points);
+            _savedProcesses.Clear();
+            _savedProcesses.AddRange(previous.Processes);
+            _nextProcessId=Math.Max(1,_savedProcesses.Count==0?1:_savedProcesses.Max(x=>x.Id)+1);
+            OnPointsChanged(PsychrometricChart.ActivePoints);
+            PointPropertiesPanel.ClearSelection();
+            ProcessResultText.Text="Se restauró el estado de puntos y procesos previo a la última acción.";
+        }
+        finally { _restoringHistory=false; }
+    }
 
     // [5.1C.14] Archivos de sesión versionados: estado de puntos y procesos.
     private sealed record SessionV1(int Version, double PressureKPa, UnitSystem Units,

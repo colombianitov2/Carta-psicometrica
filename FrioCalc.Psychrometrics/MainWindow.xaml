@@ -91,6 +91,8 @@
                                     Click="PlotProcess_Click" Margin="0,0,0,10"/>
                             <TextBlock Text="Procesos guardados" FontWeight="SemiBold" Margin="0,0,0,3"/>
                             <ListBox x:Name="SavedProcessesList" Height="95" Margin="0,0,0,7"/>
+                            <Button Content="Deshacer última acción" Click="UndoLastAction_Click"
+                                    Padding="6" Margin="0,0,0,7"/>
                             <Button Content="Eliminar proceso seleccionado" Click="DeleteProcess_Click"
                                     Padding="6" Margin="0,0,0,9"/>
                             <TextBlock Text="RESULTADOS Y ADVERTENCIAS" FontWeight="SemiBold" Margin="0,0,0,6"/>
