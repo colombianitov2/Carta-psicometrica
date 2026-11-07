@@ -17,7 +17,7 @@
 
 
 - Validación Windows GitHub Actions **#42425602980**: 0 errores, 0 advertencias, **65 pruebas numéricas** y **25 pruebas de inicialización UI** correctas.
-- Enlace: https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42416024445
+- Enlace: https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42425602980
 - Flujo controlado: solo se ejecuta mediante solicitud manual o al modificar `.github/validation-request.txt`; los commits ordinarios no desencadenan compilación.
 - Carpeta de auditoría local: `06_Tools/Auditar-FrioCalc-Lista1.ps1` con evidencias fuera del repositorio.
 - **Limitación:** el éxito de pruebas no sustituye pruebas humanas de interacción, inspección de carta ni verificación con documentación paginada.
@@ -129,10 +129,10 @@
 
 ## Pendientes bloqueantes para dar la lista por terminada
 
-1. **Validación física externa:** contrastar datos de diferentes presiones y temperaturas con referencias ASHRAE, PsychroLib y CoolProp, con tolerancias cuantificadas; comprobar especialmente nieve/hielo, saturación, soluciones inversas y mezclas.
+1. **Validación física externa:** las pruebas incluyen ejemplos cuantitativos de ASHRAE 2025 a 101,325 y 84,54 kPa. Sigue pendiente la validación sistemática en todo el dominio, la región bajo cero, pares inversos degenerados y comparación con modelos de gas real.
 2. **Modelos de equipos:** desecantes y regeneración, geometrías reales de serpentín, cargas completas de auditorio y redes multietapa; solicitar las variables faltantes en lugar de inferirlas.
-3. **Aceptación visual:** escala FCS, entradas, colores, zonas, fuentes, tamaño de letra, solapamientos, cambio SI/IP, cartas a distintas presiones, exportación y ciclos.
-4. **Edición avanzada de procesos:** el botón cargar para editar crea una nueva versión del proceso; no sustituye todavía el proceso original en sitio.
+3. **Aceptación visual:** el flujo de Windows genera seis capturas (tres zonas a 1150×788 y 1540×900) y verifica apertura WPF. Faltan pruebas humanas de clics, scroll, recorte de textos, FCS, cambio SI/IP, exportación y ciclos.
+4. **Edición avanzada de procesos:** se conserva el identificador del proceso al editar; aún debe auditarse el tratamiento de puntos de salida generados, estados compartidos y operaciones de deshacer.
 5. **Bibliografía:** el registro incluye fuentes y capítulos, pero no inventa páginas no verificadas del manual ASHRAE. La denominación «Hendrickson» permanece pendiente de corroboración externa.
 6. **Integración local:** sincronización con la carpeta de Visual Studio y ejecución de la app en el computador del usuario todavía por confirmar.
 

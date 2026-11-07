@@ -47,7 +47,7 @@ Los informes se guardan en **Documentos\FrioCalc_Auditorias\Lista1_aaaaMMdd_HHmm
 | A23 | Guardar, cerrar y abrir sesión JSON | P, SI/IP, métodos, entradas y procesos se recuperan |
 | A24 | Exportar CSV, Markdown y PNG | Archivos legibles, unidades, fórmulas, advertencias y nombres |
 | A25 | Zona 2: cada tipo de proceso con deslizador | No representar estados imposibles; comprobar cambio de P |
-| A26 | Zona 2: visor bibliográfico 18 entradas | Referencias y enlaces oficiales; exportar CSV |
+| A26 | Zona 2: visor bibliográfico 20 entradas | Referencias y enlaces oficiales; exportar CSV |
 | A27 | Diapositivas A03 6,7,14,15,22,23,24 | Cifras, unidades e hipótesis reproducibles |
 | A28 | Auditorio sin carga de envolvente | Advertencia de carga total indeterminada |
 | A29 | Capturas y navegación a 1150×788 y 1540×900 | Sin controles cortados; scroll, divisores ajustables, modo estándar, leyendas y controles de capas legibles |

@@ -25,7 +25,7 @@ Write-Host "Copia a preparar: $dest"
 
 & git -C $root rev-parse --show-toplevel | Out-Null
 Assert-GitExit 'Identificación del repositorio'
-& git -C $root fetch origin $branch
+& git -C $root fetch origin "+refs/heads/$branch:refs/remotes/origin/$branch"
 Assert-GitExit 'Descarga de rama candidata'
 
 $remoteRef = "refs/remotes/origin/$branch"

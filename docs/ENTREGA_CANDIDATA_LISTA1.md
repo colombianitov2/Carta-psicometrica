@@ -27,7 +27,7 @@ La carta y el motor de puntos/procesos están integrados para una auditoría con
 
 - Compilación `net10.0-windows` con advertencias como errores: **0 errores y 0 advertencias**.
 - **65 pruebas numéricas**: estados inversos, conservación, modelos, unidades, contraste ASHRAE 2025 y condiciones imposibles.
-- **25 pruebas de inicialización WPF y sincronización de puntos**, más capturas de las tres zonas de la interfaz.
+- **25 pruebas de inicialización WPF y sincronización de puntos**, más capturas de las tres zonas de la interfaz. La auditoría siguiente recopila dos resoluciones (1150×788 y 1540×900).
 - La validación se realizó sobre la rama aislada; no hubo fusión.
 - Consultar [evidencias de la compilación y PNG](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42425602980).
 
@@ -61,6 +61,10 @@ La validación numérica incluye referencias independientes publicadas en el cap
 - **Bibliografía:** las referencias HTML verifican números de ecuación; no se inventan páginas de PDF o del libro físico.
 - **Terminología:** se conserva «humedad absoluta» como etiqueta de interfaz solicitada, pero W con g/kgda corresponde técnicamente a razón de humedad.
 - **Aceptación visual en PC:** debe verificarse en resolución y configuración local, incluidos scroll, zoom, formatos decimales, etiquetas y exportación.
+
+## Preparación inicial y siguientes actualizaciones
+
+La **primera vez**, desde la carpeta original ejecute los comandos de la sección siguiente para crear una copia separada. Después, para actualizar y auditar en un solo paso, haga doble clic en `FrioCalc_Lista1_Auditoria\\06_Tools\\ABRIR-AUDITORIA-LISTA1.cmd`. El script comprueba la rama y si hay modificaciones locales antes de realizar `git pull --ff-only`; nunca descarta archivos del proyecto original.
 
 ## Auditoría consolidada en Windows
 
