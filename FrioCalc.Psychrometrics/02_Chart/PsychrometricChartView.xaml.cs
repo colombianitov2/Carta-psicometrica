@@ -40,6 +40,8 @@ public partial class PsychrometricChartView : UserControl
     private bool _enthalpyDeviationVisible;
 
     private bool _sensibleHeatFactorVisible;
+    private ChartPoint? _sensibleHeatFactorGuideOrigin;
+    private double? _sensibleHeatFactorGuideRatio;
     private bool _processMemberColorMode;
     private readonly List<PsychrometricProcess> _processes = new();
 
@@ -327,6 +329,8 @@ public partial class PsychrometricChartView : UserControl
         }
 
         ProcessLayer.Draw(ChartCanvas, _geometry, _chartPoints, _processes);
+        if (_sensibleHeatFactorGuideOrigin is ChartPoint origin && _sensibleHeatFactorGuideRatio is double fcs)
+            SensibleHeatFactorGuideLayer.Draw(ChartCanvas,_geometry,origin,fcs,_pressureKPa);
 
         PointLayer.Draw(
             ChartCanvas,
@@ -881,6 +885,14 @@ public partial class PsychrometricChartView : UserControl
     }
 
     // [2.1C.19] FCS independiente del resto de las familias gráficas.
+    // [2.1C.23] Proyección de familia de estados compatibles con un FCS conocido.
+    public void SetSensibleHeatFactorGuide(ChartPoint? origin,double? factor)
+    {
+        _sensibleHeatFactorGuideOrigin=origin;
+        _sensibleHeatFactorGuideRatio=factor;
+        RefreshChart();
+    }
+
     public void SetSensibleHeatFactorVisible(bool isVisible)
     {
         _sensibleHeatFactorVisible = isVisible;

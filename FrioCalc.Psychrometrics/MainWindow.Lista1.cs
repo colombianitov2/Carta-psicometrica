@@ -131,6 +131,8 @@ public partial class MainWindow
 
     private void OnLista1PointsChanged(IReadOnlyList<ChartPoint> points)
     {
+        PsychrometricChart.SetSensibleHeatFactorGuide(null,null);
+        ProcessChart.SetSensibleHeatFactorGuide(null,null);
         ProcessChart.SetSharedPoints(points);
         // [5.1C.10.1] Un estado modificado invalida los balances guardados que lo referencian.
         // Eliminar procesos afectados, en lugar de publicar un informe antiguo como válido.
@@ -159,6 +161,8 @@ public partial class MainWindow
 
     private void OnLista1PressureChanged(double pressureKPa)
     {
+        PsychrometricChart.SetSensibleHeatFactorGuide(null,null);
+        ProcessChart.SetSensibleHeatFactorGuide(null,null);
         ProcessChart.SetPressure(pressureKPa);
         ProcessTheoryPanel.SetPressure(pressureKPa);
         _savedProcesses.Clear();
@@ -198,6 +202,32 @@ public partial class MainWindow
     }
 
     // [5.1C.12] Graficación, cálculos y agrupación de procesos independientes.
+    // [5.1C.18] Línea FCS como lugar geométrico, nunca como estado único calculado.
+    private void DrawFcsGuide_Click(object sender,RoutedEventArgs e)
+    {
+        if(_selectedPointIds.Count<1)
+        {
+            MessageBox.Show("Seleccione el punto de referencia en Carta y puntos.","Guía FCS");return;
+        }
+        if(!TryReadPositive(FcsGuideTextBox.Text,out double ratio)||ratio>1)
+        {
+            MessageBox.Show("El FCS debe estar entre 0 (excluido) y 1 (incluido).","Guía FCS");return;
+        }
+        ChartPoint? point=PsychrometricChart.ActivePoints.FirstOrDefault(p=>p.Id==_selectedPointIds[0]);
+        if(point==null) return;
+        ProcessChart.SetSensibleHeatFactorGuide(point,ratio);
+        PsychrometricChart.SetSensibleHeatFactorGuide(point,ratio);
+        ProcessResultText.Text=$"Guía FCS={ratio:0.###} desde {point.Name}. Se necesita una restricción adicional para elegir el punto de suministro.";
+        WorkspaceTabs.SelectedIndex=1;
+    }
+
+    private void ClearFcsGuide_Click(object sender,RoutedEventArgs e)
+    {
+        PsychrometricChart.SetSensibleHeatFactorGuide(null,null);
+        ProcessChart.SetSensibleHeatFactorGuide(null,null);
+        ProcessResultText.Text="Guía de FCS eliminada; los puntos y procesos se conservan.";
+    }
+
     private void PlotProcess_Click(object sender, RoutedEventArgs e)
     {
         string typeValue = (ProcessTypeComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "Automatic";

@@ -68,6 +68,20 @@
                                 <Button Content="Subir" Width="78" Click="MovePointUp_Click" Margin="0,0,8,0"/>
                                 <Button Content="Bajar" Width="78" Click="MovePointDown_Click" Margin="0,0,8,0"/>
                             </StackPanel>
+                            <Border BorderBrush="#DDD6FE" BorderThickness="1" CornerRadius="5"
+                                    Padding="8" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="GUÍA DE FACTOR DE CALOR SENSIBLE"
+                                               FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,5"/>
+                                    <TextBlock Text="Introduzca FCS entre 0 y 1 y seleccione el estado de referencia. La línea no determina por sí sola el punto de impulsión."
+                                               TextWrapping="Wrap" FontSize="11" Margin="0,0,0,5"/>
+                                    <TextBox x:Name="FcsGuideTextBox" Height="27" Margin="0,0,0,5"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Content="Dibujar guía" Click="DrawFcsGuide_Click" Padding="6" Margin="0,0,5,0"/>
+                                        <Button Content="Quitar guía" Click="ClearFcsGuide_Click" Padding="6"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
                             <TextBlock Text="Método / tipo de proceso" FontWeight="SemiBold" Margin="0,0,0,3"/>
                             <ComboBox x:Name="ProcessTypeComboBox" SelectedIndex="0" Margin="0,0,0,10">
                                 <ComboBoxItem Content="Automático · diferencias entre estados" Tag="Automatic"/>
