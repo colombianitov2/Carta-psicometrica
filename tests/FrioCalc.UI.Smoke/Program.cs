@@ -37,6 +37,13 @@ internal static class Program
             Check(window.FindName("PointPropertiesPanel") is PointPropertiesPanel, "Gestor puntos");
             Check(window.FindName("ChartMetricsPanel") is ChartMetricsPanel, "Entradas propiedades");
             Check(window.FindName("PressureSelector") is PressureSelector, "Presión");
+            var pressurePanel=(PressureSelector)window.FindName("PressureSelector");
+            Check(pressurePanel.FindName("StandardChartToggle") is System.Windows.Controls.Primitives.ToggleButton,
+                "Toggle Carta estándar");
+            var chartMetrics=(ChartMetricsPanel)window.FindName("ChartMetricsPanel");
+            Check(chartMetrics.FindName("DryBulbCheckBox") is CheckBox dryBulb &&
+                dryBulb.IsChecked == true, "Bulbo seco inicial activo");
+
             Check(window.FindName("ProcessSelectionList") is ListBox, "Selección ordenada");
             Check(window.FindName("SavedProcessesList") is ListBox, "Procesos guardados");
             Check(window.FindName("TheoryExampleResultText") is TextBlock, "Ejercicios A03");
