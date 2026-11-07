@@ -54,38 +54,54 @@ public static class StateInputSolver
             diagnostic = "El volumen específico debe ser positivo."; return false;
         }
 
+        // [3.4.1] Buscar todas las soluciones independientes; restricciones
+        // redundantes pueden resolverse con una tercera propiedad.
         var pairs = conditions.ToArray();
         var candidates = new List<ChartPoint>();
-        for (int i = 0; i < pairs.Length && candidates.Count == 0; i++)
-        for (int j = i + 1; j < pairs.Length && candidates.Count == 0; j++)
+        for (int i = 0; i < pairs.Length; i++)
+        for (int j = i + 1; j < pairs.Length; j++)
         {
-            FindForPair(pairs[i], pairs[j], pressureKPa, id, colorHex, method, candidates);
+            var pairSolutions = new List<ChartPoint>();
+            FindForPair(pairs[i], pairs[j], pressureKPa, id, colorHex, method, pairSolutions);
+            foreach (var candidate in pairSolutions)
+            {
+                if (!candidates.Any(p => Math.Abs(p.DryBulbC-candidate.DryBulbC)<.01
+                    && Math.Abs(p.HumidityRatioKgPerKg-candidate.HumidityRatioKgPerKg)<.00001))
+                    candidates.Add(candidate);
+            }
         }
         if (candidates.Count == 0)
         {
-            diagnostic = "No existe un estado físico único para esas dos propiedades. Revise independencia, presión y rangos.";
+            diagnostic = method == StateSolveMethod.Direct
+                ? "El método directo requiere Tbs y otra propiedad independiente válida. Seleccione Iterativo o Automático."
+                : "No se encontró estado físico. Revise independencia, presión y dominio del método.";
             return false;
         }
-        if (candidates.Count > 1)
+        var consistent = candidates.Where(candidate => conditions.All(input =>
         {
-            diagnostic = "Los datos admiten varios estados posibles. Introduzca otra propiedad independiente.";
-            return false;
-        }
+            double calculated = ValueOf(input.Key,candidate);
+            return double.IsFinite(calculated) &&
+                Math.Abs(calculated-input.Value)<=Tolerance(input.Key,input.Value);
+        })).ToList();
 
-        ChartPoint solution = candidates[0];
-        foreach (var condition in conditions)
+        if (consistent.Count == 0)
         {
-            double computed = ValueOf(condition.Key, solution);
-            double tolerance = Tolerance(condition.Key, condition.Value);
-            if (!double.IsFinite(computed) || Math.Abs(computed - condition.Value) > tolerance)
-            {
-                diagnostic = $"Condición incompatible: {condition.Key}. Dato {condition.Value:G6}, cálculo {computed:G6}; tolerancia {tolerance:G3}.";
-                return false;
-            }
+            var c = candidates[0];
+            var inconsistent = conditions.FirstOrDefault(k =>
+                !double.IsFinite(ValueOf(k.Key,c)) ||
+                Math.Abs(ValueOf(k.Key,c)-k.Value)>Tolerance(k.Key,k.Value));
+            diagnostic = $"No hay estado que satisfaga todas las propiedades. Revise {inconsistent.Key}={inconsistent.Value:G6} y las restantes entradas.";
+            return false;
         }
+        if (consistent.Count > 1)
+        {
+            diagnostic = "Las restricciones permiten varios estados. Introduzca otra propiedad independiente.";
+            return false;
+        }
+        var solution = consistent[0];
         point = solution with { Method = method.ToString(), Origin = "Entrada numérica",
             InputConditions = new Dictionary<StateProperty,double>(conditions) };
-        diagnostic = "Estado calculado y comprobado con todas las propiedades introducidas.";
+        diagnostic = "Estado único calculado y verificado frente a todas las propiedades introducidas.";
         return true;
     }
 
