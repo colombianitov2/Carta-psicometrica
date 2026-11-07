@@ -1,13 +1,13 @@
 # Lista 1 — Estado de construcción de FrioCalc
 
-**Versión de seguimiento:** 1.1 · **Fecha:** 7 de noviembre de 2026 · **Rama:** `chatgpt/friocalc-lista1-2026-11-07`.
+**Versión de seguimiento:** 1.2 — candidata de auditoría · **Fecha:** 7 de noviembre de 2026 · **Rama:** `chatgpt/friocalc-lista1-2026-11-07`.
 
 **No se ha fusionado con `main` ni con la rama psicrométrica anterior.** Este registro diferencia compilación correcta, implementación funcional parcial y auditoría visual pendiente. No debe interpretarse como aprobación final del software.
 
 ## Resumen del avance
 
-- **34/58 actividades:** código presente; falta comprobar su aceptación visual y casos límite.
-- **19/58 actividades:** avance parcial, con pendientes técnicos/documentales especificados.
+- **45/58 actividades:** código presente; falta comprobar su aceptación visual y casos límite.
+- **8/58 actividades:** avance parcial, con pendientes técnicos/documentales especificados.
 - **5/58 actividades:** validaciones complementarias de entorno, comportamiento o cobertura.
 
 ### Evidencia de integración
@@ -28,8 +28,8 @@
 | L1.02 | Compilación y ejecución | Verificación complementaria pendiente |
 | L1.03 | Auditoría de ecuaciones | Parcial; faltan modelos, casos o referencias |
 | L1.04 | Modelo unificado de estados y procesos | Código presente; falta auditoría visual de aceptación |
-| L1.05 | Selector de unidades SI/IP | Parcial; faltan modelos, casos o referencias |
-| L1.06 | Conversiones de unidades | Parcial; faltan modelos, casos o referencias |
+| L1.05 | Selector de unidades SI/IP | Código presente; falta auditoría visual de aceptación |
+| L1.06 | Conversiones de unidades | Código presente; falta auditoría visual de aceptación |
 | L1.07 | Carta a distintas presiones | Verificación complementaria pendiente |
 | L1.08 | Zoom, etiquetas y Carta estándar | Verificación complementaria pendiente |
 | L1.09 | Casilla de FCS independiente | Código presente; falta auditoría visual de aceptación |
@@ -41,7 +41,7 @@
 | L1.10 | Campos numéricos junto a propiedades | Código presente; falta auditoría visual de aceptación |
 | L1.11 | Entradas Tbs, Tbh, Trocío, HR, W, h, v | Código presente; falta auditoría visual de aceptación |
 | L1.12 | Solucionador inverso de estados | Código presente; falta auditoría visual de aceptación |
-| L1.13 | Método directo/iterativo y contraste | Parcial; faltan modelos, casos o referencias |
+| L1.13 | Método directo/iterativo y contraste | Código presente; falta auditoría visual de aceptación |
 | L1.14 | Condiciones insuficientes y redundantes | Código presente; falta auditoría visual de aceptación |
 | L1.15 | Imposibilidades físicas y rango | Parcial; faltan modelos, casos o referencias |
 | L1.16 | Validación de decimales, signos y unidades | Código presente; falta auditoría visual de aceptación |
@@ -62,21 +62,21 @@
 | L1.26 | Orden de puntos reordenable | Código presente; falta auditoría visual de aceptación |
 | L1.27 | Graficar y agrupar proceso | Código presente; falta auditoría visual de aceptación |
 | L1.28 | Color del proceso desde primer punto | Código presente; falta auditoría visual de aceptación |
-| L1.29 | Administración de varios procesos | Parcial; faltan modelos, casos o referencias |
-| L1.30 | Método físico por proceso | Parcial; faltan modelos, casos o referencias |
-| L1.31 | Parámetros adicionales por equipo | Parcial; faltan modelos, casos o referencias |
+| L1.29 | Administración de varios procesos | Código presente; falta auditoría visual de aceptación |
+| L1.30 | Método físico por proceso | Código presente; falta auditoría visual de aceptación |
+| L1.31 | Parámetros adicionales por equipo | Código presente; falta auditoría visual de aceptación |
 | L1.32 | Calor sensible | Código presente; falta auditoría visual de aceptación |
 | L1.33 | Humidificación por vapor | Código presente; falta auditoría visual de aceptación |
 | L1.34 | Humidificación evaporativa | Código presente; falta auditoría visual de aceptación |
-| L1.35 | Deshumidificación con condensado | Parcial; faltan modelos, casos o referencias |
+| L1.35 | Deshumidificación con condensado | Código presente; falta auditoría visual de aceptación |
 | L1.36 | Deshumidificación por desecantes | Parcial; faltan modelos, casos o referencias |
-| L1.37 | Procesos combinados de varias etapas | Parcial; faltan modelos, casos o referencias |
+| L1.37 | Procesos combinados de varias etapas | Código presente; falta auditoría visual de aceptación |
 | L1.38 | Mezcla adiabática de múltiples entradas | Código presente; falta auditoría visual de aceptación |
-| L1.39 | Ramas, bypass y ciclos | Parcial; faltan modelos, casos o referencias |
+| L1.39 | Ramas, bypass y ciclos | Código presente; falta auditoría visual de aceptación |
 | L1.40 | FCS y guía gráfica de impulsión | Código presente; falta auditoría visual de aceptación |
 | L1.41 | Modelo ideal BF/ADP | Código presente; falta auditoría visual de aceptación |
 | L1.42 | Balance energético y de agua completo | Parcial; faltan modelos, casos o referencias |
-| L1.43 | Trazos, flechas y resultados gráficos | Parcial; faltan modelos, casos o referencias |
+| L1.43 | Trazos, flechas y resultados gráficos | Código presente; falta auditoría visual de aceptación |
 
 ### D. Ejercicios del material docente
 
@@ -101,12 +101,27 @@
 | ID | Actividad | Estado actual |
 |---|---|---|
 | L1.52 | Trazabilidad por fórmula/página | Parcial; faltan modelos, casos o referencias |
-| L1.53 | Documentos oficiales y enlaces | Parcial; faltan modelos, casos o referencias |
+| L1.53 | Documentos oficiales y enlaces | Código presente; falta auditoría visual de aceptación |
 | L1.54 | Pruebas de conservación y regresión | Verificación complementaria pendiente |
 | L1.55 | Auditoría visual y UI | Verificación complementaria pendiente |
 | L1.56 | Sesiones JSON con propiedades | Código presente; falta auditoría visual de aceptación |
 | L1.57 | Informes CSV, Markdown, PNG | Código presente; falta auditoría visual de aceptación |
 | L1.58 | GitHub, VS y auditoría integral | Parcial; faltan modelos, casos o referencias |
+
+## Cambios incorporados después de la validación inicial
+
+- Resolución de pares redundantes y controles de coherencia de estados.
+- Desecante con humedad retirada y temperatura de salida **aportadas**, sin inventar propiedades ni regeneración de fabricante.
+- Divisor de flujo en dos ramas con balance por rama y fracción ingresada.
+- Edición del proceso en el mismo identificador, sin duplicar el proceso al volver a graficarlo.
+- Colores de procesos visibles en ambas cartas y anillos diferenciados para estados compartidos.
+- Cálculo de condensado, guía FCS, modelos ideales de vapor y bypass, mezclas y ciclos cerrados.
+- ASHRAE Fundamentals 2025, capítulo 1 de acceso HTML y capítulo 32 sobre desecantes, con ecuaciones verificadas. Son 20 fichas bibliográficas.
+- Capturas de las tres zonas generadas desde Windows en GitHub Actions; mejora responsive: segunda carta a ancho completo y control de capas.
+- Carta estándar sincronizada en ambas pestañas desde el inicio.
+- Las pruebas numéricas contrastan también ejemplos publicados del capítulo 1 de ASHRAE 2025.
+
+**Criterio de aceptación:** «Código presente» no implica que una función esté certificada para dimensionamiento de equipos. Su aceptación visual y documental es parte de la auditoría única solicitada.
 
 ## Pendientes bloqueantes para dar la lista por terminada
 
