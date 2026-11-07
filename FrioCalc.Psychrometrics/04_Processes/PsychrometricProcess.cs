@@ -17,6 +17,6 @@ public sealed record PsychrometricProcess(
     ProcessType Type,
     IReadOnlyList<int> PointIds,
     double? DryAirMassFlowKgS,
-    double? SaturationEffectiveness,
-    double? BypassFactor,
+    double? SaturationEffectiveness = null,
+    double? BypassFactor = null,
     string Method = "Balances de masa y energía");

@@ -128,7 +128,8 @@ public static class DryBulbLayer
 
     private static void DrawAxisTitle(
         Canvas canvas,
-        Rect plotRect)
+        Rect plotRect,
+        ChartGeometry geometry)
     {
         TextBlock title =
             new()
