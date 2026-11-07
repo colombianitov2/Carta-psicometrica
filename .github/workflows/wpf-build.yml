@@ -23,3 +23,5 @@ jobs:
         run: dotnet build FrioCalc.Psychrometrics.slnx --configuration Debug --no-restore --warnaserror
       - name: Run psychrometric smoke tests
         run: dotnet run --project tests/FrioCalc.Psychrometrics.Smoke/FrioCalc.Psychrometrics.Smoke.csproj --configuration Debug
+      - name: Run WPF UI initialization smoke test
+        run: dotnet run --project tests/FrioCalc.UI.Smoke/FrioCalc.UI.Smoke.csproj --configuration Debug
