@@ -386,9 +386,10 @@ public partial class PointPropertiesPanel : UserControl
 
     private void OpenProcesses_Click(object sender, RoutedEventArgs e)
     {
-        if (_selection.Count < 2)
+        if (_selection.Count < 1)
         {
-            MessageBox.Show("Seleccione al menos dos puntos para crear un proceso.",
+            MessageBox.Show("Seleccione al menos un punto. Los procesos que relacionan estados " +
+                "requieren dos o más; los métodos predictivos pueden partir de uno solo.",
                 "Procesos psicrométricos",MessageBoxButton.OK,MessageBoxImage.Information);
             return;
         }
