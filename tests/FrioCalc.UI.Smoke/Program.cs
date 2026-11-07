@@ -3,6 +3,9 @@ using System.Windows;
 using System.Windows.Controls;
 using FrioCalc.Psychrometrics;
 using FrioCalc.Psychrometrics.UI;
+using FrioCalc.Psychrometrics.Chart;
+using FrioCalc.Psychrometrics.Points;
+using System.Collections.Generic;
 
 namespace FrioCalc.UISmoke;
 
@@ -43,6 +46,18 @@ internal static class Program
             Check(window.FindName("CloseCycleCheckBox") is CheckBox, "Cierre de ciclo");
             Check(window.FindName("CondensateTemperatureTextBox") is TextBox, "Temperatura de condensado");
             Check(window.FindName("MixFlowsListTextBox") is TextBox, "Mezclas múltiples");
+            Check(window.FindName("BranchFractionTextBox") is TextBox, "Fracción de ramificación");
+            Check(window.FindName("DesiccantRemovedTextBox") is TextBox, "Datos de desecante");
+            var mainChart=(PsychrometricChartView)window.FindName("PsychrometricChart");
+            var processChart=(PsychrometricChartView)window.FindName("ProcessChart");
+            Check(mainChart.TryAddPointFromConditions(new Dictionary<StateProperty,double>
+            {
+                [StateProperty.DryBulb]=25,[StateProperty.RelativeHumidity]=60
+            },out string note), "Entrada de punto interactivo: "+note);
+            Check(mainChart.ActivePoints.Count==1,"Punto creado en carta principal");
+            Check(processChart.ActivePoints.Count==1,
+                "Sincronización automática con segunda carta");
+
             Check(window.FindName("StateMethodComboBox") == null, "Namescope aislado de control de métodos");
             // [UI.2] Capturas automáticas de referencia (no equivalen a aceptación visual).
             try

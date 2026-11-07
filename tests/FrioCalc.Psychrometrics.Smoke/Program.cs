@@ -141,6 +141,30 @@ static class Program
             Check(!ProcessCalculator.TryBranchBalance(p,cooled,desiccated,
                 2,1.2,out _,out _),"Fracción de rama fuera de rango");
 
+            // [T4.4] Ejemplos públicos ASHRAE 2025, Fundamentals cap. 1 §9–10.
+            // Fuente: https://handbook.ashrae.org/Handbooks/F25/SI/F25_Ch01/F25_Ch01_si.aspx
+            // Los valores leídos de la carta son aproximados (redondeos gráficos).
+            double wetW=WetBulbHumidityRatio.FromDryBulbAndWetBulb(40,20,101.325);
+            Check(PointPropertyCalculator.TryCreatePoint(50,"ASHRAE Ej.1","#336699",
+                101.325,40,wetW,out var ashraeOne)&&ashraeOne!=null,"ASHRAE Ej.1 estado");
+            Check(Math.Abs(ashraeOne!.HumidityRatioKgPerKg*1000-6.5)<1.5,
+                "ASHRAE 2025 Ej.1 W aproximado");
+            Check(Math.Abs(ashraeOne.EnthalpyKJPerKgDryAir-56.7)<2.0,
+                "ASHRAE 2025 Ej.1 entalpía");
+            Check(Math.Abs(ashraeOne.SpecificVolumeM3PerKgDryAir-.896)<.025,
+                "ASHRAE 2025 Ej.1 volumen específico");
+            var ashraeThree=Create(51,30,50);
+            Check(Math.Abs(ashraeThree.HumidityRatioKgPerKg*1000-13.3)<.8,
+                "ASHRAE 2025 Ej.3 W 30°C/50%HR");
+            Check(Math.Abs(ashraeThree.EnthalpyKJPerKgDryAir-64.3)<1.5,
+                "ASHRAE 2025 Ej.3 entalpía");
+            Check(Math.Abs(ashraeThree.SpecificVolumeM3PerKgDryAir-.877)<.025,
+                "ASHRAE 2025 Ej.3 volumen específico");
+            Check(BibliographyCatalog.Entries.Count>=20,
+                "Catálogo bibliográfico ampliado");
+            Check(BibliographyCatalog.Entries.Any(e=>e.Url.Contains("/F25_Ch01_si.aspx")),
+                "Referencia ASHRAE 2025 primaria");
+
             // [T5] Unidades sin cambio de estado
             double original=101.325;
             Check(Math.Abs(PsychrometricUnits.PressureToSI(
