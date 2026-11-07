@@ -83,7 +83,8 @@ public static class StateInputSolver
                 return false;
             }
         }
-        point = solution with { Method = method.ToString() };
+        point = solution with { Method = method.ToString(), Origin = "Entrada numérica",
+            InputConditions = new Dictionary<StateProperty,double>(conditions) };
         diagnostic = "Estado calculado y comprobado con todas las propiedades introducidas.";
         return true;
     }

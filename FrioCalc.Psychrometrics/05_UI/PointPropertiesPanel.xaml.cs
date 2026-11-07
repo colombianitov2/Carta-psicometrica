@@ -214,6 +214,13 @@ public partial class PointPropertiesPanel : UserControl
                 _currentUnits == UnitSystem.SI ? "m³/kg aire seco" : "ft³/lb aire seco"));
 
         AddProperty(content,"Método",point.Method);
+        AddProperty(content,"Origen",point.Origin);
+        if (point.InputConditions is { Count: > 0 })
+        {
+            string conditions=string.Join("; ",System.Linq.Enumerable.Select(point.InputConditions,
+                kv=>$"{kv.Key}: {kv.Value.ToString("0.####",CultureInfo.InvariantCulture)}"));
+            AddProperty(content,"Datos ingresados (SI)",conditions);
+        }
 
         AddProperty(
             content,

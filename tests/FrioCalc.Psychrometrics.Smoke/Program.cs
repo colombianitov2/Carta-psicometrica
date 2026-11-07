@@ -109,6 +109,12 @@ static class Program
                 1.0,out var uncorrected,out _)
                 && uncorrected.CoilCoolingLoadKW is null,"Sin temperatura del condensado, carga no inferida");
 
+            Check(fromTRh!.InputConditions is {Count:2}, "Trazabilidad de variables de entrada");
+            string saved=System.Text.Json.JsonSerializer.Serialize(fromTRh);
+            var restored=System.Text.Json.JsonSerializer.Deserialize<ChartPoint>(saved);
+            Check(restored is not null && restored.InputConditions is {Count:2},
+                "Serialización de condiciones de entrada");
+
             // [T5] Unidades sin cambio de estado
             double original=101.325;
             Check(Math.Abs(PsychrometricUnits.PressureToSI(

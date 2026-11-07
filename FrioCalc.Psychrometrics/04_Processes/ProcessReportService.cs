@@ -26,6 +26,14 @@ public static class ProcessReportService
         foreach (ChartPoint p in points)
             sb.AppendLine($"|{p.Name}|{F(p.DryBulbC)}|{F(p.WetBulbC)}|{F(p.DewPointC)}|{F(p.RelativeHumidityPercent)}|{F(p.HumidityRatioKgPerKg*1000)}|{F(p.EnthalpyKJPerKgDryAir)}|{F(p.SpecificVolumeM3PerKgDryAir)}|{p.Method}|");
         sb.AppendLine();
+        sb.AppendLine("### Procedencia de los estados");
+        foreach(var p in points)
+        {
+            sb.AppendLine($"- {p.Name}: origen **{p.Origin}**, método **{p.Method}**.");
+            if(p.InputConditions is {Count:>0})
+                sb.AppendLine($"  Datos originales (SI): {string.Join(", ",p.InputConditions.Select(kv=>$"{kv.Key}={F(kv.Value)}"))}.");
+        }
+        sb.AppendLine();
         sb.AppendLine("## Procesos");
         if (processes.Count == 0) sb.AppendLine("No se han registrado procesos.");
         foreach (var process in processes)
@@ -57,12 +65,16 @@ public static class ProcessReportService
                     }
                     ProcessType method=process.Type==ProcessType.Bypass ? ProcessType.Automatic : process.Type;
                     if (!ProcessCalculator.TryCalculate(from,to,method,process.DryAirMassFlowKgS,
-                        out ProcessResult result,out string error))
+                        process.CondensateTemperatureC,out ProcessResult result,out string error))
                     {
                         sb.AppendLine($"|{from.Name}→{to.Name}: {error}|—|—|—|—|—|");
                         continue;
                     }
                     sb.AppendLine($"|{from.Name}→{to.Name}|{F(result.DeltaTemperatureC)}|{F(result.DeltaHumidityRatioKgPerKg*1000)}|{F(result.DeltaEnthalpyKJPerKgDryAir)}|{(result.ThermalPowerKW.HasValue?F(result.ThermalPowerKW.Value):"sin caudal")}|{(result.SensibleHeatFactor.HasValue?F(result.SensibleHeatFactor.Value):"indefinido")}|");
+                    if (result.CondensateMassFlowKgS is double mc)
+                        sb.AppendLine($"- Condensado retirado: {F(mc)} kg/s.");
+                    if (result.CoilCoolingLoadKW is double qc)
+                        sb.AppendLine($"- Carga del serpentín con entalpía del condensado: {F(qc)} kW.");
                 }
             }
             sb.AppendLine();

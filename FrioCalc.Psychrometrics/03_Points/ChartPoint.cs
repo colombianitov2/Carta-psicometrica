@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace FrioCalc.Psychrometrics.Points;
 
 // ------------------------------ Sección 3.1.1 - Modelo de punto psicrométrico ------------------------------
@@ -14,6 +16,8 @@ public sealed record ChartPoint(
     double DewPointC,
     double EnthalpyKJPerKgDryAir,
     double SpecificVolumeM3PerKgDryAir,
-    string Method = "Automático");
+    string Method = "Automático",
+    string Origin = "Calculado",
+    IReadOnlyDictionary<StateProperty,double>? InputConditions = null);
 
 // ------------------------------ Fin de sección 3.1.1 ------------------------------

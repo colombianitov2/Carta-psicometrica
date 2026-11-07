@@ -719,8 +719,7 @@ public partial class PsychrometricChartView : UserControl
             && point is not null)
         {
             PointsAboutToChange?.Invoke();
-            _chartPoints.Add(
-                point);
+            _chartPoints.Add(point with { Origin = "Clic derecho", Method = "Tbs + W (ratón)" });
 
             _nextPointId++;
 
