@@ -91,6 +91,24 @@ static class Program
             Check(ProcessCalculator.TryBypassOutlet(Create(15,30,60),10,.2,16,"#447788",
                 out var bypass,out var bypassError) && bypass is not null,bypassError);
 
+            // [T4.1] Efectividad al 100 % debe alcanzar saturación y BF no debe humidificar por error.
+            Check(ProcessCalculator.TryEvaporativeOutlet(dryAir,1.0,17,"#446688",
+                out var saturated,out var satError) && saturated is not null,satError);
+            Check(Math.Abs(saturated!.RelativeHumidityPercent-100) < .05,"Evaporativa ε=100% saturación");
+            Check(!ProcessCalculator.TryBypassOutlet(Create(18,30,40),25,.2,19,"#447788",
+                out _,out _),"ADP superior a rocío incompatible para deshumidificación");
+            var humidIn=Create(20,30,60);
+            var humidOut=Create(21,20,95);
+            Check(ProcessCalculator.TryCalculate(humidIn,humidOut,ProcessType.CoolingDehumidification,
+                1.0,20.0,out var cooling,out var coolError),coolError);
+            Check(cooling.CondensateMassFlowKgS is double waterMass && waterMass>0,
+                "Condensado mass balance");
+            Check(cooling.CoilCoolingLoadKW is double coil && coil>0,
+                "Carga de serpentín condensado");
+            Check(ProcessCalculator.TryCalculate(humidIn,humidOut,ProcessType.CoolingDehumidification,
+                1.0,out var uncorrected,out _)
+                && uncorrected.CoilCoolingLoadKW is null,"Sin temperatura del condensado, carga no inferida");
+
             // [T5] Unidades sin cambio de estado
             double original=101.325;
             Check(Math.Abs(PsychrometricUnits.PressureToSI(

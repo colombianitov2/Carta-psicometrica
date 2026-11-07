@@ -21,4 +21,5 @@ public sealed record PsychrometricProcess(
     double? BypassFactor = null,
     string Method = "Balances de masa y energía",
     bool Visible = true,
-    string Report = "");
+    string Report = "",
+    double? CondensateTemperatureC = null);

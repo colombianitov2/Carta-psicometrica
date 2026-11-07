@@ -11,7 +11,9 @@ public sealed record ProcessResult(
     double DeltaEnthalpyKJPerKgDryAir, double? ThermalPowerKW,
     double? MoistureFlowKgS, double? SensiblePowerKW,
     double? LatentPowerKW, double? SensibleHeatFactor,
-    string Diagnostic);
+    string Diagnostic,
+    double? CondensateMassFlowKgS = null,
+    double? CoilCoolingLoadKW = null);
 
 public static class ProcessCalculator
 {
@@ -19,8 +21,21 @@ public static class ProcessCalculator
         ProcessType processType, double? dryAirMassFlowKgS,
         out ProcessResult result, out string error)
     {
+        return TryCalculate(inlet,outlet,processType,dryAirMassFlowKgS,null,out result,out error);
+    }
+
+    // [4.2.1] Balance de serpentín con temperatura explícita del condensado.
+    public static bool TryCalculate(ChartPoint inlet, ChartPoint outlet,
+        ProcessType processType, double? dryAirMassFlowKgS, double? condensateTempC,
+        out ProcessResult result, out string error)
+    {
         error = "";
-        result = new ProcessResult(0, 0, 0, null, null, null, null, null, "");
+        result = new ProcessResult(0,0,0,null,null,null,null,null,"");
+        if (condensateTempC.HasValue && (!double.IsFinite(condensateTempC.Value) ||
+            condensateTempC.Value < -50 || condensateTempC.Value > 100))
+        {
+            error = "La temperatura de condensado debe ser finita y estar entre −50 y 100 °C."; return false;
+        }
         if (Math.Abs(inlet.PressureKPa - outlet.PressureKPa) > 1e-6)
         {
             error = "Estados a presiones diferentes: se requiere un modelo de compresión o expansión."; return false;
@@ -36,6 +51,14 @@ public static class ProcessCalculator
         if (processType == ProcessType.Sensible && Math.Abs(dw) > 0.00015)
         {
             error = "Un proceso exclusivamente sensible debe mantener la humedad absoluta."; return false;
+        }
+        if (processType == ProcessType.HeatingHumidification && (dT < -.1 || dw < -.00015))
+        {
+            error = "Calentamiento y humidificación requiere temperatura y humedad no decrecientes."; return false;
+        }
+        if (processType == ProcessType.Desiccant && dw > .00015)
+        {
+            error = "La deshumidificación por desecante debe reducir W; revise los estados."; return false;
         }
         if (processType == ProcessType.CoolingDehumidification && (dT > .1 || dw > .00015))
         {
@@ -66,13 +89,27 @@ public static class ProcessCalculator
         double? sensible = dryAirMassFlowKgS * sensibleSpecific;
         double? latent = dryAirMassFlowKgS * latentSpecific;
         double? ratio = Math.Abs(dh) > 1e-9 ? sensibleSpecific / dh : null;
+        // FCS (SHR) solo se presenta si las partes tienen signos coherentes.
+        if (ratio is double shr && (!double.IsFinite(shr) || shr < -1e-6 || shr > 1.000001)) ratio = null;
+
+        double? condensate = dryAirMassFlowKgS is double flow && dw < -1e-12 ? -flow * dw : null;
+        double? coilCooling = null;
+        if (condensateTempC is double tCond && condensate is double removed)
+        {
+            // Entalpía del condensado líquido con referencia a 0 °C. Prohibido inferir tCond.
+            const double waterHeatKJPerKgK = 4.186;
+            coilCooling = dryAirMassFlowKgS!.Value *
+                (inlet.EnthalpyKJPerKgDryAir - outlet.EnthalpyKJPerKgDryAir)
+                - removed * waterHeatKJPerKgK * tCond;
+        }
         string note = dryAirMassFlowKgS is null
             ? "Se conocen cambios específicos, pero falta el caudal de aire seco para determinar potencias y flujo de agua."
             : "Potencias con referencia de entalpía de aire húmedo; para deshumidificación, verificar adicionalmente entalpía del condensado.";
         if (processType == ProcessType.Desiccant) note += " La regeneración y los balances del desecante requieren datos del equipo.";
         if (processType == ProcessType.SteamHumidification) note += " Verificar entalpía y consumo del vapor inyectado.";
+        if (coilCooling.HasValue) note += $" Balance de condensado a {condensateTempC:0.###} °C incluido.";
         result = new ProcessResult(dT, dw, dh, total, dryAirMassFlowKgS * dw,
-            sensible, latent, ratio, note);
+            sensible, latent, ratio, note,condensate,coilCooling);
         return true;
     }
 
@@ -89,15 +126,20 @@ public static class ProcessCalculator
         { diagnostic = "No se pudo determinar el bulbo húmedo de entrada."; return false; }
         double outletTemperature = inlet.DryBulbC
             - efficiency * (inlet.DryBulbC - inlet.WetBulbC);
-        // Aproximación ideal de entalpía constante (aporte energético del agua líquida despreciado).
-        double outletHumidity = MoistAirEnthalpy.HumidityRatioFromEnthalpyAndDryBulb(
-            inlet.EnthalpyKJPerKgDryAir,outletTemperature);
+        // Trayectoria interpolada entre entrada y estado saturado de bulbo húmedo.
+        // Así ε=1 llega exactamente a la saturación; no atribuir h constante exacta.
+        double pws = SaturationVaporPressure.GetPressureKPa(inlet.WetBulbC);
+        if (pws >= inlet.PressureKPa) { diagnostic="Presión de saturación incompatible con bulbo húmedo."; return false; }
+        double saturatedWetBulbW = SaturationHumidityRatio.FromPressuresKPa(inlet.PressureKPa,pws);
+        double outletHumidity = inlet.HumidityRatioKgPerKg
+            + efficiency * (saturatedWetBulbW - inlet.HumidityRatioKgPerKg);
         if (!PointPropertyCalculator.TryCreatePoint(id,$"P{id}",colorHex,inlet.PressureKPa,
             outletTemperature,outletHumidity,out output) || output == null)
         {
             diagnostic = "La salida ideal estimada no define un estado húmedo válido."; return false;
         }
-        diagnostic = "Modelo de efectividad de saturación: T2=T1−ε(T1−Tbh1); h2≈h1. Verificar balance de agua del equipo.";
+        diagnostic = "Modelo ideal interpolado por efectividad: T2=T1−ε(T1−Tbh1); W2=W1+ε(Ws(Tbh1)−W1). " +
+            "A ε=1 la salida está saturada; no sustituye el balance completo de agua de reposición.";
         return true;
     }
 
@@ -110,6 +152,11 @@ public static class ProcessCalculator
             !double.IsFinite(bypassFactor) || bypassFactor < 0 || bypassFactor > 1)
         {
             diagnostic="ADP debe ser menor o igual a Tbs de entrada; BF entre 0 y 1."; return false;
+        }
+        if (bypassFactor < 1.0 && double.IsFinite(inlet.DewPointC) &&
+            apparatusDewPointC > inlet.DewPointC + 1e-7)
+        {
+            diagnostic="Para serpentín deshumidificador, ADP debe ser menor o igual al punto de rocío de entrada."; return false;
         }
         double pws = SaturationVaporPressure.GetPressureKPa(apparatusDewPointC);
         if (pws >= inlet.PressureKPa) { diagnostic="Presión de saturación ADP incompatible."; return false; }
@@ -133,7 +180,7 @@ public static class ProcessCalculator
     {
         output=null; diagnostic="";
         if (!double.IsFinite(waterAddedKgPerKgDryAir) || waterAddedKgPerKgDryAir < 0 ||
-            !double.IsFinite(steamEnthalpyKJPerKg))
+            !double.IsFinite(steamEnthalpyKJPerKg) || steamEnthalpyKJPerKg <= 0)
         {
             diagnostic="Se requiere masa de vapor añadida no negativa y su entalpía específica."; return false;
         }

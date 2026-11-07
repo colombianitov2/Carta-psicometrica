@@ -83,6 +83,9 @@
                             <TextBlock Text="Caudal másico de aire seco, kg/s (opcional salvo donde se requiera)"
                                        TextWrapping="Wrap" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="DryFlowTextBox" Height="27" Margin="0,0,0,8"/>
+                            <TextBlock Text="Temperatura del condensado para balance del serpentín (°C, opcional)"
+                                       TextWrapping="Wrap" FontSize="12" Margin="0,0,0,3"/>
+                            <TextBox x:Name="CondensateTemperatureTextBox" Height="27" Margin="0,0,0,8"/>
                             <TextBlock Text="Mezcla de N entradas: caudales m³/h separados por punto y coma (opcional)"
                                        TextWrapping="Wrap" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="MixFlowsListTextBox" Height="27" Margin="0,0,0,8"/>

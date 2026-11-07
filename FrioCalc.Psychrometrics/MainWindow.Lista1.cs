@@ -196,6 +196,17 @@ public partial class MainWindow
             MessageBox.Show(error, "Caudal inválido", MessageBoxButton.OK, MessageBoxImage.Warning); return;
         }
 
+        double? condensateTemperature = null;
+        if (!string.IsNullOrWhiteSpace(CondensateTemperatureTextBox.Text))
+        {
+            if (!TryReadPositiveOrZero(CondensateTemperatureTextBox.Text,out double condensateInput) ||
+                condensateInput < -50 || condensateInput > 100)
+            {
+                MessageBox.Show("Temperatura de condensado inválida. Se requiere −50 a 100 °C.",
+                    "Balance de serpentín",MessageBoxButton.OK,MessageBoxImage.Warning);return;
+            }
+            condensateTemperature = condensateInput;
+        }
         string predictionNote = "";
         if (selected.Length == 1 && predictive)
         {
@@ -299,7 +310,7 @@ public partial class MainWindow
             {
                 if (!ProcessCalculator.TryCalculate(selected[i]!,selected[i+1]!,
                     type == ProcessType.Bypass ? ProcessType.Automatic : type,
-                    massFlow,out ProcessResult result,out error))
+                    massFlow,condensateTemperature,out ProcessResult result,out error))
                 {
                     MessageBox.Show($"{selected[i]!.Name} → {selected[i+1]!.Name}: {error}",
                         "Proceso no resuelto",MessageBoxButton.OK,MessageBoxImage.Warning); return;
@@ -308,6 +319,13 @@ public partial class MainWindow
                 report.AppendLine($"ΔT={result.DeltaTemperatureC:0.###} °C; ΔW={result.DeltaHumidityRatioKgPerKg*1000:0.###} g/kg; Δh={result.DeltaEnthalpyKJPerKgDryAir:0.###} kJ/kgda.");
                 if (result.ThermalPowerKW.HasValue)
                     report.AppendLine($"Potencia (entalpía del aire): {result.ThermalPowerKW.Value:0.###} kW; agua={result.MoistureFlowKgS:0.#####} kg/s.");
+                if (result.CondensateMassFlowKgS is double mc)
+                    report.AppendLine($"Condensado eliminado={mc:0.######} kg/s.");
+                if (result.CoilCoolingLoadKW is double qc)
+                    report.AppendLine($"Carga de serpentín con entalpía del condensado={qc:0.###} kW.");
+                report.AppendLine(result.SensibleHeatFactor is double fcs ?
+                    $"Factor de calor sensible estimado={fcs:0.###}." :
+                    "FCS no definido para estos signos/balances.");
                 report.AppendLine(result.Diagnostic);
             }
             description = predictionNote + Environment.NewLine + report.ToString();
@@ -318,7 +336,8 @@ public partial class MainWindow
             ? $"PR{processId}" : NewProcessNameTextBox.Text.Trim();
         RememberHistory();
         _savedProcesses.Add(new PsychrometricProcess(
-            processId,name,initial.ColorHex,type,ids,massFlow,Report:description));
+            processId,name,initial.ColorHex,type,ids,massFlow,Report:description,
+            CondensateTemperatureC:condensateTemperature));
         UpdateProcessesInCharts();
         ProcessResultText.Text = description;
         SelectedProcessSummaryMainText.Text = $"Proceso: {name}\n" + description;
@@ -358,6 +377,7 @@ public partial class MainWindow
             _selectedPointIds.RemoveAt(_selectedPointIds.Count-1);
         RefreshSelectionList();
         NewProcessNameTextBox.Text=process.Name;
+        CondensateTemperatureTextBox.Text=process.CondensateTemperatureC?.ToString("0.###",CultureInfo.CurrentCulture) ?? "";
         foreach(ComboBoxItem item in ProcessTypeComboBox.Items)
             if(item.Tag?.ToString()==process.Type.ToString())
                 {ProcessTypeComboBox.SelectedItem=item;break;}
