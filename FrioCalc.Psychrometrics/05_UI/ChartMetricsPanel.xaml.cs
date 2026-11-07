@@ -348,6 +348,36 @@ public partial class ChartMetricsPanel : UserControl
         UnitsChanged?.Invoke(next);
     }
 
+
+    // [5.3C.14] Insertar casos didácticos en SI preservando la unidad seleccionada.
+    public void SetStateInputSI(StateProperty property, double canonicalValue)
+    {
+        double shown = property switch
+        {
+            StateProperty.DryBulb or StateProperty.WetBulb or StateProperty.DewPoint =>
+                PsychrometricUnits.TemperatureFromSI(canonicalValue, CurrentUnits),
+            StateProperty.HumidityRatio =>
+                PsychrometricUnits.HumidityFromSI(canonicalValue, CurrentUnits),
+            StateProperty.Enthalpy =>
+                PsychrometricUnits.EnthalpyFromSI(canonicalValue, CurrentUnits),
+            StateProperty.SpecificVolume =>
+                PsychrometricUnits.VolumeFromSI(canonicalValue, CurrentUnits),
+            _ => canonicalValue
+        };
+        TextBox box = property switch
+        {
+            StateProperty.DryBulb => DryBulbInput,
+            StateProperty.WetBulb => WetBulbInput,
+            StateProperty.DewPoint => DewPointInput,
+            StateProperty.RelativeHumidity => RelativeHumidityInput,
+            StateProperty.HumidityRatio => HumidityRatioInput,
+            StateProperty.Enthalpy => EnthalpyInput,
+            StateProperty.SpecificVolume => SpecificVolumeInput,
+            _ => throw new ArgumentOutOfRangeException(nameof(property))
+        };
+        box.Text = shown.ToString("0.######", CultureInfo.CurrentCulture);
+    }
+
     // ------------------------------ Sección 5.3C.10 - Cierre ------------------------------
 
 }

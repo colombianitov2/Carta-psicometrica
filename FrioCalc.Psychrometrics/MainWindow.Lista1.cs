@@ -1,0 +1,294 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using Microsoft.Win32;
+using FrioCalc.Psychrometrics.Core;
+using FrioCalc.Psychrometrics.Points;
+using FrioCalc.Psychrometrics.Processes;
+
+namespace FrioCalc.Psychrometrics;
+
+// [5.1C.9] Coordinación de la Lista 1; estado de puntos y procesos separados del render.
+public partial class MainWindow
+{
+    private readonly List<int> _selectedPointIds = new();
+    private readonly List<PsychrometricProcess> _savedProcesses = new();
+    private int _nextProcessId = 1;
+
+    private void InitializeLista1()
+    {
+        PointPropertiesPanel.AddPointRequested += AddStatePoint;
+        PointPropertiesPanel.OpenProcessesRequested += () => WorkspaceTabs.SelectedIndex = 1;
+        PointPropertiesPanel.DeletePointRequested += DeleteStatePoint;
+        PointPropertiesPanel.SelectionChanged += ids =>
+        {
+            _selectedPointIds.Clear();
+            _selectedPointIds.AddRange(ids);
+            RefreshSelectionList();
+        };
+        ChartMetricsPanel.SensibleHeatFactorVisibilityChanged += visible =>
+        {
+            PsychrometricChart.SetSensibleHeatFactorVisible(visible);
+            ProcessChart.SetSensibleHeatFactorVisible(visible);
+        };
+        ChartMetricsPanel.UnitsChanged += units =>
+        {
+            PointPropertiesPanel.SetUnitSystem(units);
+            ProcessResultText.Text =
+                "Unidades cambiadas en las entradas y las propiedades. La geometría y los ejes siguen en SI; conversión completa pendiente de validar.";
+        };
+        PsychrometricChart.SetSensibleHeatFactorVisible(false);
+        ProcessChart.SetPressure(PressureSelector.CurrentPressureKPa);
+        ProcessChart.SetPointSelectionMode(false);
+        ProcessChart.SetDryBulbVisible(true);
+        ProcessChart.SetHumidityRatioVisible(true);
+        ProcessChart.SetSaturationCurveVisible(true);
+        ProcessChart.SetRelativeHumidityVisible(true);
+        ProcessChart.SetEnthalpyVisible(true);
+        ProcessChart.SetWetBulbVisible(true);
+        ProcessChart.SetSpecificVolumeVisible(true);
+        ProcessChart.SetSensibleHeatFactorVisible(false);
+        RefreshSelectionList();
+    }
+
+    // [5.1C.10] Puntos entrados por teclado.
+    private void AddStatePoint()
+    {
+        if (!ChartMetricsPanel.TryReadStateConditions(out var conditions, out string error))
+        {
+            MessageBox.Show(error, "Valor inválido", MessageBoxButton.OK, MessageBoxImage.Warning); return;
+        }
+        if (!PsychrometricChart.TryAddPointFromConditions(conditions, out error))
+        {
+            MessageBox.Show(error, "No se pudo ubicar el punto", MessageBoxButton.OK, MessageBoxImage.Warning); return;
+        }
+        ChartMetricsPanel.ClearStateConditions();
+    }
+
+    private void DeleteStatePoint(int id)
+    {
+        bool used = _savedProcesses.Any(p => p.PointIds.Contains(id));
+        if (used && MessageBox.Show(
+                "Este punto forma parte de procesos guardados. Al eliminarlo también se eliminarán los procesos relacionados. ¿Continuar?",
+                "Eliminar punto", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            return;
+        if (PsychrometricChart.DeletePoint(id))
+        {
+            _savedProcesses.RemoveAll(p => p.PointIds.Contains(id));
+            UpdateProcessesInCharts();
+        }
+    }
+
+    private void OnLista1PointsChanged(IReadOnlyList<ChartPoint> points)
+    {
+        ProcessChart.SetSharedPoints(points);
+        _savedProcesses.RemoveAll(process => process.PointIds.Any(id => !points.Any(p => p.Id == id)));
+        _selectedPointIds.RemoveAll(id => !points.Any(p => p.Id == id));
+        RefreshSelectionList();
+        UpdateProcessesInCharts();
+    }
+
+    private void OnLista1PressureChanged(double pressureKPa)
+    {
+        ProcessChart.SetPressure(pressureKPa);
+        _savedProcesses.Clear();
+        _selectedPointIds.Clear();
+        _nextProcessId = 1;
+        PointPropertiesPanel.ClearSelection();
+        ProcessResultText.Text = "La presión cambió; puntos y procesos anteriores se descartan para evitar estados inconsistentes.";
+        UpdateProcessesInCharts();
+    }
+
+    // [5.1C.11] Selección ordenada para la segunda carta.
+    private void RefreshSelectionList()
+    {
+        ProcessSelectionList.ItemsSource = _selectedPointIds
+            .Select((id, index) => $"{index + 1}. P{id}")
+            .ToArray();
+    }
+
+    private void MovePointUp_Click(object sender, RoutedEventArgs e)
+        => MoveSelection(-1);
+
+    private void MovePointDown_Click(object sender, RoutedEventArgs e)
+        => MoveSelection(1);
+
+    private void MoveSelection(int direction)
+    {
+        int current = ProcessSelectionList.SelectedIndex;
+        int next = current + direction;
+        if (current < 0 || next < 0 || next >= _selectedPointIds.Count) return;
+        (_selectedPointIds[current], _selectedPointIds[next]) =
+            (_selectedPointIds[next], _selectedPointIds[current]);
+        RefreshSelectionList();
+        ProcessSelectionList.SelectedIndex = next;
+    }
+
+    // [5.1C.12] Graficación, cálculos y agrupación de procesos independientes.
+    private void PlotProcess_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selectedPointIds.Count < 2)
+        {
+            MessageBox.Show("Seleccione al menos dos puntos en Carta y puntos.",
+                "Proceso", MessageBoxButton.OK, MessageBoxImage.Information); return;
+        }
+        var points = PsychrometricChart.ActivePoints;
+        var selected = _selectedPointIds
+            .Select(id => points.FirstOrDefault(p => p.Id == id)).ToArray();
+        if (selected.Any(p => p == null)) return;
+
+        string typeValue = (ProcessTypeComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "Automatic";
+        if (!Enum.TryParse(typeValue, out ProcessType type)) type = ProcessType.Automatic;
+        if (!TryReadOptionalFlow(DryFlowTextBox.Text, out double? massFlow, out string error))
+        {
+            MessageBox.Show(error, "Caudal inválido", MessageBoxButton.OK, MessageBoxImage.Warning); return;
+        }
+
+        var ids = new List<int>(_selectedPointIds);
+        string description;
+        if (type == ProcessType.AdiabaticMixing)
+        {
+            if (selected.Length != 2)
+            {
+                MessageBox.Show("La mezcla en esta versión requiere dos corrientes de entrada.",
+                    "Mezcla",MessageBoxButton.OK,MessageBoxImage.Warning); return;
+            }
+            if (!TryReadPositive(MixFlowFirstTextBox.Text,out double v1) ||
+                !TryReadPositive(MixFlowSecondTextBox.Text,out double v2))
+            {
+                MessageBox.Show("Indique ambos caudales volumétricos positivos en m³/h.",
+                    "Mezcla",MessageBoxButton.OK,MessageBoxImage.Warning); return;
+            }
+            var first = selected[0]!;
+            var second = selected[1]!;
+            var inputs = new List<(ChartPoint State,double DryAirMassFlowKgS)>
+            {
+                (first, PsychrometricUnits.FlowToDryAirMassKgS(v1/3600.0,first.SpecificVolumeM3PerKgDryAir)),
+                (second,PsychrometricUnits.FlowToDryAirMassKgS(v2/3600.0,second.SpecificVolumeM3PerKgDryAir))
+            };
+            if (!ProcessCalculator.TryMix(inputs,0,first.ColorHex,out ChartPoint? mixed,out error) || mixed == null)
+            {
+                MessageBox.Show(error,"Mezcla no resuelta",MessageBoxButton.OK,MessageBoxImage.Warning); return;
+            }
+            var constraints = new Dictionary<StateProperty,double>
+            {
+                [StateProperty.DryBulb]=mixed.DryBulbC,
+                [StateProperty.HumidityRatio]=mixed.HumidityRatioKgPerKg
+            };
+            if (!PsychrometricChart.TryAddPointFromConditions(constraints,out error))
+            {
+                MessageBox.Show(error,"Mezcla fuera de la carta",MessageBoxButton.OK,MessageBoxImage.Warning); return;
+            }
+            ChartPoint added = PsychrometricChart.ActivePoints.Last();
+            ids.Add(added.Id);
+            double m = inputs.Sum(s => s.DryAirMassFlowKgS);
+            description = $"Mezcla: ṁda total={m:0.####} kg/s; T={added.DryBulbC:0.##} °C; " +
+                $"W={added.HumidityRatioKgPerKg*1000:0.###} g/kg; h={added.EnthalpyKJPerKgDryAir:0.###} kJ/kg. " +
+                "Balances de masa de aire seco, agua y entalpía. Sin condensación.";
+        }
+        else
+        {
+            var report = new StringBuilder();
+            for (int i=0;i<selected.Length-1;i++)
+            {
+                if (!ProcessCalculator.TryCalculate(selected[i]!,selected[i+1]!,type,
+                    massFlow,out ProcessResult result,out error))
+                {
+                    MessageBox.Show($"{selected[i]!.Name} → {selected[i+1]!.Name}: {error}",
+                        "Proceso no resuelto",MessageBoxButton.OK,MessageBoxImage.Warning); return;
+                }
+                report.AppendLine($"{selected[i]!.Name} → {selected[i+1]!.Name}");
+                report.AppendLine($"ΔT={result.DeltaTemperatureC:0.###} °C; ΔW={result.DeltaHumidityRatioKgPerKg*1000:0.###} g/kg; Δh={result.DeltaEnthalpyKJPerKgDryAir:0.###} kJ/kgda.");
+                if (result.ThermalPowerKW.HasValue)
+                    report.AppendLine($"Potencia (entalpía del aire): {result.ThermalPowerKW.Value:0.###} kW; agua={result.MoistureFlowKgS:0.#####} kg/s.");
+                report.AppendLine(result.Diagnostic);
+            }
+            description = report.ToString();
+        }
+        ChartPoint initial = selected[0]!;
+        int processId = _nextProcessId++;
+        _savedProcesses.Add(new PsychrometricProcess(
+            processId,$"PR{processId}",initial.ColorHex,type,ids,massFlow));
+        UpdateProcessesInCharts();
+        ProcessResultText.Text = description;
+        PointPropertiesPanel.ClearSelection();
+        WorkspaceTabs.SelectedIndex = 1;
+    }
+
+    private void DeleteProcess_Click(object sender, RoutedEventArgs e)
+    {
+        int index = SavedProcessesList.SelectedIndex;
+        if (index < 0 || index >= _savedProcesses.Count) return;
+        _savedProcesses.RemoveAt(index);
+        UpdateProcessesInCharts();
+        ProcessResultText.Text = "Proceso eliminado. Los puntos originales se conservan.";
+    }
+
+    private void UpdateProcessesInCharts()
+    {
+        PsychrometricChart.SetProcesses(_savedProcesses);
+        ProcessChart.SetProcesses(_savedProcesses);
+        SavedProcessesList.ItemsSource = _savedProcesses.Select(p =>
+            $"{p.Name} · {p.Type} · {string.Join(" → ",p.PointIds.Select(id => "P"+id))}").ToArray();
+    }
+
+    private static bool TryReadPositive(string raw, out double value)
+    {
+        bool valid = double.TryParse(raw.Trim(),NumberStyles.Float,CultureInfo.CurrentCulture,out value)
+            || double.TryParse(raw.Trim().Replace(',','.'),NumberStyles.Float,CultureInfo.InvariantCulture,out value);
+        return valid && double.IsFinite(value) && value > 0;
+    }
+
+    private static bool TryReadOptionalFlow(string raw, out double? flow, out string error)
+    {
+        flow = null; error = "";
+        if (string.IsNullOrWhiteSpace(raw)) return true;
+        if (!TryReadPositive(raw,out double value))
+        { error="Introduzca un flujo másico de aire seco positivo, en kg/s."; return false; }
+        flow = value;
+        return true;
+    }
+
+    // [5.1C.13] Casos didácticos y exportación auditable.
+    private void ExampleCooling_Click(object sender, RoutedEventArgs e)
+    {
+        ChartMetricsPanel.ClearStateConditions();
+        ChartMetricsPanel.SetStateInputSI(StateProperty.DryBulb,35);
+        ChartMetricsPanel.SetStateInputSI(StateProperty.HumidityRatio,.010);
+        WorkspaceTabs.SelectedIndex=0;
+    }
+    private void ExampleHumidifier_Click(object sender, RoutedEventArgs e)
+    {
+        ChartMetricsPanel.ClearStateConditions();
+        ChartMetricsPanel.SetStateInputSI(StateProperty.DryBulb,30);
+        ChartMetricsPanel.SetStateInputSI(StateProperty.RelativeHumidity,10);
+        WorkspaceTabs.SelectedIndex=0;
+    }
+
+    private void ExportReport_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title="Exportar resultados psicrométricos",
+            Filter="CSV (UTF-8)|*.csv",
+            FileName="FrioCalc_Psicrometria_Informe.csv"
+        };
+        if (dialog.ShowDialog(this)!=true) return;
+        var sb=new StringBuilder();
+        sb.AppendLine("Tipo;ID;Nombre;Presion_kPa_abs;Tbs_C;Tbh_C;Trocio_C;HR_pct;W_kg_kgda;h_kJ_kgda;v_m3_kgda");
+        foreach(var p in PsychrometricChart.ActivePoints)
+            sb.AppendLine(FormattableString.Invariant($"Punto;{p.Id};{p.Name};{p.PressureKPa};{p.DryBulbC};{p.WetBulbC};{p.DewPointC};{p.RelativeHumidityPercent};{p.HumidityRatioKgPerKg};{p.EnthalpyKJPerKgDryAir};{p.SpecificVolumeM3PerKgDryAir}"));
+        sb.AppendLine("Tipo;ID;Nombre;Metodo;Puntos;Flujo_mda_kg_s;Nota");
+        foreach(var p in _savedProcesses)
+            sb.AppendLine($"Proceso;{p.Id};{p.Name};{p.Type};{string.Join(">",p.PointIds)};{p.DryAirMassFlowKgS};Verificar balance y supuestos en la interfaz");
+        sb.AppendLine("Fuente;ASHRAE Handbook-Fundamentals capitulo psicrometria;PsychroLib;CoolProp HumidAir");
+        sb.AppendLine("Advertencia;CSV no sustituye auditoria de balances de condensado ni modelos de equipos.");
+        File.WriteAllText(dialog.FileName,sb.ToString(),new UTF8Encoding(true));
+        ProcessResultText.Text="Informe CSV exportado. Revise las advertencias y unidades de cada columna.";
+    }
+}

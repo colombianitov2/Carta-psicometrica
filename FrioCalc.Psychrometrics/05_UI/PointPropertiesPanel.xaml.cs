@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using FrioCalc.Psychrometrics.Points;
+using FrioCalc.Psychrometrics.Core;
 
 namespace FrioCalc.Psychrometrics.UI;
 
@@ -14,6 +15,7 @@ namespace FrioCalc.Psychrometrics.UI;
 public partial class PointPropertiesPanel : UserControl
 {
 
+    private UnitSystem _currentUnits = UnitSystem.SI;
     private readonly List<int> _selection = new();
     private IReadOnlyList<ChartPoint> _latestPoints = Array.Empty<ChartPoint>();
     public event Action? AddPointRequested;
@@ -156,18 +158,14 @@ public partial class PointPropertiesPanel : UserControl
         AddProperty(
             content,
             "Bulbo seco",
-            FormatValue(
-                point.DryBulbC,
-                "0.00",
-                "°C"));
+            FormatValue(PsychrometricUnits.TemperatureFromSI(point.DryBulbC, _currentUnits), "0.00",
+                _currentUnits == UnitSystem.SI ? "°C" : "°F"));
 
         AddProperty(
             content,
             "Humedad absoluta",
-            FormatValue(
-                point.HumidityRatioKgPerKg * 1000.0,
-                "0.00",
-                "g/kg aire seco"));
+            FormatValue(PsychrometricUnits.HumidityFromSI(point.HumidityRatioKgPerKg, _currentUnits), "0.00",
+                _currentUnits == UnitSystem.SI ? "g/kg aire seco" : "gr/lb aire seco"));
 
         AddProperty(
             content,
@@ -180,42 +178,32 @@ public partial class PointPropertiesPanel : UserControl
         AddProperty(
             content,
             "Bulbo húmedo",
-            FormatValue(
-                point.WetBulbC,
-                "0.00",
-                "°C"));
+            FormatValue(PsychrometricUnits.TemperatureFromSI(point.WetBulbC, _currentUnits), "0.00",
+                _currentUnits == UnitSystem.SI ? "°C" : "°F"));
 
         AddProperty(
             content,
             "Punto de rocío",
-            FormatValue(
-                point.DewPointC,
-                "0.00",
-                "°C"));
+            FormatValue(PsychrometricUnits.TemperatureFromSI(point.DewPointC, _currentUnits), "0.00",
+                _currentUnits == UnitSystem.SI ? "°C" : "°F"));
 
         AddProperty(
             content,
             "Entalpía",
-            FormatValue(
-                point.EnthalpyKJPerKgDryAir,
-                "0.00",
-                "kJ/kg aire seco"));
+            FormatValue(PsychrometricUnits.EnthalpyFromSI(point.EnthalpyKJPerKgDryAir, _currentUnits), "0.00",
+                _currentUnits == UnitSystem.SI ? "kJ/kg aire seco" : "Btu/lb aire seco"));
 
         AddProperty(
             content,
             "Volumen específico",
-            FormatValue(
-                point.SpecificVolumeM3PerKgDryAir,
-                "0.000",
-                "m³/kg aire seco"));
+            FormatValue(PsychrometricUnits.VolumeFromSI(point.SpecificVolumeM3PerKgDryAir, _currentUnits), "0.000",
+                _currentUnits == UnitSystem.SI ? "m³/kg aire seco" : "ft³/lb aire seco"));
 
         AddProperty(
             content,
             "Presión",
-            FormatValue(
-                point.PressureKPa,
-                "0.###",
-                "kPa abs"));
+            FormatValue(PsychrometricUnits.PressureFromSI(point.PressureKPa, _currentUnits), "0.###",
+                _currentUnits == UnitSystem.SI ? "kPa abs" : "psi abs"));
 
         return
             new Border
@@ -362,6 +350,12 @@ public partial class PointPropertiesPanel : UserControl
     // ------------------------------ Fin de sección 5.4C.5 ------------------------------
 
 
+
+    public void SetUnitSystem(UnitSystem units)
+    {
+        _currentUnits = units;
+        SetPoints(_latestPoints);
+    }
 
     // [5.4C.7] Acciones externas y selección ordenada
     private void AddPoint_Click(object sender, RoutedEventArgs e)
