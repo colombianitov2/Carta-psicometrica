@@ -16,3 +16,5 @@ Solicitud #6: validación de diseño responsive, carta estándar y nuevas captur
 Solicitud #7: validación de entrega candidata con modo estándar inicial y manual final.
 
 SOLICITUD FINAL #7 (2026-11-07): ASHRAE 2025 casos 1–4, dos resoluciones WPF, worktree de auditoría.
+
+SOLICITUD FINAL #8: validar viewport WPF independiente del tamaño de pantalla, seis capturas reales.
