@@ -49,7 +49,7 @@ public static class ProcessCalculator
         {
             error = "La inyección de vapor no puede retirar humedad."; return false;
         }
-        if (processType == ProcessType.Desiccant || processType == ProcessType.Bypass ||
+        if (processType == ProcessType.Bypass ||
             processType == ProcessType.AdiabaticMixing)
         {
             error = "Este modelo requiere información de equipo o de varias corrientes. No se calcula como proceso simple de dos estados.";
@@ -69,8 +69,83 @@ public static class ProcessCalculator
         string note = dryAirMassFlowKgS is null
             ? "Se conocen cambios específicos, pero falta el caudal de aire seco para determinar potencias y flujo de agua."
             : "Potencias con referencia de entalpía de aire húmedo; para deshumidificación, verificar adicionalmente entalpía del condensado.";
+        if (processType == ProcessType.Desiccant) note += " La regeneración y los balances del desecante requieren datos del equipo.";
+        if (processType == ProcessType.SteamHumidification) note += " Verificar entalpía y consumo del vapor inyectado.";
         result = new ProcessResult(dT, dw, dh, total, dryAirMassFlowKgS * dw,
             sensible, latent, ratio, note);
+        return true;
+    }
+
+
+    // [4.4] Salida de un lavador de aire ideal con efectividad de saturación.
+    public static bool TryEvaporativeOutlet(ChartPoint inlet, double efficiency,
+        int id, string colorHex, out ChartPoint? output, out string diagnostic)
+    {
+        output = null;
+        diagnostic = "";
+        if (!double.IsFinite(efficiency) || efficiency < 0 || efficiency > 1)
+        { diagnostic = "La efectividad de saturación debe estar entre 0 y 1."; return false; }
+        if (!double.IsFinite(inlet.WetBulbC))
+        { diagnostic = "No se pudo determinar el bulbo húmedo de entrada."; return false; }
+        double outletTemperature = inlet.DryBulbC
+            - efficiency * (inlet.DryBulbC - inlet.WetBulbC);
+        // Aproximación ideal de entalpía constante (aporte energético del agua líquida despreciado).
+        double outletHumidity = MoistAirEnthalpy.HumidityRatioFromEnthalpyAndDryBulb(
+            inlet.EnthalpyKJPerKgDryAir,outletTemperature);
+        if (!PointPropertyCalculator.TryCreatePoint(id,$"P{id}",colorHex,inlet.PressureKPa,
+            outletTemperature,outletHumidity,out output) || output == null)
+        {
+            diagnostic = "La salida ideal estimada no define un estado húmedo válido."; return false;
+        }
+        diagnostic = "Modelo de efectividad de saturación: T2=T1−ε(T1−Tbh1); h2≈h1. Verificar balance de agua del equipo.";
+        return true;
+    }
+
+    // [4.5] Mezcla ideal de bypass con aire saturado al ADP.
+    public static bool TryBypassOutlet(ChartPoint inlet, double apparatusDewPointC,
+        double bypassFactor, int id, string colorHex, out ChartPoint? output, out string diagnostic)
+    {
+        output = null; diagnostic="";
+        if (!double.IsFinite(apparatusDewPointC) || apparatusDewPointC > inlet.DryBulbC ||
+            !double.IsFinite(bypassFactor) || bypassFactor < 0 || bypassFactor > 1)
+        {
+            diagnostic="ADP debe ser menor o igual a Tbs de entrada; BF entre 0 y 1."; return false;
+        }
+        double pws = SaturationVaporPressure.GetPressureKPa(apparatusDewPointC);
+        if (pws >= inlet.PressureKPa) { diagnostic="Presión de saturación ADP incompatible."; return false; }
+        double ws = SaturationHumidityRatio.FromPressuresKPa(inlet.PressureKPa,pws);
+        double hs = MoistAirEnthalpy.FromDryBulbAndHumidityRatio(apparatusDewPointC,ws);
+        double w2 = bypassFactor*inlet.HumidityRatioKgPerKg+(1-bypassFactor)*ws;
+        double h2 = bypassFactor*inlet.EnthalpyKJPerKgDryAir+(1-bypassFactor)*hs;
+        double t2 = (h2-2501.0*w2)/(1.006+1.86*w2);
+        if (!PointPropertyCalculator.TryCreatePoint(id,$"P{id}",colorHex,inlet.PressureKPa,
+            t2,w2,out output) || output == null)
+        {
+            diagnostic="Salida sobresaturada: revise BF, ADP y condiciones de entrada."; return false;
+        }
+        diagnostic="Modelo ideal BF: h2=BF·h1+(1−BF)·hADP y W2=BF·W1+(1−BF)·WADP. No contempla condensado ni calor del ventilador.";
+        return true;
+    }
+
+    // [4.6] Inyección de vapor con energía aportada por kg de agua.
+    public static bool TrySteamOutlet(ChartPoint inlet, double waterAddedKgPerKgDryAir,
+        double steamEnthalpyKJPerKg, int id, string colorHex, out ChartPoint? output, out string diagnostic)
+    {
+        output=null; diagnostic="";
+        if (!double.IsFinite(waterAddedKgPerKgDryAir) || waterAddedKgPerKgDryAir < 0 ||
+            !double.IsFinite(steamEnthalpyKJPerKg))
+        {
+            diagnostic="Se requiere masa de vapor añadida no negativa y su entalpía específica."; return false;
+        }
+        double w2=inlet.HumidityRatioKgPerKg+waterAddedKgPerKgDryAir;
+        double h2=inlet.EnthalpyKJPerKgDryAir+waterAddedKgPerKgDryAir*steamEnthalpyKJPerKg;
+        double t2=(h2-2501.0*w2)/(1.006+1.86*w2);
+        if (!PointPropertyCalculator.TryCreatePoint(id,$"P{id}",colorHex,inlet.PressureKPa,
+            t2,w2,out output) || output == null)
+        {
+            diagnostic="La salida de humidificación por vapor no es físicamente válida."; return false;
+        }
+        diagnostic="Balances: W2=W1+Δm_v/ṁ_da y h2=h1+ΔW·h_vapor, sin pérdidas térmicas.";
         return true;
     }
 
