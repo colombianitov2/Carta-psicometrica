@@ -1,7 +1,12 @@
 name: FrioCalc WPF Build
-# Build on demand only to prevent one email per development commit.
+# Run only when explicitly requested or when the isolated validation-request file changes.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - 'chatgpt/friocalc-lista1-2026-11-07'
+    paths:
+      - '.github/validation-request.txt'
 
 jobs:
   build:
