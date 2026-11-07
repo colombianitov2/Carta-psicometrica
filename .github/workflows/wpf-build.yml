@@ -1,0 +1,23 @@
+name: FrioCalc WPF Build
+on:
+  push:
+    branches:
+      - 'chatgpt/friocalc-lista1-*'
+  pull_request:
+    branches:
+      - 'chatgpt/friocalc-psychrometrics'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Windows WPF (.NET 10)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore
+        run: dotnet restore FrioCalc.Psychrometrics.slnx
+      - name: Compile with warnings as errors
+        run: dotnet build FrioCalc.Psychrometrics.slnx --configuration Debug --no-restore --warnaserror
