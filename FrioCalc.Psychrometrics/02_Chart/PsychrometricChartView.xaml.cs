@@ -929,6 +929,28 @@ public partial class PsychrometricChartView : UserControl
         RefreshChart();
     }
 
+    // [2.1C.22] Edición validada preservando identidad y color del punto.
+    public bool TryUpdatePoint(int id, IReadOnlyDictionary<StateProperty,double> conditions,
+        StateSolveMethod method, out string diagnostic)
+    {
+        int index = _chartPoints.FindIndex(p => p.Id == id);
+        if (index < 0) { diagnostic = "El punto ya no existe."; return false; }
+        ChartPoint previous = _chartPoints[index];
+        if (!StateInputSolver.TrySolve(conditions,_pressureKPa,id,previous.ColorHex,method,
+            out ChartPoint? newPoint,out diagnostic) || newPoint == null) return false;
+        if (newPoint.DryBulbC < _geometry.ActiveMinDryBulbC ||
+            newPoint.DryBulbC > _geometry.ActiveMaxDryBulbC ||
+            newPoint.HumidityRatioKgPerKg < _geometry.ActiveMinHumidityRatioKgPerKg ||
+            newPoint.HumidityRatioKgPerKg > _geometry.ActiveMaxHumidityRatioKgPerKg)
+        {
+            diagnostic = "El punto editado está fuera de los límites activos de la carta."; return false;
+        }
+        _chartPoints[index] = newPoint with { Name=previous.Name };
+        NotifyPointsChanged();
+        RefreshChart();
+        return true;
+    }
+
     public bool DeletePoint(int id)
     {
         int index = _chartPoints.FindIndex(p => p.Id == id);

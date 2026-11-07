@@ -21,6 +21,8 @@ public partial class PointPropertiesPanel : UserControl
     public event Action? AddPointRequested;
     public event Action? OpenProcessesRequested;
     public event Action<int>? DeletePointRequested;
+    public event Action<int>? EditPointRequested;
+    public event Action<int>? DuplicatePointRequested;
     public event Action<IReadOnlyList<int>>? SelectionChanged;
     public IReadOnlyList<int> SelectedPointIds => _selection.AsReadOnly();
 
@@ -154,6 +156,18 @@ public partial class PointPropertiesPanel : UserControl
         };
         erase.Click += (_, _) => DeletePointRequested?.Invoke(point.Id);
         content.Children.Add(erase);
+
+        var edit = new Button { Content="Editar",Padding=new Thickness(5,2,5,2),
+            Margin=new Thickness(0,0,5,6),HorizontalAlignment=HorizontalAlignment.Left };
+        edit.Click += (_,_) => EditPointRequested?.Invoke(point.Id);
+        var duplicate = new Button {Content="Duplicar",Padding=new Thickness(5,2,5,2),
+            Margin=new Thickness(0,0,0,6),HorizontalAlignment=HorizontalAlignment.Left };
+        duplicate.Click += (_,_) => DuplicatePointRequested?.Invoke(point.Id);
+        var editRow = new StackPanel { Orientation=Orientation.Horizontal };
+        editRow.Children.Add(edit);
+        editRow.Children.Add(duplicate);
+        content.Children.Add(editRow);
+
 
         AddProperty(
             content,

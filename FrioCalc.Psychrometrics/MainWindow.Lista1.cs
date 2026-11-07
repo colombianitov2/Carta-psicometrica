@@ -20,12 +20,15 @@ public partial class MainWindow
     private readonly List<int> _selectedPointIds = new();
     private readonly List<PsychrometricProcess> _savedProcesses = new();
     private int _nextProcessId = 1;
+    private int? _editingPointId;
 
     private void InitializeLista1()
     {
         PointPropertiesPanel.AddPointRequested += AddStatePoint;
         PointPropertiesPanel.OpenProcessesRequested += () => WorkspaceTabs.SelectedIndex = 1;
         PointPropertiesPanel.DeletePointRequested += DeleteStatePoint;
+        PointPropertiesPanel.EditPointRequested += BeginPointEdit;
+        PointPropertiesPanel.DuplicatePointRequested += DuplicatePoint;
         PointPropertiesPanel.SelectionChanged += ids =>
         {
             _selectedPointIds.Clear();
@@ -68,11 +71,43 @@ public partial class MainWindow
         {
             MessageBox.Show(error, "Valor inválido", MessageBoxButton.OK, MessageBoxImage.Warning); return;
         }
-        if (!PsychrometricChart.TryAddPointFromConditions(conditions, ChartMetricsPanel.SelectedSolveMethod, out error))
+        bool ok = _editingPointId.HasValue
+            ? PsychrometricChart.TryUpdatePoint(_editingPointId.Value,conditions,
+                ChartMetricsPanel.SelectedSolveMethod,out error)
+            : PsychrometricChart.TryAddPointFromConditions(conditions,
+                ChartMetricsPanel.SelectedSolveMethod,out error);
+        if (!ok)
         {
-            MessageBox.Show(error, "No se pudo ubicar el punto", MessageBoxButton.OK, MessageBoxImage.Warning); return;
+            MessageBox.Show(error,"No se pudo calcular el punto",MessageBoxButton.OK,MessageBoxImage.Warning); return;
         }
+        _editingPointId = null;
         ChartMetricsPanel.ClearStateConditions();
+    }
+
+    private void BeginPointEdit(int id)
+    {
+        ChartPoint? point = PsychrometricChart.ActivePoints.FirstOrDefault(p=>p.Id==id);
+        if (point is null) return;
+        ChartMetricsPanel.ClearStateConditions();
+        ChartMetricsPanel.SetStateInputSI(StateProperty.DryBulb,point.DryBulbC);
+        ChartMetricsPanel.SetStateInputSI(StateProperty.HumidityRatio,point.HumidityRatioKgPerKg);
+        _editingPointId = id;
+        WorkspaceTabs.SelectedIndex = 0;
+        MessageBox.Show($"Editando {point.Name}. Modifique las condiciones y pulse Ubicar punto para guardar sin cambiar su identificador.",
+            "Editar punto",MessageBoxButton.OK,MessageBoxImage.Information);
+    }
+
+    private void DuplicatePoint(int id)
+    {
+        ChartPoint? point = PsychrometricChart.ActivePoints.FirstOrDefault(p=>p.Id==id);
+        if (point is null) return;
+        var conditions = new Dictionary<StateProperty,double>
+        {
+            [StateProperty.DryBulb]=point.DryBulbC,
+            [StateProperty.HumidityRatio]=point.HumidityRatioKgPerKg
+        };
+        if (!PsychrometricChart.TryAddPointFromConditions(conditions,out string error))
+            MessageBox.Show(error,"Duplicar punto",MessageBoxButton.OK,MessageBoxImage.Warning);
     }
 
     private void DeleteStatePoint(int id)
@@ -104,6 +139,7 @@ public partial class MainWindow
         _savedProcesses.Clear();
         _selectedPointIds.Clear();
         _nextProcessId = 1;
+        _editingPointId = null;
         PointPropertiesPanel.ClearSelection();
         ProcessResultText.Text = "La presión cambió; puntos y procesos anteriores se descartan para evitar estados inconsistentes.";
         UpdateProcessesInCharts();
