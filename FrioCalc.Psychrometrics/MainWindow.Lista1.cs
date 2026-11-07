@@ -58,6 +58,7 @@ public partial class MainWindow
         ProcessChart.SetPressure(PressureSelector.CurrentPressureKPa);
         ProcessTheoryPanel.SetPressure(PressureSelector.CurrentPressureKPa);
         ProcessChart.SetPointSelectionMode(false);
+        PsychrometricChart.SetProcessMemberColorMode(true);
         ProcessChart.SetProcessMemberColorMode(true);
         ProcessChart.SetDryBulbVisible(true);
         ProcessChart.SetHumidityRatioVisible(true);

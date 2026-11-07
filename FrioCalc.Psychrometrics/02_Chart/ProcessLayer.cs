@@ -67,32 +67,45 @@ public static class ProcessLayer
             }
         }
     }
-    // [2.13.2] En la segunda carta, los miembros adoptan el color del proceso.
-    // Un punto compartido por varios procesos se conserva como un estado único:
-    // cada proceso sigue representado por su línea y leyenda propia.
+    // [2.13.2] Los procesos determinan el color de sus miembros.
+    // Para estados compartidos, aros concéntricos permiten distinguir procesos
+    // sin sobrescribir el color propio del estado.
     public static void DrawMemberColors(Canvas canvas, ChartGeometry geometry,
         IReadOnlyList<ChartPoint> points, IReadOnlyList<PsychrometricProcess> processes)
     {
-        Rect rect = geometry.GetPlotRect(canvas.ActualWidth,canvas.ActualHeight);
-        if (rect.IsEmpty) return;
-        foreach (var process in processes)
+        Rect plot = geometry.GetPlotRect(canvas.ActualWidth,canvas.ActualHeight);
+        if (plot.IsEmpty) return;
+        var members = processes.Where(p => p.Visible)
+            .SelectMany(p => p.PointIds.Distinct().Select(id => (Id:id, Process:p)))
+            .GroupBy(x => x.Id);
+        foreach (var group in members)
         {
-            if (!process.Visible) continue;
-            var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(process.ColorHex));
-            foreach (int id in process.PointIds)
+            ChartPoint? state=points.FirstOrDefault(p=>p.Id==group.Key);
+            if(state is null||state.DryBulbC<geometry.MinDryBulbC||
+               state.DryBulbC>geometry.MaxDryBulbC||
+               state.HumidityRatioKgPerKg<geometry.MinHumidityRatioKgPerKg||
+               state.HumidityRatioKgPerKg>geometry.MaxHumidityRatioKgPerKg) continue;
+            double x=geometry.XFromDryBulbC(state.DryBulbC,plot);
+            double y=geometry.YFromHumidityRatioKgPerKg(state.HumidityRatioKgPerKg,plot);
+            var processList=group.Select(g=>g.Process).ToList();
+            for(int i=0;i<processList.Count;i++)
             {
-                ChartPoint? point = points.FirstOrDefault(p => p.Id == id);
-                if (point == null || point.DryBulbC < geometry.MinDryBulbC ||
-                    point.DryBulbC > geometry.MaxDryBulbC ||
-                    point.HumidityRatioKgPerKg < geometry.MinHumidityRatioKgPerKg ||
-                    point.HumidityRatioKgPerKg > geometry.MaxHumidityRatioKgPerKg) continue;
-                double x=geometry.XFromDryBulbC(point.DryBulbC,rect);
-                double y=geometry.YFromHumidityRatioKgPerKg(point.HumidityRatioKgPerKg,rect);
-                var marker=new Ellipse {Width=15,Height=15,Fill=brush,Stroke=Brushes.White,
-                    StrokeThickness=2,IsHitTestVisible=false,
-                    ToolTip=$"{process.Name} · {point.Name}"};
-                Canvas.SetLeft(marker,x-7.5); Canvas.SetTop(marker,y-7.5);
-                Panel.SetZIndex(marker,2000); canvas.Children.Add(marker);
+                var p=processList[i];
+                var color=(Color)ColorConverter.ConvertFromString(p.ColorHex);
+                double diameter=17+6*i;
+                var circle=new Ellipse
+                {
+                    Width=diameter,Height=diameter,
+                    Fill=processList.Count==1 ? new SolidColorBrush(color) : Brushes.Transparent,
+                    Stroke=processList.Count==1 ? Brushes.White : new SolidColorBrush(color),
+                    StrokeThickness=processList.Count==1 ? 2 : 3,
+                    ToolTip=$"{p.Name} · {state.Name}",
+                    IsHitTestVisible=false
+                };
+                Canvas.SetLeft(circle,x-diameter/2);
+                Canvas.SetTop(circle,y-diameter/2);
+                Panel.SetZIndex(circle,2000+i);
+                canvas.Children.Add(circle);
             }
         }
     }
