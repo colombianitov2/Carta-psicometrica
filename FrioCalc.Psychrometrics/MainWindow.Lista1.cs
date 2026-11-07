@@ -75,6 +75,7 @@ public partial class MainWindow
         ProcessChart.SetSensibleHeatFactorVisible(false);
         _processChartReady=true;
         ChartMetricsPanel.SetBasicView();
+        PressureSelector.SetStandardChartEnabled(true);
         RefreshSelectionList();
     }
 

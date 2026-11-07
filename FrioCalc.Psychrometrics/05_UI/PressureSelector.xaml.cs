@@ -138,6 +138,12 @@ public partial class PressureSelector : UserControl
     // [5.2C.5.1] INICIO - Cambio de Carta estándar
     // ============================================================
 
+    // [5.2C.5.1.1] Modo estándar inicial, sincronizado visualmente con el ToggleButton.
+    public void SetStandardChartEnabled(bool isEnabled)
+    {
+        StandardChartToggle.IsChecked = isEnabled;
+    }
+
     private void StandardChartToggle_Checked(
         object sender,
         RoutedEventArgs e)
