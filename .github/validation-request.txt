@@ -2,3 +2,5 @@ FrioCalc Lista 1 — solicitud explícita de auditoría CI #1
 Fecha: 2026-11-07
 Motivo: validar cambios de motor, interfaz, bibliografía, trazado, ciclos y exportación.
 No ejecutar en cada commit.
+
+Solicitud 2: validar guardias de método predictivo y seguimiento Lista 1 v1.1.
