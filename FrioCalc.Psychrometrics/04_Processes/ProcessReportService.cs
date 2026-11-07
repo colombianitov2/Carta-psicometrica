@@ -90,7 +90,7 @@ public static class ProcessReportService
         sb.AppendLine("- BF ideal: W₂=BF·W₁+(1−BF)·W_ADP; h₂=BF·h₁+(1−BF)·h_ADP.");
         sb.AppendLine();
         sb.AppendLine("## Fuentes de referencia");
-        sb.AppendLine("1. ASHRAE Handbook—Fundamentals 2025, cap. 1 Psychrometrics: https://www.ashrae.org/technical-resources/publications-library/ashrae-handbook/table-of-contents-2025-ashrae-handbook-fundamentals");
+        sb.AppendLine("1. ASHRAE Handbook—Fundamentals 2025, cap. 1 Psychrometrics: https://handbook.ashrae.org/Handbooks/F25/SI/F25_Ch01/F25_Ch01_si.aspx");
         sb.AppendLine("2. PsychroLib: https://github.com/psychrometrics/psychrolib");
         sb.AppendLine("3. CoolProp HumidAir: https://coolprop.org/fluid_properties/HumidAir.html");
         sb.AppendLine("4. Hermes Ramírez León, A03 Procesos Psicrométricos, diapositivas 1–24 (material del usuario).");

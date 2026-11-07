@@ -186,6 +186,8 @@
                                    TextWrapping="Wrap" Margin="0,5,0,15"/>
                         <ui:ProcessTheoryPanel x:Name="ProcessTheoryPanel" MaxWidth="780" HorizontalAlignment="Stretch"/>
                         <ui:BibliographyPanel x:Name="BibliographyPanel" MaxWidth="780" HorizontalAlignment="Stretch"/>
+                        <TextBlock Text="Nota técnica: en los controles se conserva «Humedad absoluta» como etiqueta solicitada, pero W en g/kg de aire seco es la razón de humedad. La humedad absoluta volumétrica tiene unidades kg de vapor/m³."
+                                   TextWrapping="Wrap" Foreground="#475569" Margin="0,0,0,12"/>
                         <TextBlock Text="1. Calefacción y enfriamiento sensible (diapositivas 3–7)"
                                    FontSize="16" FontWeight="SemiBold"/>
                         <TextBlock Text="Se modifica Tbs sin variar W. La diferencia de entalpía se convierte en potencia si se conoce el flujo másico de aire seco: Q̇ = ṁda·(h2−h1). No confundir caudal volumétrico con caudal másico."

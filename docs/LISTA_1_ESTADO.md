@@ -92,7 +92,7 @@
 | ID | Actividad | Estado actual |
 |---|---|---|
 | L1.48 | Segunda zona de teoría | Código presente; falta auditoría visual de aceptación |
-| L1.49 | Catálogo de 18 variables y métodos | Código presente; falta auditoría visual de aceptación |
+| L1.49 | Catálogo de 20 variables y métodos | Código presente; falta auditoría visual de aceptación |
 | L1.50 | Laboratorio gráfico interactivo | Código presente; falta auditoría visual de aceptación |
 | L1.51 | Ejercicios explicados y calculables | Código presente; falta auditoría visual de aceptación |
 
