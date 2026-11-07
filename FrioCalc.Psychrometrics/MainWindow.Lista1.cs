@@ -135,9 +135,13 @@ public partial class MainWindow
     // [5.1C.12] Graficación, cálculos y agrupación de procesos independientes.
     private void PlotProcess_Click(object sender, RoutedEventArgs e)
     {
-        if (_selectedPointIds.Count < 2)
+        string typeValue = (ProcessTypeComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "Automatic";
+        if (!Enum.TryParse(typeValue, out ProcessType type)) type = ProcessType.Automatic;
+        bool predictive = type is ProcessType.EvaporativeHumidification or ProcessType.SteamHumidification or ProcessType.Bypass;
+        if (_selectedPointIds.Count < (predictive ? 1 : 2))
         {
-            MessageBox.Show("Seleccione al menos dos puntos en Carta y puntos.",
+            MessageBox.Show(predictive ? "Seleccione al menos un punto de entrada." :
+                "Seleccione al menos dos puntos en Carta y puntos.",
                 "Proceso", MessageBoxButton.OK, MessageBoxImage.Information); return;
         }
         var points = PsychrometricChart.ActivePoints;
@@ -145,13 +149,53 @@ public partial class MainWindow
             .Select(id => points.FirstOrDefault(p => p.Id == id)).ToArray();
         if (selected.Any(p => p == null)) return;
 
-        string typeValue = (ProcessTypeComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "Automatic";
-        if (!Enum.TryParse(typeValue, out ProcessType type)) type = ProcessType.Automatic;
         if (!TryReadOptionalFlow(DryFlowTextBox.Text, out double? massFlow, out string error))
         {
             MessageBox.Show(error, "Caudal inválido", MessageBoxButton.OK, MessageBoxImage.Warning); return;
         }
 
+        string predictionNote = "";
+        if (selected.Length == 1 && predictive)
+        {
+            ChartPoint inlet = selected[0]!;
+            ChartPoint? predicted = null;
+            bool success;
+            if (type == ProcessType.EvaporativeHumidification)
+            {
+                if (!TryReadUnitInterval(EffectivenessTextBox.Text,out double efficiency))
+                { MessageBox.Show("Indique efectividad ε entre 0 y 1.","Humidificación",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
+                success = ProcessCalculator.TryEvaporativeOutlet(inlet,efficiency,0,inlet.ColorHex,
+                    out predicted,out predictionNote);
+            }
+            else if (type == ProcessType.Bypass)
+            {
+                if (!TryReadPositiveOrZero(ApparatusDewPointTextBox.Text,out double adp) ||
+                    !TryReadUnitInterval(BypassFactorTextBox.Text,out double bf))
+                { MessageBox.Show("Indique ADP numérico (°C) y BF de 0 a 1.","Bypass",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
+                success = ProcessCalculator.TryBypassOutlet(inlet,adp,bf,0,inlet.ColorHex,
+                    out predicted,out predictionNote);
+            }
+            else
+            {
+                if (!TryReadPositiveOrZero(SteamAddedTextBox.Text,out double waterGrams) ||
+                    !TryReadPositive(SteamEnthalpyTextBox.Text,out double steamEnthalpy))
+                { MessageBox.Show("Indique vapor añadido ≥ 0 g/kg y entalpía positiva (kJ/kg).",
+                    "Humidificación por vapor",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
+                success = ProcessCalculator.TrySteamOutlet(inlet,waterGrams/1000.0,steamEnthalpy,
+                    0,inlet.ColorHex,out predicted,out predictionNote);
+            }
+            if (!success || predicted == null)
+            { MessageBox.Show(predictionNote,"Predicción no válida",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
+            var target = new Dictionary<StateProperty,double>
+            {
+                [StateProperty.DryBulb] = predicted.DryBulbC,
+                [StateProperty.HumidityRatio] = predicted.HumidityRatioKgPerKg
+            };
+            if (!PsychrometricChart.TryAddPointFromConditions(target,out error))
+            { MessageBox.Show(error,"Salida fuera de la carta",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
+            _selectedPointIds.Add(PsychrometricChart.ActivePoints.Last().Id);
+            selected = new ChartPoint?[]{inlet,PsychrometricChart.ActivePoints.Last()};
+        }
         var ids = new List<int>(_selectedPointIds);
         string description;
         if (type == ProcessType.AdiabaticMixing)
@@ -199,7 +243,8 @@ public partial class MainWindow
             var report = new StringBuilder();
             for (int i=0;i<selected.Length-1;i++)
             {
-                if (!ProcessCalculator.TryCalculate(selected[i]!,selected[i+1]!,type,
+                if (!ProcessCalculator.TryCalculate(selected[i]!,selected[i+1]!,
+                    type == ProcessType.Bypass ? ProcessType.Automatic : type,
                     massFlow,out ProcessResult result,out error))
                 {
                     MessageBox.Show($"{selected[i]!.Name} → {selected[i+1]!.Name}: {error}",
@@ -211,7 +256,7 @@ public partial class MainWindow
                     report.AppendLine($"Potencia (entalpía del aire): {result.ThermalPowerKW.Value:0.###} kW; agua={result.MoistureFlowKgS:0.#####} kg/s.");
                 report.AppendLine(result.Diagnostic);
             }
-            description = report.ToString();
+            description = predictionNote + Environment.NewLine + report.ToString();
         }
         ChartPoint initial = selected[0]!;
         int processId = _nextProcessId++;
@@ -239,6 +284,16 @@ public partial class MainWindow
         SavedProcessesList.ItemsSource = _savedProcesses.Select(p =>
             $"{p.Name} · {p.Type} · {string.Join(" → ",p.PointIds.Select(id => "P"+id))}").ToArray();
     }
+
+    private static bool TryReadPositiveOrZero(string raw, out double value)
+    {
+        bool valid = double.TryParse(raw.Trim(),NumberStyles.Float,CultureInfo.CurrentCulture,out value)
+            || double.TryParse(raw.Trim().Replace(',','.'),NumberStyles.Float,CultureInfo.InvariantCulture,out value);
+        return valid && double.IsFinite(value);
+    }
+
+    private static bool TryReadUnitInterval(string raw, out double value)
+        => TryReadPositiveOrZero(raw,out value) && value >= 0 && value <= 1;
 
     private static bool TryReadPositive(string raw, out double value)
     {
