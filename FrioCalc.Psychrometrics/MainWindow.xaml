@@ -93,6 +93,7 @@
                                 <ComboBoxItem Content="Deshumidificación con desecante" Tag="Desiccant"/>
                                 <ComboBoxItem Content="Mezcla adiabática" Tag="AdiabaticMixing"/>
                                 <ComboBoxItem Content="Factor de bypass / ADP" Tag="Bypass"/>
+                                <ComboBoxItem Content="Divisor con dos ramas y estados conocidos" Tag="Branching"/>
                             </ComboBox>
                             <TextBlock Text="Caudal másico de aire seco, kg/s (opcional salvo donde se requiera)"
                                        TextWrapping="Wrap" FontSize="12" Margin="0,0,0,3"/>
@@ -109,6 +110,9 @@
                             <TextBox x:Name="MixFlowFirstTextBox" Height="27" Margin="0,0,0,6"/>
                             <TextBlock Text="Solo para mezcla: caudal de entrada 2, m³/h" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="MixFlowSecondTextBox" Height="27" Margin="0,0,0,10"/>
+                            <TextBlock Text="División en 2 ramas: fracción de flujo hacia rama 1 (0–1)" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,3"/>
+                            <TextBox x:Name="BranchFractionTextBox" Height="27" Margin="0,0,0,8"
+                                     ToolTip="Seleccione primero entrada, luego salidas de rama 1 y rama 2. Requiere flujo másico total."/>
                             <TextBlock Text="Para salida predictiva con un punto de entrada"
                                        FontWeight="SemiBold" FontSize="12" Margin="0,0,0,4"/>
                             <TextBlock Text="Efectividad evaporativa ε (0–1)" FontSize="12" Margin="0,0,0,3"/>
@@ -121,6 +125,10 @@
                             <TextBox x:Name="SteamAddedTextBox" Height="27" Margin="0,0,0,6"/>
                             <TextBlock Text="Entalpía del vapor inyectado (kJ/kg de vapor)" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="SteamEnthalpyTextBox" Height="27" Margin="0,0,0,10"/>
+                            <TextBlock Text="Desecante: humedad retirada (g/kg aire seco)" FontSize="12" Margin="0,0,0,3"/>
+                            <TextBox x:Name="DesiccantRemovedTextBox" Height="27" Margin="0,0,0,6"/>
+                            <TextBlock Text="Desecante: bulbo seco medido o especificado a la salida (°C)" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,3"/>
+                            <TextBox x:Name="DesiccantTemperatureTextBox" Height="27" Margin="0,0,0,8"/>
                             <TextBlock Text="Estos métodos generan un estado de salida usando exactamente los datos del equipo indicados. No hay parámetros predeterminados ocultos."
                                        TextWrapping="Wrap" FontSize="11" Foreground="#666" Margin="0,0,0,9"/>
                             <CheckBox x:Name="CloseCycleCheckBox" Content="Cerrar recorrido regresando al punto inicial (método automático)"

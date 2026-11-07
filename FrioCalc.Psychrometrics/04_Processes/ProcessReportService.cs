@@ -50,7 +50,7 @@ public static class ProcessReportService
                     sb.AppendLine("> " + line.TrimEnd('\r'));
                 sb.AppendLine();
             }
-            if (process.Type != ProcessType.AdiabaticMixing)
+            if (process.Type != ProcessType.AdiabaticMixing && process.Type != ProcessType.Branching)
             {
                 sb.AppendLine("|Tramo|ΔT °C|ΔW g/kgda|Δh kJ/kgda|Q̇ basada en h (kW)|FCS estimado|");
                 sb.AppendLine("|---|---:|---:|---:|---:|---:|");

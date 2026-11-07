@@ -21,6 +21,7 @@ public partial class MainWindow
     private readonly List<PsychrometricProcess> _savedProcesses = new();
     private int _nextProcessId = 1;
     private int? _editingPointId;
+    private int? _editingProcessId;
     private readonly Stack<SessionV1> _undoHistory = new();
     private bool _restoringHistory;
     private readonly Dictionary<int, ChartPoint> _lastKnownPoints = new();
@@ -169,6 +170,7 @@ public partial class MainWindow
         _selectedPointIds.Clear();
         _nextProcessId = 1;
         _editingPointId = null;
+        _editingProcessId = null;
         _undoHistory.Clear();
         _lastKnownPoints.Clear();
         PointPropertiesPanel.ClearSelection();
@@ -232,7 +234,8 @@ public partial class MainWindow
     {
         string typeValue = (ProcessTypeComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "Automatic";
         if (!Enum.TryParse(typeValue, out ProcessType type)) type = ProcessType.Automatic;
-        bool predictive = type is ProcessType.EvaporativeHumidification or ProcessType.SteamHumidification or ProcessType.Bypass;
+        bool predictive = type is ProcessType.EvaporativeHumidification or ProcessType.SteamHumidification or ProcessType.Bypass ||
+            (type==ProcessType.Desiccant && _selectedPointIds.Count==1);
         if (_selectedPointIds.Count < (predictive ? 1 : 2))
         {
             MessageBox.Show(predictive ? "Seleccione al menos un punto de entrada." :
@@ -270,6 +273,7 @@ public partial class MainWindow
             }
             condensateTemperature = condensateInput;
         }
+        double? branchFraction = null;
         string predictionNote = "";
         if (selected.Length == 1 && predictive)
         {
@@ -290,6 +294,18 @@ public partial class MainWindow
                 { MessageBox.Show("Indique ADP numérico (°C) y BF de 0 a 1.","Bypass",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
                 success = ProcessCalculator.TryBypassOutlet(inlet,adp,bf,0,inlet.ColorHex,
                     out predicted,out predictionNote);
+            }
+            else if (type == ProcessType.Desiccant)
+            {
+                if (!TryReadPositiveOrZero(DesiccantRemovedTextBox.Text,out double removed) || removed < 0 ||
+                    !TryReadPositiveOrZero(DesiccantTemperatureTextBox.Text,out double outputT))
+                {
+                    MessageBox.Show("Se necesitan ΔW retirada ≥ 0 g/kgda y la Tbs de salida (°C), " +
+                        "derivada de especificación o medición. No se inventa rendimiento del material.",
+                        "Desecante",MessageBoxButton.OK,MessageBoxImage.Warning);return;
+                }
+                success=ProcessCalculator.TryDesiccantOutlet(inlet,removed/1000.0,outputT,
+                    0,inlet.ColorHex,out predicted,out predictionNote);
             }
             else
             {
@@ -330,7 +346,31 @@ public partial class MainWindow
         var ids = new List<int>(_selectedPointIds);
         if (closeCycle) ids.Add(ids[0]);
         string description;
-        if (type == ProcessType.AdiabaticMixing)
+        if(type==ProcessType.Branching)
+        {
+            if(selected.Length != 3 || massFlow is not double totalFlow ||
+                !TryReadUnitInterval(BranchFractionTextBox.Text,out double fraction) ||
+                fraction <= 0 || fraction >= 1)
+            {
+                MessageBox.Show("Seleccione entrada, salida 1 y salida 2 en ese orden. " +
+                    "Introduzca caudal másico de entrada (kg/s) y fracción estrictamente entre 0 y 1.",
+                    "División en ramas",MessageBoxButton.OK,MessageBoxImage.Warning);return;
+            }
+            if(!ProcessCalculator.TryBranchBalance(selected[0]!,selected[1]!,selected[2]!,totalFlow,
+                fraction,out var balance,out error)||balance is null)
+            {
+                MessageBox.Show(error,"Balance de ramas inválido",MessageBoxButton.OK,MessageBoxImage.Warning);return;
+            }
+            branchFraction=fraction;
+            description=$"División de {selected[0]!.Name} a {selected[1]!.Name} y {selected[2]!.Name}.\n" +
+                $"Flujo entrada={totalFlow:0.#####} kgda/s; rama 1={balance.FirstMassFlowKgS:0.#####} kgda/s; " +
+                $"rama 2={balance.SecondMassFlowKgS:0.#####} kgda/s.\n" +
+                $"Agua que debe añadirse/retirarse: rama 1={balance.AddedWaterFirstKgS:0.######} kg/s; " +
+                $"rama 2={balance.AddedWaterSecondKgS:0.######} kg/s.\n" +
+                $"Cambio entálpico exigido: rama 1={balance.ThermalFirstKW:0.###} kW; " +
+                $"rama 2={balance.ThermalSecondKW:0.###} kW.\n"+balance.Diagnostic;
+        }
+        else if (type == ProcessType.AdiabaticMixing)
         {
             var flows = new List<double>();
             if (!string.IsNullOrWhiteSpace(MixFlowsListTextBox.Text))
@@ -422,13 +462,18 @@ public partial class MainWindow
             else description += Environment.NewLine + cycleError;
         }
         ChartPoint initial = selected[0]!;
-        int processId = _nextProcessId++;
+        int editingIndex=_editingProcessId is int oldId
+            ? _savedProcesses.FindIndex(p=>p.Id==oldId) : -1;
+        int processId=editingIndex>=0 ? _savedProcesses[editingIndex].Id : _nextProcessId++;
         string name=string.IsNullOrWhiteSpace(NewProcessNameTextBox.Text)
             ? $"PR{processId}" : NewProcessNameTextBox.Text.Trim();
         RememberHistory();
-        _savedProcesses.Add(new PsychrometricProcess(
+        var saved = new PsychrometricProcess(
             processId,name,initial.ColorHex,type,ids,massFlow,Report:description,
-            CondensateTemperatureC:condensateTemperature));
+            CondensateTemperatureC:condensateTemperature,BranchFractionA:branchFraction);
+        if(editingIndex>=0) _savedProcesses[editingIndex]=saved;
+        else _savedProcesses.Add(saved);
+        _editingProcessId=null;
         UpdateProcessesInCharts();
         ProcessResultText.Text = description;
         SelectedProcessSummaryMainText.Text = $"Proceso: {name}\n" + description;
@@ -461,6 +506,7 @@ public partial class MainWindow
         int index=SavedProcessesList.SelectedIndex;
         if(index<0||index>=_savedProcesses.Count) return;
         var process=_savedProcesses[index];
+        _editingProcessId=process.Id;
         _selectedPointIds.Clear();
         _selectedPointIds.AddRange(process.PointIds);
         // Si la mezcla incluye salida calculada, solo cargar entradas.
@@ -472,10 +518,11 @@ public partial class MainWindow
         if(CloseCycleCheckBox.IsChecked==true && _selectedPointIds.Count>0) _selectedPointIds.RemoveAt(_selectedPointIds.Count-1);
         RefreshSelectionList();
         CondensateTemperatureTextBox.Text=process.CondensateTemperatureC?.ToString("0.###",CultureInfo.CurrentCulture) ?? "";
+        BranchFractionTextBox.Text=process.BranchFractionA?.ToString("0.###",CultureInfo.CurrentCulture) ?? "";
         foreach(ComboBoxItem item in ProcessTypeComboBox.Items)
             if(item.Tag?.ToString()==process.Type.ToString())
                 {ProcessTypeComboBox.SelectedItem=item;break;}
-        ProcessResultText.Text="Los puntos y tipo se cargaron para edición. Al graficar se crea una nueva versión; el original se conserva hasta que se elimine explícitamente.";
+        ProcessResultText.Text="Proceso cargado para edición. Al pulsar Graficar proceso reemplazará este proceso conservando su ID; se mantiene opción Deshacer. En predicciones puede generarse un nuevo punto de salida.";
     }
 
     // [5.1C.16] Propiedades persistentes del proceso seleccionado.
@@ -497,6 +544,7 @@ public partial class MainWindow
         int index = SavedProcessesList.SelectedIndex;
         if (index < 0 || index >= _savedProcesses.Count) return;
         RememberHistory();
+        if (_editingProcessId == _savedProcesses[index].Id) _editingProcessId=null;
         _savedProcesses.RemoveAt(index);
         UpdateProcessesInCharts();
         ProcessResultText.Text = "Proceso eliminado. Los puntos originales se conservan.";
