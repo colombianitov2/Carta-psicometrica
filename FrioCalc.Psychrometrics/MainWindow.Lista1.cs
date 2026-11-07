@@ -24,6 +24,7 @@ public partial class MainWindow
     private int? _editingProcessId;
     private readonly Stack<SessionV1> _undoHistory = new();
     private bool _restoringHistory;
+    private bool _processChartReady;
     private readonly Dictionary<int, ChartPoint> _lastKnownPoints = new();
 
     private void InitializeLista1()
@@ -66,9 +67,25 @@ public partial class MainWindow
         ProcessChart.SetRelativeHumidityVisible(true);
         ProcessChart.SetEnthalpyVisible(true);
         ProcessChart.SetWetBulbVisible(true);
-        ProcessChart.SetSpecificVolumeVisible(true);
+        ProcessChart.SetSpecificVolumeVisible(false);
+        ProcessChart.SetEnthalpyVisible(false);
+        ProcessChart.SetWetBulbVisible(false);
+        ProcessChart.SetRelativeHumidityVisible(true);
+        ProcessChart.SetStandardChartMode(true);
         ProcessChart.SetSensibleHeatFactorVisible(false);
+        _processChartReady=true;
+        ChartMetricsPanel.SetBasicView();
         RefreshSelectionList();
+    }
+
+    // [5.1C.9.1] Familias de líneas independientes en la segunda carta.
+    private void ProcessFamilyVisibility_Changed(object sender,RoutedEventArgs e)
+    {
+        if(!_processChartReady) return;
+        ProcessChart.SetEnthalpyVisible(ProcessEnthalpyToggle.IsChecked==true);
+        ProcessChart.SetWetBulbVisible(ProcessWetBulbToggle.IsChecked==true);
+        ProcessChart.SetSpecificVolumeVisible(ProcessSpecificVolumeToggle.IsChecked==true);
+        ProcessChart.SetRelativeHumidityVisible(ProcessRelativeHumidityToggle.IsChecked==true);
     }
 
     // [5.1C.10] Puntos entrados por teclado.

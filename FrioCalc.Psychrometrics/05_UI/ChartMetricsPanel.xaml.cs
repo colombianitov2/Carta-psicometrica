@@ -81,6 +81,15 @@ public partial class ChartMetricsPanel : UserControl
     // ------------------------------ Fin de sección 5.3C.3 ------------------------------
 
 
+    // [5.3C.3.1] Estado inicial legible; el usuario puede usar Default/None.
+    public void SetBasicView()
+    {
+        DryBulbCheckBox.IsChecked=true;
+        HumidityRatioCheckBox.IsChecked=true;
+        SaturationCurveCheckBox.IsChecked=true;
+        RelativeHumidityCheckBox.IsChecked=true;
+    }
+
     // ------------------------------ Sección 5.3C.4 - Bulbo seco ------------------------------
 
     private void DryBulbCheckBox_Changed(

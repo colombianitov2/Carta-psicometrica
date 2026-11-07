@@ -83,6 +83,7 @@ public partial class MainWindow : Window
     {
         PsychrometricChart.SetStandardChartMode(
             isEnabled);
+        ProcessChart.SetStandardChartMode(isEnabled);
     }
 
     // ------------------------------ Fin de sección 5.1C.3.1 ------------------------------
