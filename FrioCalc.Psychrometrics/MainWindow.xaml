@@ -69,6 +69,11 @@
                             <TextBlock Text="Caudal másico de aire seco, kg/s (opcional salvo donde se requiera)"
                                        TextWrapping="Wrap" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="DryFlowTextBox" Height="27" Margin="0,0,0,8"/>
+                            <TextBlock Text="Mezcla de N entradas: caudales m³/h separados por punto y coma (opcional)"
+                                       TextWrapping="Wrap" FontSize="12" Margin="0,0,0,3"/>
+                            <TextBox x:Name="MixFlowsListTextBox" Height="27" Margin="0,0,0,8"/>
+                            <TextBlock Text="Alternativa para mezcla de solo dos entradas:" FontWeight="SemiBold"
+                                       FontSize="11" Margin="0,0,0,4"/>
                             <TextBlock Text="Solo para mezcla: caudal de entrada 1, m³/h" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="MixFlowFirstTextBox" Height="27" Margin="0,0,0,6"/>
                             <TextBlock Text="Solo para mezcla: caudal de entrada 2, m³/h" FontSize="12" Margin="0,0,0,3"/>

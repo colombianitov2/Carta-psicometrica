@@ -242,25 +242,37 @@ public partial class MainWindow
         string description;
         if (type == ProcessType.AdiabaticMixing)
         {
-            if (selected.Length != 2)
+            var flows = new List<double>();
+            if (!string.IsNullOrWhiteSpace(MixFlowsListTextBox.Text))
             {
-                MessageBox.Show("La mezcla en esta versión requiere dos corrientes de entrada.",
-                    "Mezcla",MessageBoxButton.OK,MessageBoxImage.Warning); return;
+                foreach (string part in MixFlowsListTextBox.Text.Split(
+                    new[] {';','\n'},StringSplitOptions.RemoveEmptyEntries))
+                {
+                    if (!TryReadPositive(part,out double flowValue))
+                    {
+                        MessageBox.Show("Cada caudal de mezcla debe ser positivo, separado por punto y coma.",
+                            "Mezcla",MessageBoxButton.OK,MessageBoxImage.Warning);return;
+                    }
+                    flows.Add(flowValue);
+                }
             }
-            if (!TryReadPositive(MixFlowFirstTextBox.Text,out double v1) ||
-                !TryReadPositive(MixFlowSecondTextBox.Text,out double v2))
+            else if (selected.Length == 2 &&
+                TryReadPositive(MixFlowFirstTextBox.Text,out double v1) &&
+                TryReadPositive(MixFlowSecondTextBox.Text,out double v2))
             {
-                MessageBox.Show("Indique ambos caudales volumétricos positivos en m³/h.",
-                    "Mezcla",MessageBoxButton.OK,MessageBoxImage.Warning); return;
+                flows.Add(v1); flows.Add(v2);
             }
-            var first = selected[0]!;
-            var second = selected[1]!;
-            var inputs = new List<(ChartPoint State,double DryAirMassFlowKgS)>
+            if (flows.Count != selected.Length)
             {
-                (first, PsychrometricUnits.FlowToDryAirMassKgS(v1/3600.0,first.SpecificVolumeM3PerKgDryAir)),
-                (second,PsychrometricUnits.FlowToDryAirMassKgS(v2/3600.0,second.SpecificVolumeM3PerKgDryAir))
-            };
-            if (!ProcessCalculator.TryMix(inputs,0,first.ColorHex,out ChartPoint? mixed,out error) || mixed == null)
+                MessageBox.Show($"Introduzca {selected.Length} caudales (m³/h), uno por corriente seleccionada.",
+                    "Mezcla",MessageBoxButton.OK,MessageBoxImage.Warning);return;
+            }
+            var inlet = selected[0]!;
+            var inputs = selected.Select((state,index) => (
+                State: state!,
+                DryAirMassFlowKgS: PsychrometricUnits.FlowToDryAirMassKgS(
+                    flows[index]/3600.0,state!.SpecificVolumeM3PerKgDryAir))).ToList();
+            if (!ProcessCalculator.TryMix(inputs,0,inlet.ColorHex,out ChartPoint? mixed,out error) || mixed == null)
             {
                 MessageBox.Show(error,"Mezcla no resuelta",MessageBoxButton.OK,MessageBoxImage.Warning); return;
             }
@@ -275,10 +287,10 @@ public partial class MainWindow
             }
             ChartPoint added = PsychrometricChart.ActivePoints.Last();
             ids.Add(added.Id);
-            double m = inputs.Sum(s => s.DryAirMassFlowKgS);
-            description = $"Mezcla: ṁda total={m:0.####} kg/s; T={added.DryBulbC:0.##} °C; " +
+            double m = inputs.Sum(input => input.DryAirMassFlowKgS);
+            description = $"Mezcla de {selected.Length} corrientes: ṁda total={m:0.####} kg/s; T={added.DryBulbC:0.##} °C; " +
                 $"W={added.HumidityRatioKgPerKg*1000:0.###} g/kg; h={added.EnthalpyKJPerKgDryAir:0.###} kJ/kg. " +
-                "Balances de masa de aire seco, agua y entalpía. Sin condensación.";
+                "Balances de masa de aire seco, vapor y entalpía. Sin condensación.";
         }
         else
         {
