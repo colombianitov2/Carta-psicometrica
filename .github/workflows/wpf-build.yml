@@ -1,11 +1,6 @@
 name: FrioCalc WPF Build
+# Build on demand only to prevent one email per development commit.
 on:
-  push:
-    branches:
-      - 'chatgpt/friocalc-lista1-*'
-  pull_request:
-    branches:
-      - 'chatgpt/friocalc-psychrometrics'
   workflow_dispatch:
 
 jobs:
