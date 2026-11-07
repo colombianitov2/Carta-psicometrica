@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using FrioCalc.Psychrometrics.Core;
 
 namespace FrioCalc.Psychrometrics.Chart;
 
@@ -52,66 +53,21 @@ public static class DryBulbLayer
 
     // ------------------------------ Sección 2.3.3 - Generación de líneas verticales ------------------------------
 
-    private static void DrawVerticalLines(
-        Canvas canvas,
-        ChartGeometry geometry,
-        Rect plotRect)
+    private static void DrawVerticalLines(Canvas canvas, ChartGeometry geometry, Rect plotRect)
     {
-        double minimum =
-            geometry.MinDryBulbC;
-
-        double maximum =
-            geometry.MaxDryBulbC;
-
-        double minorStep =
-            geometry.MinorDryBulbStepC;
-
-        double majorStep =
-            geometry.MajorDryBulbStepC;
-
-        double start =
-            RoundUpToStep(
-                minimum,
-                minorStep);
-
-        const double tolerance = 1e-9;
-
-        for (
-            double dryBulbC = start;
-            dryBulbC <= maximum + tolerance;
-            dryBulbC += minorStep)
+        bool ip = geometry.DisplayUnits == UnitSystem.IP;
+        double min = PsychrometricUnits.TemperatureFromSI(geometry.MinDryBulbC, geometry.DisplayUnits);
+        double max = PsychrometricUnits.TemperatureFromSI(geometry.MaxDryBulbC, geometry.DisplayUnits);
+        double minorStep = ip ? 2.0 : geometry.MinorDryBulbStepC;
+        double majorStep = ip ? 10.0 : geometry.MajorDryBulbStepC;
+        for (double display = RoundUpToStep(min, minorStep); display <= max + 1e-9; display += minorStep)
         {
-            double x =
-                geometry.XFromDryBulbC(
-                    dryBulbC,
-                    plotRect);
-
-            bool isMajor =
-                IsMajorValue(
-                    dryBulbC,
-                    majorStep);
-
-            Line line =
-                new()
-                {
-                    X1 = x,
-                    Y1 = plotRect.Top,
-                    X2 = x,
-                    Y2 = plotRect.Bottom,
-                    Stroke = isMajor ? Brushes.Gray : Brushes.LightGray,
-                    StrokeThickness = isMajor ? 1.0 : 0.5
-                };
-
-            canvas.Children.Add(line);
-
-            if (isMajor)
-            {
-                DrawTemperatureLabel(
-                    canvas,
-                    dryBulbC,
-                    x,
-                    plotRect);
-            }
+            double temperatureC = PsychrometricUnits.TemperatureToSI(display,geometry.DisplayUnits);
+            double x = geometry.XFromDryBulbC(temperatureC,plotRect);
+            bool major = IsMajorValue(display,majorStep);
+            canvas.Children.Add(new Line { X1=x, Y1=plotRect.Top, X2=x, Y2=plotRect.Bottom,
+                Stroke=major ? Brushes.Gray : Brushes.LightGray, StrokeThickness=major ? 1.0 : .5});
+            if (major) DrawTemperatureLabel(canvas,display,x,plotRect);
         }
     }
 
@@ -177,7 +133,8 @@ public static class DryBulbLayer
         TextBlock title =
             new()
             {
-                Text = "Temperatura de bulbo seco (°C)",
+                Text = geometry.DisplayUnits == UnitSystem.SI
+                    ? "Temperatura de bulbo seco (°C)" : "Temperatura de bulbo seco (°F)",
                 FontSize = 12.0,
                 FontWeight = FontWeights.SemiBold,
                 Foreground = Brushes.Black

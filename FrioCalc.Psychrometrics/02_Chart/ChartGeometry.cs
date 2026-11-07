@@ -1,5 +1,6 @@
 using System;
 using System.Windows;
+using FrioCalc.Psychrometrics.Core;
 
 namespace FrioCalc.Psychrometrics.Chart;
 
@@ -7,6 +8,9 @@ namespace FrioCalc.Psychrometrics.Chart;
 
 public sealed class ChartGeometry
 {
+    // [2.2.18] Las coordenadas siguen siendo SI; las etiquetas pueden mostrarse en IP.
+    public UnitSystem DisplayUnits { get; set; } = UnitSystem.SI;
+
 
     // ------------------------------ Fin de sección 2.2.1 ------------------------------
 

@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using FrioCalc.Psychrometrics.Core;
 
 namespace FrioCalc.Psychrometrics.Chart;
 
@@ -52,66 +53,21 @@ public static class HumidityRatioLayer
 
     // ------------------------------ Sección 2.4.3 - Generación de líneas horizontales ------------------------------
 
-    private static void DrawHorizontalLines(
-        Canvas canvas,
-        ChartGeometry geometry,
-        Rect plotRect)
+    private static void DrawHorizontalLines(Canvas canvas, ChartGeometry geometry, Rect plotRect)
     {
-        double minimum =
-            geometry.MinHumidityRatioKgPerKg;
-
-        double maximum =
-            geometry.MaxHumidityRatioKgPerKg;
-
-        double minorStep =
-            geometry.MinorHumidityRatioStepKgPerKg;
-
-        double majorStep =
-            geometry.MajorHumidityRatioStepKgPerKg;
-
-        double start =
-            RoundUpToStep(
-                minimum,
-                minorStep);
-
-        const double tolerance = 1e-9;
-
-        for (
-            double humidityRatio = start;
-            humidityRatio <= maximum + tolerance;
-            humidityRatio += minorStep)
+        bool ip = geometry.DisplayUnits == UnitSystem.IP;
+        double min = PsychrometricUnits.HumidityFromSI(geometry.MinHumidityRatioKgPerKg,geometry.DisplayUnits);
+        double max = PsychrometricUnits.HumidityFromSI(geometry.MaxHumidityRatioKgPerKg,geometry.DisplayUnits);
+        double minorStep = ip ? 10.0 : geometry.MinorHumidityRatioStepKgPerKg * 1000.0;
+        double majorStep = ip ? 50.0 : geometry.MajorHumidityRatioStepKgPerKg * 1000.0;
+        for (double display = RoundUpToStep(min,minorStep); display <= max + 1e-9; display += minorStep)
         {
-            double y =
-                geometry.YFromHumidityRatioKgPerKg(
-                    humidityRatio,
-                    plotRect);
-
-            bool isMajor =
-                IsMajorValue(
-                    humidityRatio,
-                    majorStep);
-
-            Line line =
-                new()
-                {
-                    X1 = plotRect.Left,
-                    Y1 = y,
-                    X2 = plotRect.Right,
-                    Y2 = y,
-                    Stroke = isMajor ? Brushes.Gray : Brushes.LightGray,
-                    StrokeThickness = isMajor ? 1.0 : 0.5
-                };
-
-            canvas.Children.Add(line);
-
-            if (isMajor)
-            {
-                DrawHumidityRatioLabel(
-                    canvas,
-                    humidityRatio,
-                    y,
-                    plotRect);
-            }
+            double w = PsychrometricUnits.HumidityToSI(display,geometry.DisplayUnits);
+            double y = geometry.YFromHumidityRatioKgPerKg(w,plotRect);
+            bool major = IsMajorValue(display,majorStep);
+            canvas.Children.Add(new Line { X1=plotRect.Left,Y1=y,X2=plotRect.Right,Y2=y,
+                Stroke=major ? Brushes.Gray : Brushes.LightGray, StrokeThickness=major ? 1 : .5 });
+            if (major) DrawHumidityRatioLabel(canvas,display,y,plotRect);
         }
     }
 
@@ -173,7 +129,8 @@ public static class HumidityRatioLayer
         TextBlock title =
             new()
             {
-                Text = "Humedad absoluta (g/kg aire seco)",
+                Text = geometry.DisplayUnits == UnitSystem.SI
+                    ? "Humedad absoluta (g/kg aire seco)" : "Humedad absoluta (gr/lb aire seco)",
                 FontSize = 12.0,
                 FontWeight = FontWeights.SemiBold,
                 Foreground = Brushes.DimGray

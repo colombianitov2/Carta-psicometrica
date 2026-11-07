@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using FrioCalc.Psychrometrics.Points;
 using FrioCalc.Psychrometrics.Processes;
+using FrioCalc.Psychrometrics.Core;
 
 namespace FrioCalc.Psychrometrics.Chart;
 
@@ -860,6 +861,12 @@ public partial class PsychrometricChartView : UserControl
     // ------------------------------ Fin de sección 2.1C.17 ------------------------------
 
 
+
+    public void SetDisplayUnits(UnitSystem units)
+    {
+        _geometry.DisplayUnits = units;
+        RefreshChart();
+    }
 
     // [2.1C.19] FCS independiente del resto de las familias gráficas.
     public void SetSensibleHeatFactorVisible(bool isVisible)

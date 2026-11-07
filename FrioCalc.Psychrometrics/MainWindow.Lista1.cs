@@ -39,8 +39,10 @@ public partial class MainWindow
         ChartMetricsPanel.UnitsChanged += units =>
         {
             PointPropertiesPanel.SetUnitSystem(units);
+            PsychrometricChart.SetDisplayUnits(units);
+            ProcessChart.SetDisplayUnits(units);
             ProcessResultText.Text =
-                "Unidades cambiadas en las entradas y las propiedades. La geometría y los ejes siguen en SI; conversión completa pendiente de validar.";
+                "Unidades cambiadas en ejes principales, entradas y propiedades. Se están auditando las etiquetas auxiliares.";
         };
         PsychrometricChart.SetSensibleHeatFactorVisible(false);
         ProcessChart.SetPressure(PressureSelector.CurrentPressureKPa);
