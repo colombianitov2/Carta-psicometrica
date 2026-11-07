@@ -98,8 +98,7 @@ public partial class PsychrometricChartView : UserControl
         _pressureKPa =
             pressureKPa;
 
-        PressureValueText.Text =
-            $"Presión: {pressureKPa.ToString("0.###", CultureInfo.CurrentCulture)} kPa abs";
+        UpdatePressureLabel();
 
         if (pressureChanged)
         {
@@ -881,7 +880,17 @@ public partial class PsychrometricChartView : UserControl
     public void SetDisplayUnits(UnitSystem units)
     {
         _geometry.DisplayUnits = units;
+        UpdatePressureLabel();
         RefreshChart();
+    }
+
+    // [2.1C.25] La etiqueta de presión debe corresponder al sistema de unidades elegido.
+    private void UpdatePressureLabel()
+    {
+        var units=_geometry.DisplayUnits;
+        double displayed=PsychrometricUnits.PressureFromSI(_pressureKPa,units);
+        PressureValueText.Text=$"Presión: {displayed.ToString("0.###",CultureInfo.CurrentCulture)} "+
+            (units==UnitSystem.SI?"kPa abs":"psi abs");
     }
 
     // [2.1C.24] Exportación PNG directa del Canvas visible, en resolución 2×.

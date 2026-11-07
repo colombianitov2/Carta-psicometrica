@@ -82,8 +82,8 @@ public static class HumidityRatioLayer
         double y,
         Rect plotRect)
     {
-        double gramsPerKilogram =
-            humidityRatioKgPerKg * 1000.0;
+        // El valor recibido ya está convertido a la unidad que se dibuja (g/kgda o gr/lbda).
+        double gramsPerKilogram = humidityRatioKgPerKg;
 
         TextBlock label =
             new()

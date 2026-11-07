@@ -46,8 +46,10 @@
                        Margin="0,0,0,9"/>
             <Border BorderBrush="#CBD5E1" BorderThickness="1" Background="White"
                     CornerRadius="4" Margin="0,0,0,9">
-                <Canvas x:Name="DiagramCanvas" Width="720" Height="300" HorizontalAlignment="Left"
-                        SizeChanged="DiagramCanvas_SizeChanged"/>
+                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Stretch">
+                    <Canvas x:Name="DiagramCanvas" Width="720" Height="300" HorizontalAlignment="Left"
+                            SizeChanged="DiagramCanvas_SizeChanged"/>
+                </Viewbox>
             </Border>
             <TextBlock x:Name="TheoryValues" FontFamily="Consolas" FontSize="12"
                        TextWrapping="Wrap" Margin="0,0,0,7"/>
