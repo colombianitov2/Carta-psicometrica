@@ -37,6 +37,11 @@ internal static class Program
             Check(window.FindName("ProcessSelectionList") is ListBox, "Selección ordenada");
             Check(window.FindName("SavedProcessesList") is ListBox, "Procesos guardados");
             Check(window.FindName("TheoryExampleResultText") is TextBlock, "Ejercicios A03");
+            Check(window.FindName("ProcessTheoryPanel") is ProcessTheoryPanel, "Laboratorio teórico");
+            Check(window.FindName("BibliographyPanel") is BibliographyPanel, "Catálogo bibliográfico");
+            Check(window.FindName("FcsGuideTextBox") is TextBox, "Guía FCS");
+            Check(window.FindName("CloseCycleCheckBox") is CheckBox, "Cierre de ciclo");
+            Check(window.FindName("CondensateTemperatureTextBox") is TextBox, "Temperatura de condensado");
             Check(window.FindName("MixFlowsListTextBox") is TextBox, "Mezclas múltiples");
             Check(window.FindName("StateMethodComboBox") == null, "Namescope aislado de control de métodos");
             writer.WriteLine($"PRUEBAS UI SUPERADAS: {checks}");
