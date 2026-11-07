@@ -10,3 +10,5 @@ Solicitud final de prueba 3: ramas, desecantes, edición, ASHRAE 2025 y capturas
 Solicitud #4: corrección constantes de bibliografía, reconstrucción WPF completa y capturas.
 
 Solicitud #5: verificar catálogo ASHRAE y suite completa tras ajuste de prueba.
+
+Solicitud #6: validación de diseño responsive, carta estándar y nuevas capturas UI.
