@@ -30,7 +30,21 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <chart:PsychrometricChartView x:Name="PsychrometricChart" Grid.Row="0"/>
-                    <ui:PointPropertiesPanel x:Name="PointPropertiesPanel" Grid.Row="2"/>
+                    <StackPanel Grid.Row="2">
+                        <ui:PointPropertiesPanel x:Name="PointPropertiesPanel"/>
+                        <Border BorderBrush="#D0D0D0" BorderThickness="1" CornerRadius="6"
+                                Background="#FAFAFA" Margin="0,6,0,0" Padding="10">
+                            <StackPanel>
+                                <TextBlock Text="PROPIEDADES DEL PROCESO" FontWeight="SemiBold" FontSize="14"
+                                           Margin="0,0,0,4"/>
+                                <ScrollViewer MaxHeight="115" VerticalScrollBarVisibility="Auto">
+                                    <TextBlock x:Name="SelectedProcessSummaryMainText" FontSize="12"
+                                               Text="Todavía no hay un proceso calculado."
+                                               TextWrapping="Wrap"/>
+                                </ScrollViewer>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
                 </Grid>
             </TabItem>
             <!-- [5.1X.4] Segunda carta para procesos múltiples -->
@@ -97,7 +111,8 @@
                             <Button Content="GRAFICAR PROCESO" Padding="8" FontWeight="SemiBold"
                                     Click="PlotProcess_Click" Margin="0,0,0,10"/>
                             <TextBlock Text="Procesos guardados" FontWeight="SemiBold" Margin="0,0,0,3"/>
-                            <ListBox x:Name="SavedProcessesList" Height="95" Margin="0,0,0,7"/>
+                            <ListBox x:Name="SavedProcessesList" Height="95" Margin="0,0,0,7"
+                                     SelectionChanged="SavedProcessesList_SelectionChanged"/>
                             <TextBlock Text="Nombre para renombrar el proceso seleccionado" FontSize="11"
                                        TextWrapping="Wrap" Margin="0,0,0,3"/>
                             <TextBox x:Name="RenameProcessTextBox" Height="27" Margin="0,0,0,7"/>
@@ -120,6 +135,8 @@
                                         Padding="5" Margin="0,0,7,0"/>
                                 <Button Content="Abrir sesión JSON" Click="LoadSession_Click" Padding="5"/>
                             </StackPanel>
+                            <Button Content="Exportar informe Markdown (.md)" Click="ExportMarkdownReport_Click"
+                                    Padding="7" Margin="0,0,0,6"/>
                             <Button Content="Exportar informe CSV" Click="ExportReport_Click"
                                     Padding="7"/>
                         </StackPanel>

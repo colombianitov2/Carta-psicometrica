@@ -20,4 +20,5 @@ public sealed record PsychrometricProcess(
     double? SaturationEffectiveness = null,
     double? BypassFactor = null,
     string Method = "Balances de masa y energía",
-    bool Visible = true);
+    bool Visible = true,
+    string Report = "");

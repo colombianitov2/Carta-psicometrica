@@ -318,9 +318,10 @@ public partial class MainWindow
             ? $"PR{processId}" : NewProcessNameTextBox.Text.Trim();
         RememberHistory();
         _savedProcesses.Add(new PsychrometricProcess(
-            processId,name,initial.ColorHex,type,ids,massFlow));
+            processId,name,initial.ColorHex,type,ids,massFlow,Report:description));
         UpdateProcessesInCharts();
         ProcessResultText.Text = description;
+        SelectedProcessSummaryMainText.Text = $"Proceso: {name}\n" + description;
         PointPropertiesPanel.ClearSelection();
         WorkspaceTabs.SelectedIndex = 1;
     }
@@ -361,6 +362,20 @@ public partial class MainWindow
             if(item.Tag?.ToString()==process.Type.ToString())
                 {ProcessTypeComboBox.SelectedItem=item;break;}
         ProcessResultText.Text="Los puntos y tipo se cargaron para edición. Al graficar se crea una nueva versión; el original se conserva hasta que se elimine explícitamente.";
+    }
+
+    // [5.1C.16] Propiedades persistentes del proceso seleccionado.
+    private void SavedProcessesList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        int index = SavedProcessesList.SelectedIndex;
+        if(index < 0 || index >= _savedProcesses.Count) return;
+        PsychrometricProcess p = _savedProcesses[index];
+        string heading=$"{p.Name} · {p.Type} · {string.Join(" → ",p.PointIds.Select(id=>"P"+id))}";
+        string detail=string.IsNullOrWhiteSpace(p.Report)
+            ? "No hay informe calculado para este proceso importado."
+            : p.Report;
+        ProcessResultText.Text=heading+Environment.NewLine+detail;
+        SelectedProcessSummaryMainText.Text=heading+Environment.NewLine+detail;
     }
 
     private void DeleteProcess_Click(object sender, RoutedEventArgs e)
@@ -518,6 +533,18 @@ public partial class MainWindow
     {
         if(sender is not Button b || !int.TryParse(b.Tag?.ToString(),out int slide)) return;
         TheoryExampleResultText.Text=SlideExamples.Evaluate(slide,PressureSelector.CurrentPressureKPa);
+    }
+
+    // [5.1C.17] Informe con ecuaciones, supuestos, estados, procesos y bibliografía.
+    private void ExportMarkdownReport_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog=new SaveFileDialog {Title="Exportar informe técnico de FrioCalc",
+            Filter="Markdown (*.md)|*.md",FileName="FrioCalc_Informe_Tecnico.md"};
+        if(dialog.ShowDialog(this)!=true) return;
+        var report=ProcessReportService.BuildMarkdown(PressureSelector.CurrentPressureKPa,
+            PsychrometricChart.ActivePoints,_savedProcesses);
+        File.WriteAllText(dialog.FileName,report,new UTF8Encoding(true));
+        ProcessResultText.Text="Informe Markdown exportado, con supuestos y bibliografía.";
     }
 
     private void ExportReport_Click(object sender, RoutedEventArgs e)
