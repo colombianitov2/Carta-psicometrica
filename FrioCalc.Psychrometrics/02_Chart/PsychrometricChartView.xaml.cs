@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using FrioCalc.Psychrometrics.Points;
+using FrioCalc.Psychrometrics.Processes;
 
 namespace FrioCalc.Psychrometrics.Chart;
 
@@ -36,6 +37,9 @@ public partial class PsychrometricChartView : UserControl
     private bool _specificVolumeVisible;
 
     private bool _enthalpyDeviationVisible;
+
+    private bool _sensibleHeatFactorVisible;
+    private readonly List<PsychrometricProcess> _processes = new();
 
     private bool _pointSelectionEnabled;
 
@@ -314,9 +318,12 @@ public partial class PsychrometricChartView : UserControl
                 _pressureKPa);
         }
 
-        SensibleHeatFactorScaleLayer.Draw(
-            ChartCanvas,
-            _geometry);
+        if (_sensibleHeatFactorVisible)
+        {
+            SensibleHeatFactorScaleLayer.Draw(ChartCanvas, _geometry);
+        }
+
+        ProcessLayer.Draw(ChartCanvas, _geometry, _chartPoints, _processes);
 
         PointLayer.Draw(
             ChartCanvas,
@@ -852,6 +859,65 @@ public partial class PsychrometricChartView : UserControl
 
     // ------------------------------ Fin de sección 2.1C.17 ------------------------------
 
+
+
+    // [2.1C.19] FCS independiente del resto de las familias gráficas.
+    public void SetSensibleHeatFactorVisible(bool isVisible)
+    {
+        _sensibleHeatFactorVisible = isVisible;
+        RefreshChart();
+    }
+
+    // [2.1C.20] Creación de punto con restricciones, sin alterar otros puntos.
+    public bool TryAddPointFromConditions(
+        IReadOnlyDictionary<StateProperty, double> conditions, out string diagnostic)
+    {
+        string color = PointColorPalette.GetColorHex(_nextPointId);
+        if (!StateInputSolver.TrySolve(conditions, _pressureKPa, _nextPointId, color,
+            out ChartPoint? point, out diagnostic) || point == null) return false;
+        if (point.DryBulbC < _geometry.ActiveMinDryBulbC ||
+            point.DryBulbC > _geometry.ActiveMaxDryBulbC ||
+            point.HumidityRatioKgPerKg < _geometry.ActiveMinHumidityRatioKgPerKg ||
+            point.HumidityRatioKgPerKg > _geometry.ActiveMaxHumidityRatioKgPerKg)
+        {
+            diagnostic = "Punto físico válido, pero fuera de los límites activos de la carta. Amplíe los límites o desactive Carta estándar.";
+            return false;
+        }
+        _chartPoints.Add(point);
+        _nextPointId++;
+        NotifyPointsChanged();
+        RefreshChart();
+        return true;
+    }
+
+    // [2.1C.21] Compartir el estado de puntos con la carta de procesos.
+    public void SetSharedPoints(IReadOnlyList<ChartPoint> points)
+    {
+        _chartPoints.Clear();
+        _chartPoints.AddRange(points);
+        _nextPointId = 1;
+        foreach (var point in points) _nextPointId = Math.Max(_nextPointId, point.Id + 1);
+        RefreshChart();
+    }
+
+    public void SetProcesses(IReadOnlyList<PsychrometricProcess> processes)
+    {
+        _processes.Clear();
+        _processes.AddRange(processes);
+        RefreshChart();
+    }
+
+    public bool DeletePoint(int id)
+    {
+        int index = _chartPoints.FindIndex(p => p.Id == id);
+        if (index < 0) return false;
+        _chartPoints.RemoveAt(index);
+        NotifyPointsChanged();
+        RefreshChart();
+        return true;
+    }
+
+    public IReadOnlyList<ChartPoint> ActivePoints => _chartPoints.AsReadOnly();
 
     // ------------------------------ Sección 2.1C.18 - Cierre ------------------------------
 
