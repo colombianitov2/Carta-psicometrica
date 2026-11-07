@@ -302,6 +302,22 @@ public partial class MainWindow
             _selectedPointIds.Add(PsychrometricChart.ActivePoints.Last().Id);
             selected = new ChartPoint?[]{inlet,PsychrometricChart.ActivePoints.Last()};
         }
+        bool closeCycle=CloseCycleCheckBox.IsChecked==true;
+        if(closeCycle)
+        {
+            if(type!=ProcessType.Automatic)
+            {
+                MessageBox.Show("Para un ciclo cerrado utilice método Automático: cada tramo puede representar una transformación distinta.",
+                    "Ciclo psicrométrico",MessageBoxButton.OK,MessageBoxImage.Warning);return;
+            }
+            if(selected.Length < 3)
+            {
+                MessageBox.Show("Para cerrar un ciclo se necesitan al menos tres puntos distintos.",
+                    "Ciclo psicrométrico",MessageBoxButton.OK,MessageBoxImage.Warning);return;
+            }
+            _selectedPointIds.Add(_selectedPointIds[0]);
+            selected=selected.Concat(new[]{selected[0]}).ToArray();
+        }
         var ids = new List<int>(_selectedPointIds);
         string description;
         if (type == ProcessType.AdiabaticMixing)
@@ -382,6 +398,18 @@ public partial class MainWindow
                 report.AppendLine(result.Diagnostic);
             }
             description = predictionNote + Environment.NewLine + report.ToString();
+            if(ProcessCycleAnalyzer.TryAnalyze(selected.Where(p=>p is not null).Select(p=>p!).ToArray(),
+                massFlow,out var cycle,out var cycleError))
+            {
+                description += Environment.NewLine + 
+                    $"Recorrido de {cycle.StageCount} tramos; cerrado={cycle.IsClosed}; " +
+                    $"Δh neta={cycle.NetEnthalpyKJPerKgDryAir:0.######} kJ/kgda; " +
+                    $"ΔW neta={cycle.NetHumidityRatioKgPerKg*1000:0.######} g/kgda.";
+                if(cycle.NetPowerKW is double qcycle)
+                    description += $" Potencia neta por entalpía del aire={qcycle:0.###} kW.";
+                description += Environment.NewLine + cycle.Diagnostic;
+            }
+            else description += Environment.NewLine + cycleError;
         }
         ChartPoint initial = selected[0]!;
         int processId = _nextProcessId++;
@@ -430,6 +458,9 @@ public partial class MainWindow
             _selectedPointIds.RemoveAt(_selectedPointIds.Count-1);
         RefreshSelectionList();
         NewProcessNameTextBox.Text=process.Name;
+        CloseCycleCheckBox.IsChecked=process.PointIds.Count>=4 && process.PointIds[0]==process.PointIds[^1];
+        if(CloseCycleCheckBox.IsChecked==true && _selectedPointIds.Count>0) _selectedPointIds.RemoveAt(_selectedPointIds.Count-1);
+        RefreshSelectionList();
         CondensateTemperatureTextBox.Text=process.CondensateTemperatureC?.ToString("0.###",CultureInfo.CurrentCulture) ?? "";
         foreach(ComboBoxItem item in ProcessTypeComboBox.Items)
             if(item.Tag?.ToString()==process.Type.ToString())
@@ -626,6 +657,23 @@ public partial class MainWindow
             PsychrometricChart.ActivePoints,_savedProcesses);
         File.WriteAllText(dialog.FileName,report,new UTF8Encoding(true));
         ProcessResultText.Text="Informe Markdown exportado, con supuestos y bibliografía.";
+    }
+
+    // [5.1C.19] Imagen rasterizada de la carta completa (incluye puntos y trazados).
+    private void ExportChartPng_Click(object sender,RoutedEventArgs e)
+    {
+        var dialog=new SaveFileDialog {Title="Exportar carta de procesos",
+            Filter="Imagen PNG (*.png)|*.png",FileName="FrioCalc_Carta_Procesos.png"};
+        if(dialog.ShowDialog(this)!=true) return;
+        try
+        {
+            ProcessChart.ExportPng(dialog.FileName);
+            ProcessResultText.Text="Carta de procesos exportada como PNG a resolución ampliada.";
+        }
+        catch(Exception ex) when(ex is InvalidOperationException or IOException)
+        {
+            MessageBox.Show(ex.Message,"Exportación gráfica",MessageBoxButton.OK,MessageBoxImage.Warning);
+        }
     }
 
     private void ExportReport_Click(object sender, RoutedEventArgs e)

@@ -884,6 +884,22 @@ public partial class PsychrometricChartView : UserControl
         RefreshChart();
     }
 
+    // [2.1C.24] Exportación PNG directa del Canvas visible, en resolución 2×.
+    public void ExportPng(string fileName)
+    {
+        if (ChartCanvas.ActualWidth < 100 || ChartCanvas.ActualHeight < 100)
+            throw new InvalidOperationException("La carta debe estar visible antes de exportarse.");
+        int width=(int)Math.Ceiling(ChartCanvas.ActualWidth*2.0);
+        int height=(int)Math.Ceiling(ChartCanvas.ActualHeight*2.0);
+        var bitmap=new System.Windows.Media.Imaging.RenderTargetBitmap(
+            width,height,192,192,System.Windows.Media.PixelFormats.Pbgra32);
+        bitmap.Render(ChartCanvas);
+        var encoder=new System.Windows.Media.Imaging.PngBitmapEncoder();
+        encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
+        using var stream=System.IO.File.Create(fileName);
+        encoder.Save(stream);
+    }
+
     // [2.1C.19] FCS independiente del resto de las familias gráficas.
     // [2.1C.23] Proyección de familia de estados compatibles con un FCS conocido.
     public void SetSensibleHeatFactorGuide(ChartPoint? origin,double? factor)
