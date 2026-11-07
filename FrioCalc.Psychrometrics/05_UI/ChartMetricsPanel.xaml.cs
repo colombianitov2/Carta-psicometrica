@@ -299,6 +299,13 @@ public partial class ChartMetricsPanel : UserControl
         return true;
     }
 
+    public void SetUnitSystem(UnitSystem unitSystem)
+    {
+        int requestedIndex = unitSystem == UnitSystem.IP ? 1 : 0;
+        if (UnitsComboBox.SelectedIndex != requestedIndex)
+            UnitsComboBox.SelectedIndex = requestedIndex;
+    }
+
     public void ClearStateConditions()
     {
         foreach (TextBox tb in new [] {DryBulbInput,WetBulbInput,DewPointInput,RelativeHumidityInput,

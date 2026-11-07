@@ -23,6 +23,7 @@ public partial class MainWindow
     private int? _editingPointId;
     private readonly Stack<SessionV1> _undoHistory = new();
     private bool _restoringHistory;
+    private readonly Dictionary<int, ChartPoint> _lastKnownPoints = new();
 
     private void InitializeLista1()
     {
@@ -131,7 +132,26 @@ public partial class MainWindow
     private void OnLista1PointsChanged(IReadOnlyList<ChartPoint> points)
     {
         ProcessChart.SetSharedPoints(points);
+        // [5.1C.10.1] Un estado modificado invalida los balances guardados que lo referencian.
+        // Eliminar procesos afectados, en lugar de publicar un informe antiguo como válido.
+        var changed = new HashSet<int>(points
+            .Where(p => _lastKnownPoints.TryGetValue(p.Id,out var oldPoint) && oldPoint != p)
+            .Select(p=>p.Id));
+        int invalidated = 0;
+        if (!_restoringHistory && changed.Count>0)
+        {
+            invalidated = _savedProcesses.RemoveAll(process =>
+                process.PointIds.Any(id=>changed.Contains(id)));
+        }
         _savedProcesses.RemoveAll(process => process.PointIds.Any(id => !points.Any(p => p.Id == id)));
+        _lastKnownPoints.Clear();
+        foreach(var p in points) _lastKnownPoints[p.Id]=p;
+        if(invalidated>0)
+        {
+            ProcessResultText.Text=$"{invalidated} proceso(s) invalidado(s) porque cambió un estado. " +
+                "Seleccione de nuevo los puntos y recalcule.";
+            SelectedProcessSummaryMainText.Text=ProcessResultText.Text;
+        }
         _selectedPointIds.RemoveAll(id => !points.Any(p => p.Id == id));
         RefreshSelectionList();
         UpdateProcessesInCharts();
@@ -146,6 +166,7 @@ public partial class MainWindow
         _nextProcessId = 1;
         _editingPointId = null;
         _undoHistory.Clear();
+        _lastKnownPoints.Clear();
         PointPropertiesPanel.ClearSelection();
         ProcessResultText.Text = "La presión cambió; puntos y procesos anteriores se descartan para evitar estados inconsistentes.";
         UpdateProcessesInCharts();
@@ -511,12 +532,20 @@ public partial class MainWindow
                 session.Processes is null || !double.IsFinite(session.PressureKPa) ||
                 session.PressureKPa <= 0)
                 throw new InvalidDataException("Archivo de sesión incompatible.");
+            if (session.Points.Any(p => p.Id <= 0 || !PointPropertyCalculator.TryCreatePoint(
+                p.Id,p.Name,p.ColorHex,p.PressureKPa,p.DryBulbC,
+                p.HumidityRatioKgPerKg,out var recomputed) || recomputed is null ||
+                Math.Abs(recomputed.EnthalpyKJPerKgDryAir-p.EnthalpyKJPerKgDryAir) > .03))
+                throw new InvalidDataException("La sesión contiene estados que no corresponden a propiedades psicrométricas válidas.");
             if (session.Points.Any(p=>Math.Abs(p.PressureKPa-session.PressureKPa)>1e-6) ||
                 session.Points.GroupBy(p=>p.Id).Any(g=>g.Count()>1) ||
                 session.Processes.Any(p=>p.PointIds.Any(id=>!session.Points.Any(x=>x.Id==id))))
                 throw new InvalidDataException("Puntos o procesos contradictorios en el archivo.");
             if (MessageBox.Show("Esto reemplazará los puntos y procesos actuales. ¿Continuar?",
                 "Abrir sesión",MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes) return;
+            // Restaurar unidades ANTES de escribir la presión de la sesión.
+            ChartMetricsPanel.ClearStateConditions();
+            ChartMetricsPanel.SetUnitSystem(session.Units);
             PressureSelector.ApplyExternalPressure(session.PressureKPa);
             PsychrometricChart.SetSharedPoints(session.Points);
             OnPointsChanged(PsychrometricChart.ActivePoints);
