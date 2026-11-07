@@ -73,22 +73,30 @@ internal static class Program
                 window.UpdateLayout();
                 string folder=System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(),"ui-snapshots");
                 System.IO.Directory.CreateDirectory(folder);
-                for(int tab=0;tab<3;tab++)
+                // [UI.3] Dos resoluciones para detectar solapamientos y recortes.
+                foreach (var resolution in new[] { (W:1150.0,H:788.0), (W:1540.0,H:900.0) })
                 {
-                    tabs.SelectedIndex=tab;
+                    window.Width=resolution.W;
+                    window.Height=resolution.H;
                     window.UpdateLayout();
-                    window.Dispatcher.Invoke(() => { },
-                        System.Windows.Threading.DispatcherPriority.Render);
-                    int width=Math.Max(1,(int)Math.Ceiling(window.ActualWidth));
-                    int height=Math.Max(1,(int)Math.Ceiling(window.ActualHeight));
-                    var bitmap=new System.Windows.Media.Imaging.RenderTargetBitmap(
-                        width,height,96,96,System.Windows.Media.PixelFormats.Pbgra32);
-                    bitmap.Render(window);
-                    var encoder=new System.Windows.Media.Imaging.PngBitmapEncoder();
-                    encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
-                    string file=System.IO.Path.Combine(folder,$"Zona_{tab+1}.png");
-                    using(var stream=System.IO.File.Create(file)) encoder.Save(stream);
-                    writer.WriteLine("CAPTURA_WPF: "+file);
+                    for(int tab=0;tab<3;tab++)
+                    {
+                        tabs.SelectedIndex=tab;
+                        window.UpdateLayout();
+                        window.Dispatcher.Invoke(() => { },
+                            System.Windows.Threading.DispatcherPriority.Render);
+                        int width=Math.Max(1,(int)Math.Ceiling(window.ActualWidth));
+                        int height=Math.Max(1,(int)Math.Ceiling(window.ActualHeight));
+                        var bitmap=new System.Windows.Media.Imaging.RenderTargetBitmap(
+                            width,height,96,96,System.Windows.Media.PixelFormats.Pbgra32);
+                        bitmap.Render(window);
+                        var encoder=new System.Windows.Media.Imaging.PngBitmapEncoder();
+                        encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
+                        string file=System.IO.Path.Combine(folder,
+                            $"Zona_{tab+1}_{(int)resolution.W}x{(int)resolution.H}.png");
+                        using(var stream=System.IO.File.Create(file)) encoder.Save(stream);
+                        writer.WriteLine("CAPTURA_WPF: "+file);
+                    }
                 }
             }
             catch(Exception visualError)

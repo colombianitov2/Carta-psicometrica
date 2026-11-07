@@ -165,6 +165,74 @@ static class Program
             Check(BibliographyCatalog.Entries.Any(e=>e.Url.Contains("/F25_Ch01_si.aspx")),
                 "Referencia ASHRAE 2025 primaria");
 
+            // [T4.5] Validación externa independiente: ASHRAE 2025, Fundamentals, cap. 1,
+            // §9 comparación cartas 1/6 y §10 ejemplos 2–4 (lectura gráfica aproximada).
+            // https://handbook.ashrae.org/Handbooks/F25/SI/F25_Ch01/F25_Ch01_si.aspx
+            double wSea = WetBulbHumidityRatio.FromDryBulbAndWetBulb(40,30,101.325);
+            Check(PointPropertyCalculator.TryCreatePoint(60,"Carta 1","#145388",
+                101.325,40,wSea,out var sea) && sea!=null,"ASHRAE Carta 1 estado");
+            Check(Math.Abs(sea!.HumidityRatioKgPerKg*1000-23.0)<1.2,
+                "ASHRAE Carta 1 W ≈23.0 g/kgda");
+            Check(Math.Abs(sea.EnthalpyKJPerKgDryAir-99.5)<2.5,
+                "ASHRAE Carta 1 h ≈99.5 kJ/kgda");
+            Check(Math.Abs(sea.SpecificVolumeM3PerKgDryAir-0.920)<0.025,
+                "ASHRAE Carta 1 v ≈0.920 m³/kgda");
+
+            double pAltitude = 84.54; // Presión carta 6, 1500 m, ASHRAE 2025.
+            double wAltitude = WetBulbHumidityRatio.FromDryBulbAndWetBulb(40,30,pAltitude);
+            Check(PointPropertyCalculator.TryCreatePoint(61,"Carta 6","#145388",
+                pAltitude,40,wAltitude,out var mountain) && mountain!=null,
+                "ASHRAE Carta 6 estado");
+            Check(Math.Abs(mountain!.HumidityRatioKgPerKg*1000-28.6)<1.5,
+                "ASHRAE Carta 6 W ≈28.6 g/kgda");
+            Check(Math.Abs(mountain.EnthalpyKJPerKgDryAir-114.1)<3.0,
+                "ASHRAE Carta 6 h ≈114.1 kJ/kgda");
+            Check(Math.Abs(mountain.SpecificVolumeM3PerKgDryAir-1.111)<0.03,
+                "ASHRAE Carta 6 v ≈1.111 m³/kgda");
+            Check(mountain.HumidityRatioKgPerKg > sea.HumidityRatioKgPerKg,
+                "ASHRAE humedad mayor con altitud a Tbs y Tbh fijas");
+
+            // ASHRAE ejemplo 2: 2 °C saturado, 10 m³/s de entrada y salida a 40 °C.
+            var sat2 = Create(62,2,100);
+            Check(Math.Abs(sat2.HumidityRatioKgPerKg*1000-4.38)<.40,
+                "ASHRAE ejemplo 2 W1 ≈4.38 g/kgda");
+            Check(Math.Abs(sat2.SpecificVolumeM3PerKgDryAir-.785)<.02,
+                "ASHRAE ejemplo 2 v1 ≈0.785 m³/kgda");
+            Check(PointPropertyCalculator.TryCreatePoint(63,"Salida 40°C","#145388",
+                101.325,40,sat2.HumidityRatioKgPerKg,out var hot40) && hot40!=null,
+                "ASHRAE ejemplo 2 salida");
+            Check(ProcessCalculator.TryCalculate(sat2,hot40!,ProcessType.Sensible,
+                10/sat2.SpecificVolumeM3PerKgDryAir,out var qHeating,out var qHeatError),qHeatError);
+            Check(qHeating.ThermalPowerKW is double heatKw && Math.Abs(heatKw-490)<20,
+                "ASHRAE ejemplo 2 carga sensible ≈490 kW");
+
+            // ASHRAE ejemplo 3: 30 °C/50 % HR a 10 °C saturados, 5 m³/s y
+            // condensado drenado a 10 °C (h_agua = 42.02 kJ/kg).
+            var coolingIn = Create(64,30,50);
+            var coolingOut = Create(65,10,100);
+            double mCooling = 5/coolingIn.SpecificVolumeM3PerKgDryAir;
+            Check(ProcessCalculator.TryCalculate(coolingIn,coolingOut,
+                ProcessType.CoolingDehumidification,mCooling,10,
+                out var fullCoil,out var coilError),coilError);
+            Check(fullCoil.CoilCoolingLoadKW is double fullQ && Math.Abs(fullQ-197)<15,
+                "ASHRAE ejemplo 3 carga de serpentín ≈197 kW");
+
+            // ASHRAE ejemplo 4: mezcla de 2 m³/s a 4°C/2°C Tbh y 6.25 m³/s
+            // a 25°C/50% HR. Resultado gráfico ~19.5°C Tbs y 14.6°C Tbh.
+            double wCold = WetBulbHumidityRatio.FromDryBulbAndWetBulb(4,2,101.325);
+            Check(PointPropertyCalculator.TryCreatePoint(66,"Aire exterior","#145388",
+                101.325,4,wCold,out var cold)&&cold!=null,"ASHRAE ejemplo 4 exterior");
+            var return25 = Create(67,25,50);
+            double mCold = 2/cold!.SpecificVolumeM3PerKgDryAir;
+            double mWarm = 6.25/return25.SpecificVolumeM3PerKgDryAir;
+            Check(ProcessCalculator.TryMix(new List<(ChartPoint,double)> {
+                (cold,mCold),(return25,mWarm)},68,"#145388",
+                out var ashraeMix,out var mixingError)&&ashraeMix!=null,mixingError);
+            Check(Math.Abs(ashraeMix!.DryBulbC-19.5)<1.2,
+                "ASHRAE ejemplo 4 Tbs mezcla ≈19.5°C");
+            Check(Math.Abs(ashraeMix.WetBulbC-14.6)<1.2,
+                "ASHRAE ejemplo 4 Tbh mezcla ≈14.6°C");
+
             // [T5] Unidades sin cambio de estado
             double original=101.325;
             Check(Math.Abs(PsychrometricUnits.PressureToSI(
