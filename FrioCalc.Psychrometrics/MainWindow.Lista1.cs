@@ -514,6 +514,12 @@ public partial class MainWindow
         WorkspaceTabs.SelectedIndex=0;
     }
 
+    private void ComputeSlideExample_Click(object sender, RoutedEventArgs e)
+    {
+        if(sender is not Button b || !int.TryParse(b.Tag?.ToString(),out int slide)) return;
+        TheoryExampleResultText.Text=SlideExamples.Evaluate(slide,PressureSelector.CurrentPressureKPa);
+    }
+
     private void ExportReport_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new SaveFileDialog

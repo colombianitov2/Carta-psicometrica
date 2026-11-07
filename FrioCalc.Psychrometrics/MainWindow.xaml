@@ -156,6 +156,23 @@
                         <TextBlock Text="4. Ejercicios de las diapositivas 22–24" FontSize="16" FontWeight="SemiBold"/>
                         <TextBlock Text="Auditorio: 300 personas y 8 L/s por persona; para la carga total se necesitan estados y un modelo de flujos/cargas. UTA: 3000 m³/h de retorno y 500 m³/h de aire exterior, convertir cada volumen por su propio volumen específico. FCS interior 0,75 y BF 0,2 no determinan por sí solos un estado único de impulsión sin datos suficientes del serpentín y cargas."
                                    TextWrapping="Wrap" Margin="0,4,0,16"/>
+                        <TextBlock Text="EJERCICIOS RESUELTOS DESDE EL MOTOR (A03)"
+                                   FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                        <WrapPanel Margin="0,0,0,10">
+                            <Button Content="Diapo 6" Tag="6" Click="ComputeSlideExample_Click" Padding="9,5" Margin="0,0,6,6"/>
+                            <Button Content="Diapo 7" Tag="7" Click="ComputeSlideExample_Click" Padding="9,5" Margin="0,0,6,6"/>
+                            <Button Content="Diapo 14" Tag="14" Click="ComputeSlideExample_Click" Padding="9,5" Margin="0,0,6,6"/>
+                            <Button Content="Diapo 15" Tag="15" Click="ComputeSlideExample_Click" Padding="9,5" Margin="0,0,6,6"/>
+                            <Button Content="Diapo 22" Tag="22" Click="ComputeSlideExample_Click" Padding="9,5" Margin="0,0,6,6"/>
+                            <Button Content="Diapo 23" Tag="23" Click="ComputeSlideExample_Click" Padding="9,5" Margin="0,0,6,6"/>
+                            <Button Content="Diapo 24" Tag="24" Click="ComputeSlideExample_Click" Padding="9,5" Margin="0,0,6,6"/>
+                        </WrapPanel>
+                        <Border Padding="14" BorderBrush="#CCD0D4" BorderThickness="1"
+                                CornerRadius="6" Background="#FAFAFA" Margin="0,0,0,18">
+                            <TextBlock x:Name="TheoryExampleResultText"
+                                       Text="Seleccione una diapositiva para resolverla con la presión activa."
+                                       FontFamily="Consolas" TextWrapping="Wrap" FontSize="13"/>
+                        </Border>
                         <TextBlock Text="Fuentes: ASHRAE 2025 Handbook—Fundamentals, cap. 1; PsychroLib (psychrometrics.github.io/psychrolib); CoolProp (coolprop.org/fluid_properties/HumidAir.html). El término 'rendimiento de Hendrickson' de la presentación requiere corroboración terminológica antes de publicarse como norma."
                                    TextWrapping="Wrap" Foreground="#444"/>
                     </StackPanel>
