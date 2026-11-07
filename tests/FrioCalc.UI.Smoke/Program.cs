@@ -44,6 +44,36 @@ internal static class Program
             Check(window.FindName("CondensateTemperatureTextBox") is TextBox, "Temperatura de condensado");
             Check(window.FindName("MixFlowsListTextBox") is TextBox, "Mezclas múltiples");
             Check(window.FindName("StateMethodComboBox") == null, "Namescope aislado de control de métodos");
+            // [UI.2] Capturas automáticas de referencia (no equivalen a aceptación visual).
+            try
+            {
+                window.Show();
+                window.UpdateLayout();
+                string folder=System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(),"ui-snapshots");
+                System.IO.Directory.CreateDirectory(folder);
+                for(int tab=0;tab<3;tab++)
+                {
+                    tabs.SelectedIndex=tab;
+                    window.UpdateLayout();
+                    window.Dispatcher.Invoke(() => { },
+                        System.Windows.Threading.DispatcherPriority.Render);
+                    int width=Math.Max(1,(int)Math.Ceiling(window.ActualWidth));
+                    int height=Math.Max(1,(int)Math.Ceiling(window.ActualHeight));
+                    var bitmap=new System.Windows.Media.Imaging.RenderTargetBitmap(
+                        width,height,96,96,System.Windows.Media.PixelFormats.Pbgra32);
+                    bitmap.Render(window);
+                    var encoder=new System.Windows.Media.Imaging.PngBitmapEncoder();
+                    encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
+                    string file=System.IO.Path.Combine(folder,$"Zona_{tab+1}.png");
+                    using(var stream=System.IO.File.Create(file)) encoder.Save(stream);
+                    writer.WriteLine("CAPTURA_WPF: "+file);
+                }
+            }
+            catch(Exception visualError)
+            {
+                writer.WriteLine("CAPTURA_WPF_NO_DISPONIBLE: "+visualError.GetType().Name+
+                    ": "+visualError.Message);
+            }
             writer.WriteLine($"PRUEBAS UI SUPERADAS: {checks}");
             window.Close();
             app.Shutdown();

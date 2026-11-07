@@ -25,3 +25,11 @@ jobs:
         run: dotnet run --project tests/FrioCalc.Psychrometrics.Smoke/FrioCalc.Psychrometrics.Smoke.csproj --configuration Debug
       - name: Run WPF UI initialization smoke test
         run: dotnet run --project tests/FrioCalc.UI.Smoke/FrioCalc.UI.Smoke.csproj --configuration Debug
+      - name: Preserve UI screenshots when available
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: friocalc-lista1-ui-snapshots
+          path: ui-snapshots
+          if-no-files-found: warn
+
