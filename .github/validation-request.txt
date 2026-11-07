@@ -12,3 +12,5 @@ Solicitud #4: corrección constantes de bibliografía, reconstrucción WPF compl
 Solicitud #5: verificar catálogo ASHRAE y suite completa tras ajuste de prueba.
 
 Solicitud #6: validación de diseño responsive, carta estándar y nuevas capturas UI.
+
+Solicitud #7: validación de entrega candidata con modo estándar inicial y manual final.
