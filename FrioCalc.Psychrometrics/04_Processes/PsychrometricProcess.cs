@@ -7,7 +7,7 @@ public enum ProcessType
 {
     Automatic, Sensible, HeatingHumidification, CoolingDehumidification,
     SteamHumidification, EvaporativeHumidification, Desiccant,
-    AdiabaticMixing, Bypass
+    AdiabaticMixing, Bypass, Branching
 }
 
 public sealed record PsychrometricProcess(
@@ -22,4 +22,5 @@ public sealed record PsychrometricProcess(
     string Method = "Balances de masa y energía",
     bool Visible = true,
     string Report = "",
-    double? CondensateTemperatureC = null);
+    double? CondensateTemperatureC = null,
+    double? BranchFractionA = null);

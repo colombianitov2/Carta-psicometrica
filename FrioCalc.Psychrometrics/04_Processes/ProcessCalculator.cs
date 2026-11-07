@@ -72,7 +72,7 @@ public static class ProcessCalculator
         {
             error = "La inyección de vapor no puede retirar humedad."; return false;
         }
-        if (processType == ProcessType.Bypass ||
+        if (processType == ProcessType.Branching || processType == ProcessType.Bypass ||
             processType == ProcessType.AdiabaticMixing)
         {
             error = "Este modelo requiere información de equipo o de varias corrientes. No se calcula como proceso simple de dos estados.";
@@ -193,6 +193,69 @@ public static class ProcessCalculator
             diagnostic="La salida de humidificación por vapor no es físicamente válida."; return false;
         }
         diagnostic="Balances: W2=W1+Δm_v/ṁ_da y h2=h1+ΔW·h_vapor, sin pérdidas térmicas.";
+        return true;
+    }
+
+    // [4.11] Desecante: estado de salida con aporte de propiedades conocidas.
+    // No se predice calor de adsorción ni regeneración: requieren datos del fabricante.
+    public static bool TryDesiccantOutlet(ChartPoint inlet,double removedWaterKgPerKgDryAir,
+        double outletDryBulbC,int id,string colorHex,out ChartPoint? outlet,out string diagnostic)
+    {
+        outlet=null;diagnostic="";
+        if(!double.IsFinite(removedWaterKgPerKgDryAir)||removedWaterKgPerKgDryAir<0||
+           !double.IsFinite(outletDryBulbC))
+        {
+            diagnostic="Indique humedad retirada (kg/kgda) no negativa y Tbs de salida finita.";return false;
+        }
+        double w2=inlet.HumidityRatioKgPerKg-removedWaterKgPerKgDryAir;
+        if(w2<0)
+        {
+            diagnostic="El agua que se desea retirar excede el agua presente en el aire.";return false;
+        }
+        if(!PointPropertyCalculator.TryCreatePoint(id,$"P{id}",colorHex,inlet.PressureKPa,
+            outletDryBulbC,w2,out outlet)||outlet==null)
+        {
+            diagnostic="El estado de salida indicado para el desecante es físicamente inválido.";return false;
+        }
+        diagnostic="Deshumidificación por desecante con Tbs y ΔW conocidos. " +
+            "Los resultados NO predicen calor de adsorción, regeneración, capacidad, equilibrio ni eficiencia del material.";
+        return true;
+    }
+
+    // [4.12] División con dos ramas: el divisor conserva masa de aire seco.
+    // Las salidas pueden sufrir procesos posteriores; sus cambios energéticos
+    // y de agua son balances de carga exigida, no propiedades espontáneas del divisor.
+    public sealed record BranchBalance(double FirstMassFlowKgS,double SecondMassFlowKgS,
+        double AddedWaterFirstKgS,double AddedWaterSecondKgS,
+        double ThermalFirstKW,double ThermalSecondKW,string Diagnostic);
+
+    public static bool TryBranchBalance(ChartPoint inlet,ChartPoint first,ChartPoint second,
+        double dryAirMassFlowKgS,double firstFraction,out BranchBalance? balance,out string diagnostic)
+    {
+        balance=null;diagnostic="";
+        if(!double.IsFinite(dryAirMassFlowKgS)||dryAirMassFlowKgS<=0||
+           !double.IsFinite(firstFraction)||firstFraction<=0||firstFraction>=1)
+        {
+            diagnostic="La división requiere flujo total de aire seco positivo y fracción de rama 1 entre 0 y 1 (excluidos).";
+            return false;
+        }
+        if(Math.Abs(inlet.PressureKPa-first.PressureKPa)>1e-6||
+           Math.Abs(inlet.PressureKPa-second.PressureKPa)>1e-6)
+        {
+            diagnostic="División de corrientes a presiones distintas: se requiere un modelo de pérdida de presión.";
+            return false;
+        }
+        double m1=dryAirMassFlowKgS*firstFraction,m2=dryAirMassFlowKgS-m1;
+        double water1=m1*(first.HumidityRatioKgPerKg-inlet.HumidityRatioKgPerKg);
+        double water2=m2*(second.HumidityRatioKgPerKg-inlet.HumidityRatioKgPerKg);
+        double energy1=m1*(first.EnthalpyKJPerKgDryAir-inlet.EnthalpyKJPerKgDryAir);
+        double energy2=m2*(second.EnthalpyKJPerKgDryAir-inlet.EnthalpyKJPerKgDryAir);
+        string note=(Math.Abs(water1)+Math.Abs(water2)<1e-9&&
+                     Math.Abs(energy1)+Math.Abs(energy2)<1e-6)
+            ? "Divisor ideal: ambas ramas conservan estado; masa, agua y energía sin intervención."
+            : "Las salidas cambian de estado: Q y Δm calculados representan intervenciones necesarias en cada rama, no el divisor ideal.";
+        balance=new BranchBalance(m1,m2,water1,water2,energy1,energy2,note);
+        diagnostic=note;
         return true;
     }
 

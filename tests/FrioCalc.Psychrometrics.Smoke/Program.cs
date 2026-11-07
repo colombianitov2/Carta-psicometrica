@@ -127,6 +127,20 @@ static class Program
             Check(BibliographyCatalog.ExportCsv().Contains("GetMoistAirEnthalpy"),
                 "Exportación bibliográfica con método");
 
+            // [T4.3] Ramas y desecante con datos suficientes.
+            Check(ProcessCalculator.TryDesiccantOutlet(p,.002,32,40,"#669900",
+                out var desiccated,out var desError)&&desiccated is not null,desError);
+            Check(Math.Abs(desiccated!.HumidityRatioKgPerKg-(p.HumidityRatioKgPerKg-.002))<1e-9,
+                "Desecante con remoción explícita");
+            Check(!ProcessCalculator.TryDesiccantOutlet(p,.05,32,41,"#669900",out _,out _),
+                "Desecante no puede retirar agua inexistente");
+            Check(ProcessCalculator.TryBranchBalance(p,cooled,desiccated,
+                2,.35,out var split,out var splitError)&&split!=null,splitError);
+            Check(Math.Abs(split!.FirstMassFlowKgS+split.SecondMassFlowKgS-2)<1e-10,
+                "Conservación del flujo másico de ramas");
+            Check(!ProcessCalculator.TryBranchBalance(p,cooled,desiccated,
+                2,1.2,out _,out _),"Fracción de rama fuera de rango");
+
             // [T5] Unidades sin cambio de estado
             double original=101.325;
             Check(Math.Abs(PsychrometricUnits.PressureToSI(

@@ -27,7 +27,12 @@ public static class ProcessLayer
                 .Where(p => p != null).ToList();
             if (states.Count < 2) continue;
             var edges = new List<(ChartPoint First, ChartPoint Last)>();
-            if (process.Type == ProcessType.AdiabaticMixing && states.Count >= 3)
+            if (process.Type == ProcessType.Branching && states.Count == 3)
+            {
+                edges.Add((states[0]!,states[1]!));
+                edges.Add((states[0]!,states[2]!));
+            }
+            else if (process.Type == ProcessType.AdiabaticMixing && states.Count >= 3)
             {
                 for (int i = 0; i < states.Count - 1; i++)
                     edges.Add((states[i]!, states[^1]!)); // dos entradas convergen al nodo mezcla
