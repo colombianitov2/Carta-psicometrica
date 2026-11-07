@@ -39,6 +39,7 @@ public partial class MainWindow
         };
         ChartMetricsPanel.UnitsChanged += units =>
         {
+            PressureSelector.SetUnitSystem(units);
             PointPropertiesPanel.SetUnitSystem(units);
             PsychrometricChart.SetDisplayUnits(units);
             ProcessChart.SetDisplayUnits(units);

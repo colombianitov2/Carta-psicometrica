@@ -23,6 +23,7 @@ public partial class PressureSelector : UserControl
     // ============================================================
 
     private bool _updatingUi;
+    private UnitSystem _currentUnits = UnitSystem.SI;
 
     public double CurrentPressureKPa { get; private set; }
         = AtmosphericPressure.StandardSeaLevelKPa;
@@ -224,31 +225,13 @@ public partial class PressureSelector : UserControl
     // [5.2C.7] INICIO - Lectura robusta del número
     // ============================================================
 
-    private bool TryReadPressure(
-        out double pressureKPa)
+    private bool TryReadPressure(out double pressureKPa)
     {
-        string input =
-            PressureTextBox.Text.Trim();
-
-        if (double.TryParse(
-                input,
-                NumberStyles.Float,
-                CultureInfo.CurrentCulture,
-                out pressureKPa))
-        {
-            return true;
-        }
-
-        string normalized =
-            input.Replace(
-                ',',
-                '.');
-
-        return double.TryParse(
-            normalized,
-            NumberStyles.Float,
-            CultureInfo.InvariantCulture,
-            out pressureKPa);
+        string input = PressureTextBox.Text.Trim();
+        bool success = double.TryParse(input,NumberStyles.Float,CultureInfo.CurrentCulture,out double displayed)
+            || double.TryParse(input.Replace(',','.'),NumberStyles.Float,CultureInfo.InvariantCulture,out displayed);
+        pressureKPa = success ? PsychrometricUnits.PressureToSI(displayed,_currentUnits) : double.NaN;
+        return success && double.IsFinite(pressureKPa);
     }
 
     // ============================================================
@@ -301,7 +284,7 @@ public partial class PressureSelector : UserControl
             true;
 
         PressureTextBox.Text =
-            pressureKPa.ToString(
+            PsychrometricUnits.PressureFromSI(pressureKPa,_currentUnits).ToString(
                 "0.###",
                 CultureInfo.CurrentCulture);
 
@@ -314,6 +297,16 @@ public partial class PressureSelector : UserControl
     // ============================================================
 
 
+    // [5.2C.12] Entrada de presión en el sistema visual seleccionado.
+    public void SetUnitSystem(UnitSystem units)
+    {
+        if (_currentUnits == units) return;
+        _currentUnits = units;
+        PressureUnitLabel.Text = units == UnitSystem.SI ? "kPa abs" : "psi abs";
+        SetPressureText(CurrentPressureKPa);
+        ValidateCurrentInput();
+    }
+
     // [5.2C.11] Restablecer presión al importar sesión, notificando al gráfico.
     public void ApplyExternalPressure(double pressureKPa)
     {
@@ -323,7 +316,7 @@ public partial class PressureSelector : UserControl
         try
         {
             PresetComboBox.SelectedItem = PressurePresetCatalog.Custom;
-            PressureTextBox.Text = pressureKPa.ToString("0.######",CultureInfo.CurrentCulture);
+            PressureTextBox.Text = PsychrometricUnits.PressureFromSI(pressureKPa,_currentUnits).ToString("0.######",CultureInfo.CurrentCulture);
         }
         finally { _updatingUi = false; }
         CurrentPressureKPa = pressureKPa;
