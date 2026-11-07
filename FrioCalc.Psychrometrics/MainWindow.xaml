@@ -1,88 +1,128 @@
-﻿<Window x:Class="FrioCalc.Psychrometrics.MainWindow"
+<Window x:Class="FrioCalc.Psychrometrics.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="clr-namespace:FrioCalc.Psychrometrics.UI"
         xmlns:chart="clr-namespace:FrioCalc.Psychrometrics.Chart"
-        Title="FrioCalc — Carta psicrométrica"
-        Width="1400"
-        Height="850"
-        MinWidth="1000"
-        MinHeight="650"
-        WindowStartupLocation="CenterScreen">
-
-    <!-- ======================================================== -->
-    <!-- [5.1X.1] INICIO - Contenedor general                    -->
-    <!-- ======================================================== -->
-
-    <Grid Margin="16">
-
+        Title="FrioCalc — Psicrometría y procesos" Width="1540" Height="900"
+        MinWidth="1150" MinHeight="700" WindowStartupLocation="CenterScreen">
+    <!-- [5.1X.1] Dos zonas: carta y procesos (Zona 1), teoría (Zona 2). -->
+    <Grid Margin="12">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="330"/>
-            <ColumnDefinition Width="16"/>
+            <ColumnDefinition Width="385"/>
+            <ColumnDefinition Width="14"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-
-        <!-- ==================================================== -->
-        <!-- [5.1X.2] INICIO - Panel lateral                     -->
-        <!-- ==================================================== -->
-
-        <ScrollViewer Grid.Column="0"
-              VerticalScrollBarVisibility="Auto"
-              HorizontalScrollBarVisibility="Disabled">
-
+        <!-- [5.1X.2] Controles de presión, unidades y propiedades -->
+        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
             <StackPanel>
-
-                <ui:PressureSelector x:Name="PressureSelector"
-                             Margin="0,0,0,12"/>
-
+                <ui:PressureSelector x:Name="PressureSelector" Margin="0,0,0,12"/>
                 <ui:ChartMetricsPanel x:Name="ChartMetricsPanel"/>
-
             </StackPanel>
-
         </ScrollViewer>
-
-        <!-- ==================================================== -->
-        <!-- [5.1X.2] FIN - Panel lateral                        -->
-        <!-- ==================================================== -->
-
-
-
-        <!-- ==================================================== -->
-        <!-- [5.1X.3] INICIO - Área de carta                     -->
-        <!-- ==================================================== -->
-
-        <Grid Grid.Column="2">
-
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="12"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-
-            <chart:PsychrometricChartView x:Name="PsychrometricChart"
-                                          Grid.Row="0"/>
-
-            <!-- ==================================================== -->
-            <!-- [5.1X.3.1] INICIO - Propiedades del punto           -->
-            <!-- ==================================================== -->
-
-            <ui:PointPropertiesPanel x:Name="PointPropertiesPanel"
-                                     Grid.Row="2"/>
-
-            <!-- ==================================================== -->
-            <!-- [5.1X.3.1] FIN - Propiedades del punto              -->
-            <!-- ==================================================== -->
-
-        </Grid>
-
-        <!-- ==================================================== -->
-        <!-- [5.1X.3] FIN - Área de carta                        -->
-        <!-- ==================================================== -->
-
+        <TabControl Grid.Column="2" x:Name="WorkspaceTabs">
+            <!-- [5.1X.3] Carta original conservada + panel de puntos -->
+            <TabItem Header="Zona 1 · Carta y puntos">
+                <Grid Margin="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <chart:PsychrometricChartView x:Name="PsychrometricChart" Grid.Row="0"/>
+                    <ui:PointPropertiesPanel x:Name="PointPropertiesPanel" Grid.Row="2"/>
+                </Grid>
+            </TabItem>
+            <!-- [5.1X.4] Segunda carta para procesos múltiples -->
+            <TabItem Header="Zona 1 · Procesos">
+                <Grid Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="310"/>
+                    </Grid.ColumnDefinitions>
+                    <chart:PsychrometricChartView x:Name="ProcessChart" Grid.Column="0"/>
+                    <ScrollViewer Grid.Column="1" Margin="12,0,0,0" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <TextBlock Text="CONSTRUIR PROCESO" FontSize="16" FontWeight="SemiBold"
+                                       Margin="0,0,0,8"/>
+                            <TextBlock Text="Seleccione puntos desde la pestaña Carta, en el orden del recorrido. Para mezcla seleccione dos entradas."
+                                       TextWrapping="Wrap" FontSize="12" Foreground="#666"
+                                       Margin="0,0,0,10"/>
+                            <TextBlock Text="Secuencia seleccionada" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                            <ListBox x:Name="ProcessSelectionList" Height="90" Margin="0,0,0,8"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <Button Content="Subir" Width="78" Click="MovePointUp_Click" Margin="0,0,8,0"/>
+                                <Button Content="Bajar" Width="78" Click="MovePointDown_Click" Margin="0,0,8,0"/>
+                            </StackPanel>
+                            <TextBlock Text="Método / tipo de proceso" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                            <ComboBox x:Name="ProcessTypeComboBox" SelectedIndex="0" Margin="0,0,0,10">
+                                <ComboBoxItem Content="Automático · diferencias entre estados" Tag="Automatic"/>
+                                <ComboBoxItem Content="Calefacción o enfriamiento sensible" Tag="Sensible"/>
+                                <ComboBoxItem Content="Calentamiento y humidificación" Tag="HeatingHumidification"/>
+                                <ComboBoxItem Content="Enfriamiento y deshumidificación" Tag="CoolingDehumidification"/>
+                                <ComboBoxItem Content="Humidificación por vapor" Tag="SteamHumidification"/>
+                                <ComboBoxItem Content="Humidificación evaporativa" Tag="EvaporativeHumidification"/>
+                                <ComboBoxItem Content="Deshumidificación con desecante" Tag="Desiccant"/>
+                                <ComboBoxItem Content="Mezcla adiabática" Tag="AdiabaticMixing"/>
+                                <ComboBoxItem Content="Factor de bypass / ADP" Tag="Bypass"/>
+                            </ComboBox>
+                            <TextBlock Text="Caudal másico de aire seco, kg/s (opcional salvo donde se requiera)"
+                                       TextWrapping="Wrap" FontSize="12" Margin="0,0,0,3"/>
+                            <TextBox x:Name="DryFlowTextBox" Height="27" Margin="0,0,0,8"/>
+                            <TextBlock Text="Solo para mezcla: caudal de entrada 1, m³/h" FontSize="12" Margin="0,0,0,3"/>
+                            <TextBox x:Name="MixFlowFirstTextBox" Height="27" Margin="0,0,0,6"/>
+                            <TextBlock Text="Solo para mezcla: caudal de entrada 2, m³/h" FontSize="12" Margin="0,0,0,3"/>
+                            <TextBox x:Name="MixFlowSecondTextBox" Height="27" Margin="0,0,0,10"/>
+                            <Button Content="GRAFICAR PROCESO" Padding="8" FontWeight="SemiBold"
+                                    Click="PlotProcess_Click" Margin="0,0,0,10"/>
+                            <TextBlock Text="Procesos guardados" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                            <ListBox x:Name="SavedProcessesList" Height="95" Margin="0,0,0,7"/>
+                            <Button Content="Eliminar proceso seleccionado" Click="DeleteProcess_Click"
+                                    Padding="6" Margin="0,0,0,9"/>
+                            <TextBlock Text="RESULTADOS Y ADVERTENCIAS" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <TextBlock x:Name="ProcessResultText" Text="Seleccione al menos dos puntos."
+                                       TextWrapping="Wrap" FontSize="12" Margin="0,0,0,12"/>
+                            <Button Content="Exportar informe CSV" Click="ExportReport_Click"
+                                    Padding="7"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+            <!-- [5.1X.5] Zona 2: teoría según diapositivas 1-24 de A03 -->
+            <TabItem Header="Zona 2 · Teoría">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="24" MaxWidth="850" HorizontalAlignment="Left">
+                        <TextBlock Text="PSICROMETRÍA Y PROCESOS PSICROMÉTRICOS"
+                                   FontSize="23" FontWeight="Bold" Margin="0,0,0,15"/>
+                        <TextBlock Text="Base docente: A03 Procesos Psicrométricos, PhD. Hermes Ramírez León, diapositivas 1–24. Ecuaciones contrastables en ASHRAE Handbook—Fundamentals, capítulo de psicrometría."
+                                   TextWrapping="Wrap" Margin="0,0,0,15"/>
+                        <TextBlock Text="Propiedades del aire húmedo" FontSize="17" FontWeight="SemiBold"/>
+                        <TextBlock Text="Tbs: temperatura de bulbo seco. Tbh: temperatura de bulbo húmedo termodinámico. Trocío: temperatura de condensación. HR: humedad relativa (%). W: masa de vapor de agua por masa de aire seco. h: entalpía por masa de aire seco. v: volumen por masa de aire seco. P: presión absoluta."
+                                   TextWrapping="Wrap" Margin="0,5,0,15"/>
+                        <TextBlock Text="1. Calefacción y enfriamiento sensible (diapositivas 3–7)"
+                                   FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock Text="Se modifica Tbs sin variar W. La diferencia de entalpía se convierte en potencia si se conoce el flujo másico de aire seco: Q̇ = ṁda·(h2−h1). No confundir caudal volumétrico con caudal másico."
+                                   TextWrapping="Wrap" Margin="0,4,0,9"/>
+                        <Button Content="Cargar ejemplo: 35 °C y W=10 g/kg" Click="ExampleCooling_Click"
+                                HorizontalAlignment="Left" Padding="10,6" Margin="0,0,0,17"/>
+                        <TextBlock Text="2. Humidificación y deshumidificación (diapositivas 8–15)"
+                                   FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock Text="La inyección de vapor agrega masa de agua y entalpía; su aporte energético depende de la entalpía del vapor. La evaporación adiabática puede disminuir Tbs a la vez que aumenta W. La deshumidificación por serpentín exige balance energético y de agua condensada. Para desecantes se requieren propiedades y rendimiento del material."
+                                   TextWrapping="Wrap" Margin="0,4,0,9"/>
+                        <Button Content="Cargar ejemplo: 30 °C y 10 % HR" Click="ExampleHumidifier_Click"
+                                HorizontalAlignment="Left" Padding="10,6" Margin="0,0,0,17"/>
+                        <TextBlock Text="3. Procesos combinados (diapositivas 16–21)"
+                                   FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock Text="Calentamiento+humidificación, enfriamiento+deshumidificación y mezcla adiabática son secuencias o balances de múltiples corrientes. En mezcla se conservan ṁda, ṁda·W y ṁda·h; no es válido promediar directamente caudales volumétricos."
+                                   TextWrapping="Wrap" Margin="0,4,0,17"/>
+                        <TextBlock Text="4. Ejercicios de las diapositivas 22–24" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock Text="Auditorio: 300 personas y 8 L/s por persona; para la carga total se necesitan estados y un modelo de flujos/cargas. UTA: 3000 m³/h de retorno y 500 m³/h de aire exterior, convertir cada volumen por su propio volumen específico. FCS interior 0,75 y BF 0,2 no determinan por sí solos un estado único de impulsión sin datos suficientes del serpentín y cargas."
+                                   TextWrapping="Wrap" Margin="0,4,0,16"/>
+                        <TextBlock Text="Fuentes: ASHRAE 2025 Handbook—Fundamentals, cap. 1; PsychroLib (psychrometrics.github.io/psychrolib); CoolProp (coolprop.org/fluid_properties/HumidAir.html). El término 'rendimiento de Hendrickson' de la presentación requiere corroboración terminológica antes de publicarse como norma."
+                                   TextWrapping="Wrap" Foreground="#444"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
     </Grid>
-
-    <!-- ======================================================== -->
-    <!-- [5.1X.1] FIN - Contenedor general                       -->
-    <!-- ======================================================== -->
-
 </Window>

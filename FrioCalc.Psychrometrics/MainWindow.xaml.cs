@@ -57,6 +57,7 @@ public partial class MainWindow : Window
 
         PsychrometricChart.SetPressure(
             AtmosphericPressure.StandardSeaLevelKPa);
+        InitializeLista1();
     }
 
     // ------------------------------ Fin de sección 5.1C.2 ------------------------------
@@ -69,6 +70,7 @@ public partial class MainWindow : Window
     {
         PsychrometricChart.SetPressure(
             pressureKPa);
+        OnLista1PressureChanged(pressureKPa);
     }
 
     // ------------------------------ Fin de sección 5.1C.3 ------------------------------
@@ -196,6 +198,7 @@ public partial class MainWindow : Window
     {
         PointPropertiesPanel.SetPoints(
             points);
+        OnLista1PointsChanged(points);
     }
 
     // ------------------------------ Fin de sección 5.1C.7.5 ------------------------------
