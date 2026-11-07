@@ -1,0 +1,36 @@
+<UserControl x:Class="FrioCalc.Psychrometrics.UI.BibliographyPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- [5.6X.1] Registro consultable de fuentes por variable y método -->
+    <Border BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="12"
+            Background="#FAFAFA" Margin="0,0,0,16">
+        <StackPanel>
+            <TextBlock Text="DICCIONARIO TÉCNICO Y BIBLIOGRAFÍA" FontSize="17" FontWeight="SemiBold"
+                       Margin="0,0,0,6"/>
+            <TextBlock Text="Seleccione una fila para consultar símbolo, unidades, origen y trazabilidad. La página se consigna solo cuando esté documentalmente verificada."
+                       Foreground="#555" TextWrapping="Wrap" Margin="0,0,0,10"/>
+            <DataGrid x:Name="EntriesGrid" IsReadOnly="True" AutoGenerateColumns="False"
+                      HeadersVisibility="Column" SelectionMode="Single"
+                      MaxHeight="290" MinWidth="650"
+                      SelectionChanged="EntriesGrid_SelectionChanged"
+                      CanUserAddRows="False">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="46"/>
+                    <DataGridTextColumn Header="Variable" Binding="{Binding Variable}" Width="220"/>
+                    <DataGridTextColumn Header="Símbolo" Binding="{Binding Symbol}" Width="75"/>
+                    <DataGridTextColumn Header="SI" Binding="{Binding UnitsSI}" Width="130"/>
+                    <DataGridTextColumn Header="IP" Binding="{Binding UnitsIP}" Width="130"/>
+                    <DataGridTextColumn Header="Fuente" Binding="{Binding Source}" Width="230"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <TextBlock x:Name="EntryDetailsText" Text="Seleccione una propiedad."
+                       TextWrapping="Wrap" Margin="0,9,0,10" FontSize="12"/>
+            <StackPanel Orientation="Horizontal">
+                <Button Content="Abrir documentación oficial" Click="OpenSource_Click"
+                        Padding="8,6" Margin="0,0,8,0"/>
+                <Button Content="Exportar bibliografía CSV" Click="ExportBibliography_Click"
+                        Padding="8,6"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>
