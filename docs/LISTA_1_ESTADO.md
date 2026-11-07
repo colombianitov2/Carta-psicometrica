@@ -12,8 +12,8 @@
 
 ### Evidencia de integración
 
-- Validación Windows GitHub Actions **#42415621386**: 0 errores, 0 advertencias, **49 pruebas numéricas** y **18 pruebas de inicialización UI** correctas.
-- Enlace: https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42415621386
+- Validación Windows GitHub Actions **#42416024445**: 0 errores, 0 advertencias, **49 pruebas numéricas** y **18 pruebas de inicialización UI** correctas.
+- Enlace: https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42416024445
 - Flujo controlado: solo se ejecuta mediante solicitud manual o al modificar `.github/validation-request.txt`; los commits ordinarios no desencadenan compilación.
 - Carpeta de auditoría local: `06_Tools/Auditar-FrioCalc-Lista1.ps1` con evidencias fuera del repositorio.
 - **Limitación:** el éxito de pruebas no sustituye pruebas humanas de interacción, inspección de carta ni verificación con documentación paginada.
