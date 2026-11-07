@@ -157,6 +157,7 @@
                         <TextBlock Text="Propiedades del aire húmedo" FontSize="17" FontWeight="SemiBold"/>
                         <TextBlock Text="Tbs: temperatura de bulbo seco. Tbh: temperatura de bulbo húmedo termodinámico. Trocío: temperatura de condensación. HR: humedad relativa (%). W: masa de vapor de agua por masa de aire seco. h: entalpía por masa de aire seco. v: volumen por masa de aire seco. P: presión absoluta."
                                    TextWrapping="Wrap" Margin="0,5,0,15"/>
+                        <ui:ProcessTheoryPanel x:Name="ProcessTheoryPanel" Width="780"/>
                         <TextBlock Text="1. Calefacción y enfriamiento sensible (diapositivas 3–7)"
                                    FontSize="16" FontWeight="SemiBold"/>
                         <TextBlock Text="Se modifica Tbs sin variar W. La diferencia de entalpía se convierte en potencia si se conoce el flujo másico de aire seco: Q̇ = ṁda·(h2−h1). No confundir caudal volumétrico con caudal másico."

@@ -54,6 +54,7 @@ public partial class MainWindow
         };
         PsychrometricChart.SetSensibleHeatFactorVisible(false);
         ProcessChart.SetPressure(PressureSelector.CurrentPressureKPa);
+        ProcessTheoryPanel.SetPressure(PressureSelector.CurrentPressureKPa);
         ProcessChart.SetPointSelectionMode(false);
         ProcessChart.SetProcessMemberColorMode(true);
         ProcessChart.SetDryBulbVisible(true);
@@ -139,6 +140,7 @@ public partial class MainWindow
     private void OnLista1PressureChanged(double pressureKPa)
     {
         ProcessChart.SetPressure(pressureKPa);
+        ProcessTheoryPanel.SetPressure(pressureKPa);
         _savedProcesses.Clear();
         _selectedPointIds.Clear();
         _nextProcessId = 1;
