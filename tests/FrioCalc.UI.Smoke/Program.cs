@@ -73,36 +73,43 @@ internal static class Program
                 window.UpdateLayout();
                 string folder=System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(),"ui-snapshots");
                 System.IO.Directory.CreateDirectory(folder);
-                // [UI.3] Dos resoluciones para detectar solapamientos y recortes.
+                // [UI.3] Dos áreas de contenido medidas y dispuestas en tamaños
+                // independientes de la pantalla física de GitHub Actions.
+                // El HWND puede quedar limitado a 1150 px; por eso NO se renderiza
+                // window.ActualWidth, sino el contenido con ancho explícito.
+                if (window.Content is not FrameworkElement root)
+                    throw new InvalidOperationException("No hay raíz visual WPF para las capturas.");
                 foreach (var resolution in new[] { (W:1150.0,H:788.0), (W:1540.0,H:900.0) })
                 {
-                    window.Width=resolution.W;
-                    window.Height=resolution.H;
-                    window.UpdateLayout();
+                    double desiredWidth=resolution.W-28;
+                    double desiredHeight=resolution.H-60;
+                    root.Width=desiredWidth;
+                    root.Height=desiredHeight;
                     for(int tab=0;tab<3;tab++)
                     {
                         tabs.SelectedIndex=tab;
-                        window.UpdateLayout();
-                        window.Dispatcher.Invoke(() => { },
-                            System.Windows.Threading.DispatcherPriority.Render);
-                        int width=Math.Max(1,(int)Math.Ceiling(window.ActualWidth));
-                        int height=Math.Max(1,(int)Math.Ceiling(window.ActualHeight));
+                        root.Measure(new Size(desiredWidth,desiredHeight));
+                        root.Arrange(new Rect(0,0,desiredWidth,desiredHeight));
+                        root.UpdateLayout();
+                        int width=(int)Math.Ceiling(root.ActualWidth);
+                        int height=(int)Math.Ceiling(root.ActualHeight);
+                        Check(Math.Abs(width-desiredWidth)<=1 && Math.Abs(height-desiredHeight)<=1,
+                            $"Viewport independiente {resolution.W}x{resolution.H}, zona {tab+1}");
                         var bitmap=new System.Windows.Media.Imaging.RenderTargetBitmap(
                             width,height,96,96,System.Windows.Media.PixelFormats.Pbgra32);
-                        bitmap.Render(window);
+                        bitmap.Render(root);
                         var encoder=new System.Windows.Media.Imaging.PngBitmapEncoder();
                         encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
                         string file=System.IO.Path.Combine(folder,
                             $"Zona_{tab+1}_{(int)resolution.W}x{(int)resolution.H}.png");
                         using(var stream=System.IO.File.Create(file)) encoder.Save(stream);
-                        writer.WriteLine("CAPTURA_WPF: "+file);
+                        writer.WriteLine($"CAPTURA_WPF: {file} ({width}x{height} contenido)");
                     }
                 }
             }
             catch(Exception visualError)
             {
-                writer.WriteLine("CAPTURA_WPF_NO_DISPONIBLE: "+visualError.GetType().Name+
-                    ": "+visualError.Message);
+                throw new InvalidOperationException("La auditoría visual automatizada no pudo generar las seis capturas válidas.",visualError);
             }
             writer.WriteLine($"PRUEBAS UI SUPERADAS: {checks}");
             window.Close();
