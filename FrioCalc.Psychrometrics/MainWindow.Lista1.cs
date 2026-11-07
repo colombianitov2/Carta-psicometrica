@@ -315,10 +315,10 @@ public partial class MainWindow
                 MessageBox.Show("Para cerrar un ciclo se necesitan al menos tres puntos distintos.",
                     "Ciclo psicrométrico",MessageBoxButton.OK,MessageBoxImage.Warning);return;
             }
-            _selectedPointIds.Add(_selectedPointIds[0]);
             selected=selected.Concat(new[]{selected[0]}).ToArray();
         }
         var ids = new List<int>(_selectedPointIds);
+        if (closeCycle) ids.Add(ids[0]);
         string description;
         if (type == ProcessType.AdiabaticMixing)
         {
