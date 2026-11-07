@@ -13,8 +13,8 @@ public sealed record BibliographyEntry(
 
 public static class BibliographyCatalog
 {
-    private const string ASHRAE="https://handbook.ashrae.org/Handbooks/F25/SI/F25_Ch01/F25_Ch01_si.aspx"
-    private const string DESICCANTS="https://handbook.ashrae.org/Handbooks/F25/SI/F25_Ch32/F25_Ch32_si.aspx";;
+    private const string ASHRAE="https://handbook.ashrae.org/Handbooks/F25/SI/F25_Ch01/F25_Ch01_si.aspx";
+    private const string DESICCANTS="https://handbook.ashrae.org/Handbooks/F25/SI/F25_Ch32/F25_Ch32_si.aspx";
     private const string PSYCHRO="https://psychrometrics.github.io/psychrolib/api_docs.html";
     private const string COOLPROP="https://coolprop.org/fluid_properties/HumidAir.html";
     private const string EVAP="https://handbook.ashrae.org/handbooks/S20/SI/s20_ch41/s20_ch41_si.aspx";
