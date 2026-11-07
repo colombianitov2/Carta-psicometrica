@@ -14,6 +14,14 @@ namespace FrioCalc.Psychrometrics.UI;
 public partial class PointPropertiesPanel : UserControl
 {
 
+    private readonly List<int> _selection = new();
+    private IReadOnlyList<ChartPoint> _latestPoints = Array.Empty<ChartPoint>();
+    public event Action? AddPointRequested;
+    public event Action? OpenProcessesRequested;
+    public event Action<int>? DeletePointRequested;
+    public event Action<IReadOnlyList<int>>? SelectionChanged;
+    public IReadOnlyList<int> SelectedPointIds => _selection.AsReadOnly();
+
     // ------------------------------ Fin de sección 5.4C.1 ------------------------------
 
 
@@ -35,6 +43,8 @@ public partial class PointPropertiesPanel : UserControl
     public void SetPoints(
         IReadOnlyList<ChartPoint> points)
     {
+        _latestPoints = points;
+        _selection.RemoveAll(id => !System.Linq.Enumerable.Any(points, p => p.Id == id));
         PointsWrapPanel.Children.Clear();
 
         EmptyStateTextBlock.Visibility =
@@ -56,7 +66,7 @@ public partial class PointPropertiesPanel : UserControl
 
     // ------------------------------ Sección 5.4C.4 - Tarjeta de propiedades ------------------------------
 
-    private static Border CreatePointCard(
+    private Border CreatePointCard(
         ChartPoint point)
     {
         Brush pointBrush =
@@ -114,6 +124,34 @@ public partial class PointPropertiesPanel : UserControl
 
         content.Children.Add(
             header);
+
+        var choose = new CheckBox
+        {
+            Content = "Incluir en proceso",
+            IsChecked = _selection.Contains(point.Id),
+            Margin = new Thickness(0,0,0,5),
+            ToolTip = "Se utilizará el orden en que seleccione cada punto."
+        };
+        choose.Checked += (_, _) =>
+        {
+            if (!_selection.Contains(point.Id)) _selection.Add(point.Id);
+            SelectionChanged?.Invoke(SelectedPointIds);
+        };
+        choose.Unchecked += (_, _) =>
+        {
+            _selection.Remove(point.Id);
+            SelectionChanged?.Invoke(SelectedPointIds);
+        };
+        content.Children.Add(choose);
+        var erase = new Button
+        {
+            Content = "Eliminar este punto",
+            Padding = new Thickness(5,2,5,2),
+            Margin = new Thickness(0,0,0,6),
+            HorizontalAlignment = HorizontalAlignment.Left
+        };
+        erase.Click += (_, _) => DeletePointRequested?.Invoke(point.Id);
+        content.Children.Add(erase);
 
         AddProperty(
             content,
@@ -323,6 +361,29 @@ public partial class PointPropertiesPanel : UserControl
 
     // ------------------------------ Fin de sección 5.4C.5 ------------------------------
 
+
+
+    // [5.4C.7] Acciones externas y selección ordenada
+    private void AddPoint_Click(object sender, RoutedEventArgs e)
+        => AddPointRequested?.Invoke();
+
+    private void OpenProcesses_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selection.Count < 2)
+        {
+            MessageBox.Show("Seleccione al menos dos puntos para crear un proceso.",
+                "Procesos psicrométricos",MessageBoxButton.OK,MessageBoxImage.Information);
+            return;
+        }
+        OpenProcessesRequested?.Invoke();
+    }
+
+    public void ClearSelection()
+    {
+        _selection.Clear();
+        SetPoints(_latestPoints);
+        SelectionChanged?.Invoke(SelectedPointIds);
+    }
 
     // ------------------------------ Sección 5.4C.6 - Cierre ------------------------------
 

@@ -30,6 +30,13 @@
                        FontStyle="Italic"
                        Margin="0,4,0,4"/>
 
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <Button Content="Ubicar punto" Padding="12,7" Margin="0,0,8,0"
+                        Click="AddPoint_Click"/>
+                <Button Content="Abrir procesos" Padding="12,7"
+                        Click="OpenProcesses_Click"/>
+            </StackPanel>
+
             <ScrollViewer MaxHeight="205"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled">
