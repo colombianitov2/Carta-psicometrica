@@ -21,3 +21,5 @@ jobs:
         run: dotnet restore FrioCalc.Psychrometrics.slnx
       - name: Compile with warnings as errors
         run: dotnet build FrioCalc.Psychrometrics.slnx --configuration Debug --no-restore --warnaserror
+      - name: Run psychrometric smoke tests
+        run: dotnet run --project tests/FrioCalc.Psychrometrics.Smoke/FrioCalc.Psychrometrics.Smoke.csproj --configuration Debug
