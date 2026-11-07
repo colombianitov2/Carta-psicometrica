@@ -175,6 +175,7 @@ public static class WetBulbLayer
         DrawLabel(
             canvas,
             wetBulbC,
+            geometry,
             line.Points[labelIndex],
             line.Points[labelIndex + 1]);
     }
@@ -187,6 +188,7 @@ public static class WetBulbLayer
     private static void DrawLabel(
         Canvas canvas,
         double wetBulbC,
+        ChartGeometry geometry,
         Point firstPoint,
         Point secondPoint)
     {
@@ -194,10 +196,9 @@ public static class WetBulbLayer
             new()
             {
                 Text =
-                    wetBulbC.ToString(
-                        "0",
-                        CultureInfo.CurrentCulture)
-                    + " °C",
+                    PsychrometricUnits.TemperatureFromSI(wetBulbC,geometry.DisplayUnits).ToString(
+                        "0", CultureInfo.CurrentCulture)
+                    + (geometry.DisplayUnits == UnitSystem.SI ? " °C" : " °F"),
                 FontSize = 9.5,
                 Foreground = Brushes.DimGray,
                 Background = Brushes.White

@@ -187,7 +187,8 @@ public static class EnthalpyLayer
                 canvas,
                 enthalpyKJPerKg,
                 firstVisiblePoint.Value,
-                plotRect);
+                plotRect,
+                geometry);
         }
     }
 
@@ -259,15 +260,15 @@ public static class EnthalpyLayer
         Canvas canvas,
         double enthalpyKJPerKg,
         Point point,
-        Rect plotRect)
+        Rect plotRect,
+        ChartGeometry geometry)
     {
         TextBlock label =
             new()
             {
                 Text =
-                    enthalpyKJPerKg.ToString(
-                        "0",
-                        CultureInfo.CurrentCulture),
+                    PsychrometricUnits.EnthalpyFromSI(enthalpyKJPerKg,geometry.DisplayUnits).ToString(
+                        "0",CultureInfo.CurrentCulture),
 
                 FontSize = 10.0,
                 Foreground = Brushes.DimGray,

@@ -99,7 +99,7 @@ public static class SpecificVolumeLayer
 
         DrawAxisTitle(
             canvas,
-            plotRect);
+            plotRect, geometry);
     }
 
     // ------------------------------ Fin de sección 2.9.2 ------------------------------
@@ -368,9 +368,8 @@ public static class SpecificVolumeLayer
             new()
             {
                 Text =
-                    specificVolumeM3PerKgDryAir.ToString(
-                        "0.00",
-                        CultureInfo.CurrentCulture),
+                    PsychrometricUnits.VolumeFromSI(specificVolumeM3PerKgDryAir,geometry.DisplayUnits).ToString(
+                        "0.00",CultureInfo.CurrentCulture),
                 FontSize = 9.5,
                 Foreground = Brushes.DimGray,
                 Background = Brushes.White
@@ -394,13 +393,14 @@ public static class SpecificVolumeLayer
 
     private static void DrawAxisTitle(
         Canvas canvas,
-        Rect plotRect)
+        Rect plotRect,
+        ChartGeometry geometry)
     {
         TextBlock title =
             new()
             {
                 Text =
-                    "Volumen específico (m³/kg aire seco)",
+                    (geometry.DisplayUnits == UnitSystem.SI ? "Volumen específico (m³/kg aire seco)" : "Volumen específico (ft³/lb aire seco)"),
                 FontSize =
                     10.0,
                 FontWeight =

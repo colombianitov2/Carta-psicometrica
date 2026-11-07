@@ -69,7 +69,7 @@ public static class EnthalpyDeviationLayer
 
         DrawScaleTitle(
             canvas,
-            plotRect);
+            plotRect, geometry);
     }
 
     // ------------------------------ Fin de sección 2.10.3 ------------------------------
@@ -112,6 +112,7 @@ public static class EnthalpyDeviationLayer
                 AddCompletedSegment(
                     canvas,
                     targetDeviationKJPerKg,
+                    geometry,
                     ref currentSegment,
                     ref labelDrawn);
 
@@ -135,6 +136,7 @@ public static class EnthalpyDeviationLayer
         AddCompletedSegment(
             canvas,
             targetDeviationKJPerKg,
+            geometry,
             ref currentSegment,
             ref labelDrawn);
     }
@@ -469,6 +471,7 @@ public static class EnthalpyDeviationLayer
     private static void AddCompletedSegment(
         Canvas canvas,
         double deviationKJPerKg,
+        ChartGeometry geometry,
         ref Polyline? segment,
         ref bool labelDrawn)
     {
@@ -489,6 +492,7 @@ public static class EnthalpyDeviationLayer
             DrawCurveLabel(
                 canvas,
                 deviationKJPerKg,
+                geometry,
                 segment);
 
             labelDrawn =
@@ -502,6 +506,7 @@ public static class EnthalpyDeviationLayer
     private static void DrawCurveLabel(
         Canvas canvas,
         double deviationKJPerKg,
+        ChartGeometry geometry,
         Polyline curve)
     {
         if (curve.Points.Count < 2)
@@ -570,9 +575,8 @@ public static class EnthalpyDeviationLayer
             new()
             {
                 Text =
-                    deviationKJPerKg.ToString(
-                        "0.0",
-                        CultureInfo.CurrentCulture),
+                    PsychrometricUnits.EnthalpyFromSI(deviationKJPerKg,geometry.DisplayUnits).ToString(
+                        geometry.DisplayUnits == UnitSystem.SI ? "0.0" : "0.000", CultureInfo.CurrentCulture),
 
                 FontSize =
                     9.0,
@@ -616,13 +620,14 @@ public static class EnthalpyDeviationLayer
 
     private static void DrawScaleTitle(
         Canvas canvas,
-        Rect plotRect)
+        Rect plotRect,
+        ChartGeometry geometry)
     {
         TextBlock title =
             new()
             {
                 Text =
-                    "Desviación de entalpía\n(kJ/kg aire seco)",
+                    (geometry.DisplayUnits == UnitSystem.SI ? "Desviación de entalpía\n(kJ/kg aire seco)" : "Desviación de entalpía\n(Btu/lb aire seco)"),
 
                 FontSize =
                     9.0,
