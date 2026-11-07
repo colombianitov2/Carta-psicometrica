@@ -243,6 +243,16 @@ public partial class MainWindow
         var selected = _selectedPointIds
             .Select(id => points.FirstOrDefault(p => p.Id == id)).ToArray();
         if (selected.Any(p => p == null)) return;
+        // [5.1C.12.1] No confundir una comparación de estados con predicción de equipo.
+        if (selected.Length > 1 && predictive)
+        {
+            MessageBox.Show("Para humidificación evaporativa, inyección de vapor o bypass, " +
+                "seleccione solo el punto de entrada y proporcione los datos de equipo requeridos. " +
+                "Para comparar dos estados conocidos, utilice el método Automático.",
+                "Modelo de equipo no determinado",MessageBoxButton.OK,MessageBoxImage.Warning);
+            return;
+        }
+
 
         if (!TryReadOptionalFlow(DryFlowTextBox.Text, out double? massFlow, out string error))
         {
