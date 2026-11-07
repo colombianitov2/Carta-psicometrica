@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
@@ -310,6 +311,65 @@ public partial class MainWindow
         { error="Introduzca un flujo másico de aire seco positivo, en kg/s."; return false; }
         flow = value;
         return true;
+    }
+
+
+    // [5.1C.14] Archivos de sesión versionados: estado de puntos y procesos.
+    private sealed record SessionV1(int Version, double PressureKPa, UnitSystem Units,
+        List<ChartPoint> Points, List<PsychrometricProcess> Processes);
+
+    private void SaveSession_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title="Guardar proyecto FrioCalc", Filter="FrioCalc JSON|*.friocalc.json|JSON|*.json",
+            FileName="FrioCalc_Sesion.friocalc.json"
+        };
+        if (dialog.ShowDialog(this) != true) return;
+        var session = new SessionV1(1, PressureSelector.CurrentPressureKPa,
+            ChartMetricsPanel.CurrentUnits, PsychrometricChart.ActivePoints.ToList(),
+            new List<PsychrometricProcess>(_savedProcesses));
+        File.WriteAllText(dialog.FileName,
+            JsonSerializer.Serialize(session,new JsonSerializerOptions { WriteIndented=true }),
+            new UTF8Encoding(false));
+    }
+
+    private void LoadSession_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title="Abrir sesión FrioCalc", Filter="FrioCalc JSON|*.friocalc.json;*.json|Todos|*.*"
+        };
+        if (dialog.ShowDialog(this) != true) return;
+        try
+        {
+            var session=JsonSerializer.Deserialize<SessionV1>(File.ReadAllText(dialog.FileName));
+            if (session is null || session.Version != 1 || session.Points is null ||
+                session.Processes is null || !double.IsFinite(session.PressureKPa) ||
+                session.PressureKPa <= 0)
+                throw new InvalidDataException("Archivo de sesión incompatible.");
+            if (session.Points.Any(p=>Math.Abs(p.PressureKPa-session.PressureKPa)>1e-6) ||
+                session.Points.GroupBy(p=>p.Id).Any(g=>g.Count()>1) ||
+                session.Processes.Any(p=>p.PointIds.Any(id=>!session.Points.Any(x=>x.Id==id))))
+                throw new InvalidDataException("Puntos o procesos contradictorios en el archivo.");
+            if (MessageBox.Show("Esto reemplazará los puntos y procesos actuales. ¿Continuar?",
+                "Abrir sesión",MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes) return;
+            PressureSelector.ApplyExternalPressure(session.PressureKPa);
+            PsychrometricChart.SetSharedPoints(session.Points);
+            OnPointsChanged(PsychrometricChart.ActivePoints);
+            _savedProcesses.Clear();
+            _savedProcesses.AddRange(session.Processes);
+            _nextProcessId=Math.Max(1,_savedProcesses.Count==0 ? 1 : _savedProcesses.Max(p=>p.Id)+1);
+            _selectedPointIds.Clear();
+            PointPropertiesPanel.ClearSelection();
+            UpdateProcessesInCharts();
+            WorkspaceTabs.SelectedIndex=0;
+            ProcessResultText.Text="Sesión cargada. Confirme la coherencia de cálculos y métodos.";
+        }
+        catch (Exception ex) when (ex is IOException or JsonException or InvalidDataException or ArgumentException)
+        {
+            MessageBox.Show(ex.Message,"Error al abrir sesión",MessageBoxButton.OK,MessageBoxImage.Error);
+        }
     }
 
     // [5.1C.13] Casos didácticos y exportación auditable.

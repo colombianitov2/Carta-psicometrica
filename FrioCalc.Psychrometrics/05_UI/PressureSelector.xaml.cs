@@ -314,6 +314,23 @@ public partial class PressureSelector : UserControl
     // ============================================================
 
 
+    // [5.2C.11] Restablecer presión al importar sesión, notificando al gráfico.
+    public void ApplyExternalPressure(double pressureKPa)
+    {
+        string? error = AtmosphericPressure.GetValidationError(pressureKPa);
+        if (error != null) throw new ArgumentOutOfRangeException(nameof(pressureKPa), error);
+        _updatingUi = true;
+        try
+        {
+            PresetComboBox.SelectedItem = PressurePresetCatalog.Custom;
+            PressureTextBox.Text = pressureKPa.ToString("0.######",CultureInfo.CurrentCulture);
+        }
+        finally { _updatingUi = false; }
+        CurrentPressureKPa = pressureKPa;
+        ValidateCurrentInput();
+        PressureApplied?.Invoke(pressureKPa);
+    }
+
     // ============================================================
     // [5.2C.10] INICIO - Cierre del selector
     // ============================================================

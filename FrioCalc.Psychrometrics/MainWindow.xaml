@@ -96,6 +96,11 @@
                             <TextBlock Text="RESULTADOS Y ADVERTENCIAS" FontWeight="SemiBold" Margin="0,0,0,6"/>
                             <TextBlock x:Name="ProcessResultText" Text="Seleccione al menos dos puntos."
                                        TextWrapping="Wrap" FontSize="12" Margin="0,0,0,12"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,9">
+                                <Button Content="Guardar sesión JSON" Click="SaveSession_Click"
+                                        Padding="5" Margin="0,0,7,0"/>
+                                <Button Content="Abrir sesión JSON" Click="LoadSession_Click" Padding="5"/>
+                            </StackPanel>
                             <Button Content="Exportar informe CSV" Click="ExportReport_Click"
                                     Padding="7"/>
                         </StackPanel>
