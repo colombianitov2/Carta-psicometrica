@@ -74,3 +74,5 @@ VALIDACION #34: Δh marching squares, clic corto/arrastre, curso ASHRAE fraccion
 VALIDACION #35: import de geometría arreglado; Δh marching squares y clic de ratón WPF.
 
 VALIDACION #36: UI pruebas ASHRAE, Δh robusto, bibliografía fracciones, puntos, numeración de líneas; cultura es-CO.
+
+VALIDACION #37: layout adaptable ancho total en Procesos/Teoría, clic en plot real, etiquetas y Δh.
