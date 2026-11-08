@@ -66,3 +66,5 @@ ZONA2 #30: regresión final de encabezados 1–36 y documentación v1.6; confirm
 VALIDACION LOCAL #31: reproducir configuración es-CO, 694 numéricas, UI en inglés y español tras corregir comparación decimal y CS8602.
 
 AUDITORIA UI #32: rango estándar 60g, ocultar scrollbars, botones unidades, puntos y diálogo etiquetas; compilar.
+
+VALIDACION #33: curso ASHRAE 18 unidades, fracciones matematicas, pasos carta, adaptación 60g, y procesos sin segunda carta.
