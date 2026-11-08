@@ -144,6 +144,42 @@ internal static class Program
             Check(mainChart.ActivePoints.Count==2&&processChart.ActivePoints.Count==2,
                 "Deshacer mantiene ambas cartas sincronizadas");
 
+            // [UI.6.2] Regresión de edición predictiva con salida calculada.
+            var twoPointCards=(WrapPanel)properties.FindName("PointsWrapPanel");
+            var inletCard=(StackPanel)((Border)twoPointCards.Children[0]).Child;
+            var inletCheck=inletCard.Children.OfType<CheckBox>()
+                .First(x=>x.Content?.ToString()=="Incluir en proceso");
+            inletCheck.IsChecked=true;
+            Check(properties.SelectedPointIds.Count==1,"Entrada de proceso predictivo única");
+            foreach(ComboBoxItem item in typeSelector.Items)
+            {
+                if(item.Tag?.ToString()=="EvaporativeHumidification")
+                {typeSelector.SelectedItem=item;break;}
+            }
+            ((TextBox)window.FindName("EffectivenessTextBox")).Text="0.5";
+            ((TextBox)window.FindName("NewProcessNameTextBox")).Text="Lavador editable";
+            plotMethod.Invoke(window,new object[]{window,new RoutedEventArgs(Button.ClickEvent)});
+            Check(processesList.Items.Count==2 && mainChart.ActivePoints.Count==3,
+                "Humidificación genera una salida y un proceso");
+            int oldCalculatedOutput=mainChart.ActivePoints.Last().Id;
+            processesList.SelectedIndex=1;
+            var edit=typeof(MainWindow).GetMethod("EditProcess_Click",
+                System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance);
+            Check(edit!=null,"Edición de proceso visible");
+            edit!.Invoke(window,new object[]{window,new RoutedEventArgs(Button.ClickEvent)});
+            Check(properties.SelectedPointIds.Count==1,
+                "Edición de proceso recupera entradas y excluye salida calculada");
+            Check(((TextBox)window.FindName("EffectivenessTextBox")).Text.StartsWith("0.5"),
+                "Edición recupera efectividad de saturación");
+            ((TextBox)window.FindName("EffectivenessTextBox")).Text="0.65";
+            plotMethod.Invoke(window,new object[]{window,new RoutedEventArgs(Button.ClickEvent)});
+            Check(processesList.Items.Count==2 && mainChart.ActivePoints.Count==3,
+                "Recalcular proceso reemplaza salida antigua sin crear huérfanos");
+            Check(!mainChart.ActivePoints.Any(p=>p.Id==oldCalculatedOutput),
+                "Salida generada anterior realmente retirada");
+            Check(processChart.ActivePoints.Count==mainChart.ActivePoints.Count,
+                "Segunda carta sincronizada al editar predicción");
+
             // [UI.7] Auditoría geométrica de entalpías: nunca mostrar estados supersaturados.
             foreach(double pressure in new[]{84.54,101.325})
             {
