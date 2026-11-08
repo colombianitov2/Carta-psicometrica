@@ -371,6 +371,7 @@ public partial class ChartMetricsPanel : UserControl
         HumidityRatioLabel.Text = "Humedad absoluta (" + (ip ? "gr/lb" : "g/kg") + " aire seco)";
         EnthalpyLabel.Text = "Entalpía (" + (ip ? "Btu/lb" : "kJ/kg") + " aire seco)";
         SpecificVolumeLabel.Text = "Volumen específico (" + (ip ? "ft³/lb" : "m³/kg") + " aire seco)";
+        SpecificEntropyLabel.Text = "Entropía relativa s* ("+(ip?"Btu/(lbda·°F)":"kJ/(kgda·K)")+")";
         UnitsChanged?.Invoke(next);
     }
 

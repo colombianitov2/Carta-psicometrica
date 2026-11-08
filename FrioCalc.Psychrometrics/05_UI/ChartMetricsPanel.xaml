@@ -268,7 +268,7 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="Entropía específica relativa s* (kJ/(kg aire seco·K))"
+                <TextBlock x:Name="SpecificEntropyLabel" Text="Entropía específica relativa s* (kJ/(kg aire seco·K))"
                            TextWrapping="Wrap" FontSize="13.5" Margin="0,0,10,0" VerticalAlignment="Center"
                            ToolTip="Familia opcional adicional, modelo ideal. Referencia T=0 °C, p_da=101,325 kPa y p_v=0,611657 kPa."/>
                 <CheckBox x:Name="SpecificEntropyCheckBox" Grid.Column="1" VerticalAlignment="Center"

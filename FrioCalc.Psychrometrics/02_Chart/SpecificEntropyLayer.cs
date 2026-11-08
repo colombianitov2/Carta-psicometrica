@@ -89,7 +89,9 @@ public static class SpecificEntropyLayer
                 labels.Add(caption.Value.Y);
                 string units=geometry.DisplayUnits==UnitSystem.SI?"kJ/(kgda·K)":"Btu/(lbda·°F)";
                 double value=PsychrometricUnits.EntropyFromSI(level,geometry.DisplayUnits);
-                var label=new TextBlock{Text=$"s*={value.ToString(geometry.DisplayUnits==UnitSystem.SI?"0.00":"0.000",CultureInfo.CurrentCulture)}",
+                string shown=(Math.Abs(value)<0.00001?0.0:value).ToString(
+                    geometry.DisplayUnits==UnitSystem.SI?"0.00":"0.000",CultureInfo.CurrentCulture);
+                var label=new TextBlock{Text="s*="+shown,
                     ToolTip=$"Entropía relativa del modelo ideal, {units}. No equivale a Δh.",
                     FontSize=10,Foreground=color,Background=Brushes.White,IsHitTestVisible=false};
                 Canvas.SetLeft(label,caption.Value.X+5);
@@ -97,6 +99,17 @@ public static class SpecificEntropyLayer
                 canvas.Children.Add(label);
             }
         }
+        var title=new TextBlock
+        {
+            Text=geometry.DisplayUnits==UnitSystem.SI ? "s* (modelo ideal, kJ/(kgda·K))" :
+                "s* (modelo ideal, Btu/(lbda·°F))",
+            FontSize=9.5,FontWeight=FontWeights.SemiBold,
+            Foreground=color,Background=Brushes.White,
+            ToolTip="Entropía relativa al conjunto de referencias especificado; no es entropía absoluta de ASHRAE."
+        };
+        Canvas.SetLeft(title,rect.Left+8);
+        Canvas.SetTop(title,rect.Top+20);
+        canvas.Children.Add(title);
     }
 
     private static void AddCrossing(List<Point> points,double first,double second,
