@@ -541,6 +541,18 @@ internal static class Program
             Check(Math.Abs(pressurePanel.CurrentPressureKPa-101.325)<.0001,
                 "Presión estándar restaurada");
 
+            // [UI.14.1] La bibliografía debe mostrar fórmulas en fracción visual.
+            var bibliography=(BibliographyPanel)window.FindName("BibliographyPanel");
+            var bibliographyGrid=(DataGrid)bibliography.FindName("EntriesGrid");
+            var chosenEntry=bibliographyGrid.Items.Cast<BibliographyEntry>()
+                .First(entry=>entry.Id=="B06");
+            bibliographyGrid.SelectedItem=chosenEntry;
+            var bibliographyFraction=(ContentControl)bibliography.FindName("EntryEquationVisual");
+            Check(bibliographyFraction.Content is StackPanel,
+                "Bibliografía W renderiza numerador sobre denominador");
+            Check(((TextBlock)bibliography.FindName("EntryEquationProvenance")).Text.Contains("Deducción"),
+                "Bibliografía explica de dónde salen las fórmulas");
+
             // [UI.15] Sin barras gráficas intrusivas y clic agrega/quita puntos.
             tabs.SelectedIndex=0;
             window.UpdateLayout();
