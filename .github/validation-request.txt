@@ -30,3 +30,5 @@ AUDITORIA #12: fix sintaxis bibliografía, carta estándar inmóvil, test entrop
 AUDITORIA #13: compilar recorte físico de entalpía propagando presión; comprobar isoentrópicas y capturas.
 
 AUDITORIA #14: matriz 48 estados multi-presión, A03 siete ejercicios, UI selección SI/IP, títulos Δh claros.
+
+AUDITORIA #15: geometría entalpía no sobresaturada dos presiones, desviación Δh=0 saturación, etiqueta s* SI/IP.
