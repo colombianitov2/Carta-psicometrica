@@ -23,6 +23,10 @@
                     <DataGridTextColumn Header="Fuente" Binding="{Binding Source}" Width="2*"/>
                 </DataGrid.Columns>
             </DataGrid>
+            <ContentControl x:Name="EntryEquationVisual" Margin="0,4,0,9"
+                            HorizontalAlignment="Left"/>
+            <TextBlock x:Name="EntryEquationProvenance" TextWrapping="Wrap"
+                       FontSize="12" Margin="0,0,0,7" Foreground="#486378"/>
             <TextBlock x:Name="EntryDetailsText" Text="Seleccione una propiedad."
                        TextWrapping="Wrap" Margin="0,9,0,10" FontSize="12"/>
             <StackPanel Orientation="Horizontal">

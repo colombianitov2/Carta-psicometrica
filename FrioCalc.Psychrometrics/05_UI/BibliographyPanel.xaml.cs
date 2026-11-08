@@ -5,6 +5,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using FrioCalc.Psychrometrics.Core;
+using FrioCalc.Psychrometrics.Processes;
 using Microsoft.Win32;
 
 namespace FrioCalc.Psychrometrics.UI;
@@ -21,6 +22,18 @@ public partial class BibliographyPanel : UserControl
     private void EntriesGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (EntryDetailsText == null || EntriesGrid.SelectedItem is not BibliographyEntry item) return;
+        string? formulaKey=item.Id switch
+        {
+            "B04"=>"Tdp","B05"=>"RH","B06"=>"W","B07"=>"Ws",
+            "B08"=>"h","B09"=>"v","B11"=>"SHR","B12"=>"BF",
+            "B15"=>"Mdot","B18"=>"MixW",_=>null
+        };
+        var formula=formulaKey is null?null:AshraeStudyCatalog.FindEquation(formulaKey);
+        EntryEquationVisual.Content=formula is null?null:
+            AshraeStudyPanel.RenderMathematicalFraction(formula);
+        EntryEquationProvenance.Text=formula is null?
+            "No se dispone de una fracción equivalente para este registro; consulte su definición y método.": 
+            "Fundamento: "+formula.Origin+"\nDeducción: "+formula.Derivation;
         EntryDetailsText.Text=$"ID {item.Id} — {item.Variable} ({item.Symbol})\n" +
             $"Definición: {item.Definition}\nObtención: {item.ObtainingMethod}\n" +
             $"Método en código: {item.MethodId}\nReferencia: {item.Source} / {item.Chapter}\n" +

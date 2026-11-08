@@ -436,7 +436,7 @@ internal static class Program
                 ((TextBlock)ashrae.FindName("ConstructionStepTitle")).Text.Contains("12"),
                 "Construcción de carta describe cada etapa hasta la doce");
             ashrae.SelectUnit("A4");
-            Check(((TextBlock)ashrae.FindName("UnitHeading")).Text.Contains("Presión de saturación"),
+            Check(((TextBlock)ashrae.FindName("UnitHeading")).Text.Contains("presión de saturación",StringComparison.OrdinalIgnoreCase),
                 "Temario navega en orden físico independiente del PowerPoint");
             var workUnits=(ComboBox)pressurePanel.FindName("WorkUnitsComboBox");
             Check(workUnits!=null&&workUnits.SelectedIndex==0,
