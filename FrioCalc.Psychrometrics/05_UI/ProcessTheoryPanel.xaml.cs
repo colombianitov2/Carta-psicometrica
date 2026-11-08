@@ -26,6 +26,8 @@ public partial class ProcessTheoryPanel : UserControl
     private double _previousRH=double.NaN;
     private double _previousFraction=double.NaN;
     private double _previousPressure=double.NaN;
+    private double _previousSecondT=double.NaN;
+    private double _previousSecondRH=double.NaN;
 
     public ProcessTheoryPanel()
     {
@@ -43,6 +45,91 @@ public partial class ProcessTheoryPanel : UserControl
         if (!double.IsFinite(pressureKPa) || pressureKPa <= 0) return;
         _pressureKPa = pressureKPa;
         Recompute();
+    }
+
+    // [5.5C.6] Vincular ejercicios A03 al laboratorio sin sustituir
+    // la solución escrita del material por una aproximación oculta.
+    public string LoadSlideExample(int slide)
+    {
+        double t=25,rh=50,intensity=.5,secondT=35,secondRH=60;
+        string kind="Heating",explanation="";
+        try
+        {
+            switch(slide)
+            {
+                case 6:
+                    kind="Cooling";t=35;intensity=.5;
+                    rh=RelativeHumidityFromHumidityRatio(t,.010,_pressureKPa);
+                    explanation="A03/6: reproduce 35→25 °C y W=10 g/kgda. La potencia se calcula en el cuadro del ejercicio con 5 m³/s.";
+                    break;
+                case 7:
+                    kind="Heating";t=2;rh=80;intensity=.95;
+                    explanation="A03/7: reproduce 2→21 °C a W constante. Consulte el cálculo de 10.000 m³/h en el cuadro del ejercicio.";
+                    break;
+                case 14:
+                    kind="Evaporative";t=30;rh=10;intensity=.7;
+                    explanation="A03/14: efecto del lavador con efectividad 70 %. Explore si la HR llega al 95 % sin cambiar el equipo.";
+                    break;
+                case 15:
+                    kind="Dehumidification";t=32;
+                    double w=SaturationHumidityRatio.FromPressuresKPa(
+                        _pressureKPa,SaturationVaporPressure.GetPressureKPa(28));
+                    rh=RelativeHumidityFromHumidityRatio(t,w,_pressureKPa);
+                    intensity=7.0/12.0;
+                    explanation="A03/15: Tbs1=32°C, rocío=28°C; salida saturada a 21°C. Se representa el tramo de condensación; el balance exacto requiere entalpía de condensado.";
+                    break;
+                case 22:
+                    return "A03/22: el ejercicio exige carga TOTAL del auditorio. Las condiciones dadas no incluyen envolvente, iluminación, ocupación sensible/latente ni infiltración; se mantiene el desarrollo parcial en el panel de resultados, sin inventar carga.";
+                case 23:
+                    kind="Mixing";t=24;rh=55;secondT=32;secondRH=70;
+                    double w1=RelativeHumidity.HumidityRatioFromDryBulbAndRelativeHumidity(t,rh/100.0,_pressureKPa);
+                    double w2=RelativeHumidity.HumidityRatioFromDryBulbAndRelativeHumidity(secondT,secondRH/100.0,_pressureKPa);
+                    if(!PointPropertyCalculator.TryCreatePoint(1,"R","#2563EB",_pressureKPa,t,w1,out var r) ||
+                       !PointPropertyCalculator.TryCreatePoint(2,"E","#EA580C",_pressureKPa,secondT,w2,out var e)||
+                       r is null||e is null)
+                        return "La mezcla A03 no es válida a la presión seleccionada.";
+                    double massReturn=(3000.0/3600.0)/r.SpecificVolumeM3PerKgDryAir;
+                    double massOutside=(500.0/3600.0)/e.SpecificVolumeM3PerKgDryAir;
+                    intensity=massOutside/(massReturn+massOutside);
+                    explanation="A03/23: mezcla de 3000 m³/h de retorno y 500 m³/h exterior. El control muestra la fracción MÁSICA calculada usando v de cada corriente.";
+                    break;
+                case 24:
+                    kind="SHR";t=24;rh=55;intensity=.75;
+                    explanation="A03/24: se muestra FCSi=0,75 sin fabricar una impulsión. El BF=0,20 por sí solo tampoco fija ADP ni salida.";
+                    break;
+                default:return "Esta diapositiva no tiene un caso numérico parametrizado en el laboratorio.";
+            }
+        }
+        catch(ArgumentException e)
+        {
+            return "No se puede cargar el caso a esta presión: "+e.Message;
+        }
+        if(!double.IsFinite(rh)||rh<HumiditySlider.Minimum||rh>HumiditySlider.Maximum)
+            return "A la presión indicada, la humedad del caso A03 queda fuera de los controles del laboratorio.";
+        _updatingControls=true;
+        int index=0;
+        foreach(ComboBoxItem item in ProcessSelector.Items)
+        {
+            if(item.Tag?.ToString()==kind)break;
+            index++;
+        }
+        ProcessSelector.SelectedIndex=Math.Min(index,ProcessSelector.Items.Count-1);
+        DryBulbSlider.Value=t;
+        HumiditySlider.Value=rh;
+        ParameterSlider.Value=intensity*100;
+        SecondDryBulbSlider.Value=secondT;
+        SecondHumiditySlider.Value=secondRH;
+        _updatingControls=false;
+        _previousLesson=null;
+        Recompute();
+        TheoryChangeText.Text=explanation;
+        return explanation;
+    }
+
+    private static double RelativeHumidityFromHumidityRatio(double t,double w,double p)
+    {
+        double pV=p*w/(0.621945+w);
+        return 100.0*pV/SaturationVaporPressure.GetPressureKPa(t);
     }
 
     private void DiagramCanvas_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -65,6 +152,10 @@ public partial class ProcessTheoryPanel : UserControl
 
         double t=DryBulbSlider.Value,rh=HumiditySlider.Value,intensity=ParameterSlider.Value/100.0;
         string kind=item.Tag?.ToString()??"Heating";
+        double tSecond=SecondDryBulbSlider.Value,rhSecond=SecondHumiditySlider.Value;
+        SecondStreamControls.Visibility=kind=="Mixing"?Visibility.Visible:Visibility.Collapsed;
+        SecondDryBulbLabel.Text=$"Tbs exterior: {tSecond:0} °C";
+        SecondHumidityLabel.Text=$"HR exterior: {rhSecond:0} %";
         DryBulbValueLabel.Text=$"Tbs inicial: {t:0} °C";
         RelativeHumidityValueLabel.Text=$"HR inicial: {rh:0} %";
         ParameterLabel.Text=kind switch
@@ -79,7 +170,7 @@ public partial class ProcessTheoryPanel : UserControl
         };
 
         if(!TheoryLessonService.TryEvaluate(kind,t,rh,intensity,_pressureKPa,
-            out TheoryLesson? lesson,out string error)||lesson is null)
+            out TheoryLesson? lesson,out string error,tSecond,rhSecond)||lesson is null)
         {
             _currentLesson=null;
             ShowError(error);
@@ -93,6 +184,10 @@ public partial class ProcessTheoryPanel : UserControl
                 change=$"Tbs inicial: {_previousTemperature:0.##} → {t:0.##} °C. ";
             else if(Math.Abs(rh-_previousRH)>1e-8)
                 change=$"HR inicial: {_previousRH:0.##} → {rh:0.##} %. ";
+            else if(kind=="Mixing" && Math.Abs(tSecond-_previousSecondT)>1e-8)
+                change=$"Tbs exterior: {_previousSecondT:0.##} → {tSecond:0.##} °C. ";
+            else if(kind=="Mixing" && Math.Abs(rhSecond-_previousSecondRH)>1e-8)
+                change=$"HR exterior: {_previousSecondRH:0.##} → {rhSecond:0.##} %. ";
             else if(Math.Abs(intensity-_previousFraction)>1e-8)
                 change=$"Intensidad: {_previousFraction:P0} → {intensity:P0}. ";
             else if(Math.Abs(_pressureKPa-_previousPressure)>1e-7)
@@ -138,6 +233,8 @@ public partial class ProcessTheoryPanel : UserControl
         _previousRH=rh;
         _previousFraction=intensity;
         _previousPressure=_pressureKPa;
+        _previousSecondT=tSecond;
+        _previousSecondRH=rhSecond;
     }
 
     private static string FormatStateSummary(TheoryLesson lesson)
@@ -195,6 +292,8 @@ public partial class ProcessTheoryPanel : UserControl
         DryBulbSlider.Value=25;
         HumiditySlider.Value=50;
         ParameterSlider.Value=50;
+        SecondDryBulbSlider.Value=35;
+        SecondHumiditySlider.Value=60;
         ProcessSelector.SelectedIndex=0;
         ExplanationLevelComboBox.SelectedIndex=1;
         _updatingControls=false;

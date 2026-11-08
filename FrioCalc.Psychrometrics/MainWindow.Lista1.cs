@@ -792,7 +792,9 @@ public partial class MainWindow
     private void ComputeSlideExample_Click(object sender, RoutedEventArgs e)
     {
         if(sender is not Button b || !int.TryParse(b.Tag?.ToString(),out int slide)) return;
-        TheoryExampleResultText.Text=SlideExamples.Evaluate(slide,PressureSelector.CurrentPressureKPa);
+        string solution=SlideExamples.Evaluate(slide,PressureSelector.CurrentPressureKPa);
+        string explore=ProcessTheoryPanel.LoadSlideExample(slide);
+        TheoryExampleResultText.Text=solution+"\n\nLABORATORIO INTERACTIVO: "+explore;
     }
 
     // [5.1C.17] Informe con ecuaciones, supuestos, estados, procesos y bibliografía.

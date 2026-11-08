@@ -31,17 +31,40 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0">
                     <TextBlock x:Name="DryBulbValueLabel" Text="Tbs inicial: 25 °C"/>
-                    <Slider x:Name="DryBulbSlider" Minimum="5" Maximum="40" Value="25"
+                    <Slider x:Name="DryBulbSlider" Minimum="0" Maximum="45" Value="25"
                             TickFrequency="1" IsSnapToTickEnabled="True"
                             ValueChanged="ControlsChanged"/>
                 </StackPanel>
                 <StackPanel Grid.Column="2">
                     <TextBlock x:Name="RelativeHumidityValueLabel" Text="HR inicial: 50 %"/>
-                    <Slider x:Name="HumiditySlider" Minimum="10" Maximum="90" Value="50"
+                    <Slider x:Name="HumiditySlider" Minimum="5" Maximum="100" Value="50"
                             TickFrequency="1" IsSnapToTickEnabled="True"
                             ValueChanged="ControlsChanged"/>
                 </StackPanel>
             </Grid>
+            <StackPanel x:Name="SecondStreamControls" Visibility="Collapsed" Margin="0,0,0,10">
+                <TextBlock Text="SEGUNDA CORRIENTE DE MEZCLA (EDITABLE)"
+                           FontWeight="SemiBold" Margin="0,0,0,5"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock x:Name="SecondDryBulbLabel" Text="Tbs exterior: 35 °C"/>
+                        <Slider x:Name="SecondDryBulbSlider" Minimum="0" Maximum="45" Value="35"
+                                TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="ControlsChanged"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock x:Name="SecondHumidityLabel" Text="HR exterior: 60 %"/>
+                        <Slider x:Name="SecondHumiditySlider" Minimum="5" Maximum="100" Value="60"
+                                TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="ControlsChanged"/>
+                    </StackPanel>
+                </Grid>
+                <TextBlock Text="La proporción del control inferior es de masa de aire seco, NO de volumen."
+                           TextWrapping="Wrap" FontSize="11" Foreground="#475569"/>
+            </StackPanel>
             <TextBlock x:Name="ParameterLabel" Text="Intensidad del proceso: 50 %" Margin="0,0,0,3"/>
             <Slider x:Name="ParameterSlider" Minimum="0" Maximum="100" Value="50"
                     TickFrequency="1" IsSnapToTickEnabled="True"
