@@ -54,6 +54,58 @@ internal static class Program
                 "Casilla independiente desviación de entalpía");
             Check(window.FindName("ProcessSelectionList") is ListBox, "Selección ordenada");
             Check(window.FindName("SavedProcessesList") is ListBox, "Procesos guardados");
+            var teaching=(ProcessTheoryPanel)window.FindName("ProcessTheoryPanel");
+            var processTopics=(ComboBox)teaching.FindName("ProcessSelector");
+            var drySlider=(Slider)teaching.FindName("DryBulbSlider");
+            var intensitySlider=(Slider)teaching.FindName("ParameterSlider");
+            var explanation=(TextBlock)teaching.FindName("TheoryExplanation");
+            var steps=(TextBlock)teaching.FindName("TheoryStepsText");
+            var formulas=(TextBlock)teaching.FindName("TheoryFormulaText");
+            var change=(TextBlock)teaching.FindName("TheoryChangeText");
+            var warning=(TextBlock)teaching.FindName("TheoryWarningText");
+            var variableSelector=(ComboBox)teaching.FindName("VariableSelector");
+            var variableInfo=(TextBlock)teaching.FindName("VariableExplanationText");
+            var question=(TextBlock)teaching.FindName("TheoryQuestionText");
+            var options=(ComboBox)teaching.FindName("TheoryAnswerCombo");
+            var feedback=(TextBlock)teaching.FindName("TheoryFeedbackText");
+            Check(processTopics.Items.Count>=10,"Zona 2 incluye diez escenarios docentes");
+            Check(explanation.Text.Contains("Calefacción")&&formulas.Text.Contains("W2"),
+                "Zona 2 explica el proceso inicial con fórmula");
+            double former=drySlider.Value;
+            drySlider.Value=former+3;
+            Check(change.Text.Contains("Tbs inicial") && steps.Text.Contains("28"),
+                "Mover temperatura actualiza explicación y sustitución numérica");
+            intensitySlider.Value=75;
+            Check(change.Text.Contains("Intensidad") && steps.Text.Contains("0,75") || 
+                change.Text.Contains("Intensidad") && steps.Text.Contains("0.75"),
+                "Mover intensidad modifica pasos en tiempo real");
+            processTopics.SelectedIndex=6; // Calentamiento + humidificación.
+            Check(explanation.Text.Contains("Calentamiento seguido") &&
+                steps.Text.Contains("HR intermedia"),
+                "Lección combinada muestra estados intermedios");
+            processTopics.SelectedIndex=9; // FCS con salida indeterminada.
+            var values=(TextBlock)teaching.FindName("TheoryValues");
+            Check(values.Text.Contains("INDETERMINADO") &&
+                warning.Text.Contains("no se debe dibujar"),
+                "FCS no crea salida inexistente");
+            Check(options.Items.Count==3 && question.Text.Contains("FCS"),
+                "Cuestionario depende del proceso");
+            options.SelectedIndex=1;
+            var quiz=typeof(ProcessTheoryPanel).GetMethod("CheckTheoryAnswer_Click",
+                System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance);
+            Check(quiz!=null,"Verificación de quiz enlazada");
+            quiz!.Invoke(teaching,new object[]{teaching,new RoutedEventArgs(Button.ClickEvent)});
+            Check(feedback.Text.Contains("CORRECTO"),"Cuestionario responde a elección del estudiante");
+            variableSelector.SelectedIndex=4; // W.
+            Check(variableInfo.Text.Contains("Humedad")&&variableInfo.Text.Contains("Ecuación"),
+                "Inspector de propiedades explica y cita ecuación");
+            // Restore the tutorial to its reference state for the visual captures.
+            var resetLesson=typeof(ProcessTheoryPanel).GetMethod("ResetTheoryExample_Click",
+                System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance);
+            resetLesson!.Invoke(teaching,new object[]{teaching,new RoutedEventArgs(Button.ClickEvent)});
+            Check(processTopics.SelectedIndex==0&&drySlider.Value==25,
+                "Restablecer escenario docente");
+
             Check(window.FindName("TheoryExampleResultText") is TextBlock, "Ejercicios A03");
             Check(window.FindName("ProcessTheoryPanel") is ProcessTheoryPanel, "Laboratorio teórico");
             Check(window.FindName("BibliographyPanel") is BibliographyPanel, "Catálogo bibliográfico");

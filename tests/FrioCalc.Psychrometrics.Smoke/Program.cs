@@ -420,6 +420,57 @@ static class Program
                 PsychrometricUnits.HumidityFromSI(p.HumidityRatioKgPerKg,UnitSystem.IP),UnitSystem.IP)
                 -p.HumidityRatioKgPerKg)<1e-9,"Humedad SI/IP");
 
+            // [T13] Zona 2: los textos didácticos usan estados reales del
+            // motor, ecuaciones resueltas, advertencias y fuente explícita.
+            string[] lessonKinds={"Heating","Cooling","Evaporative","Steam",
+                "Dehumidification","Mixing","HeatingHumidification",
+                "Desiccant","Bypass","SHR"};
+            foreach(string kind in lessonKinds)
+            {
+                Check(TheoryLessonService.TryEvaluate(kind,25,50,.5,101.325,
+                    out var lesson,out string why)&&lesson is not null,
+                    "Lección "+kind+": "+why);
+                Check(lesson!.Initial.PressureKPa==101.325 &&
+                    lesson.Initial.DryBulbC==25,"Estado inicial del motor "+kind);
+                Check(!string.IsNullOrWhiteSpace(lesson.Equations)&&
+                    !string.IsNullOrWhiteSpace(lesson.Steps)&&
+                    !string.IsNullOrWhiteSpace(lesson.Warning),
+                    "Explicación, ecuación, pasos y advertencias "+kind);
+                Check(lesson.Answers.Count==3 && lesson.CorrectAnswer>=0 &&
+                    lesson.CorrectAnswer<3 && lesson.AnswerExplanation.Length>10,
+                    "Autoevaluación docente válida "+kind);
+                Check(lesson.References.Contains("ASHRAE") &&
+                    lesson.References.Contains("A03"),
+                    "Referencias de clase y libro "+kind);
+                if(kind=="SHR")
+                    Check(lesson.Final is null &&
+                        lesson.Warning.Contains("no se debe dibujar"),
+                        "FCS indeterminado sin punto fabricado");
+                else
+                    Check(lesson.Final is not null &&
+                        lesson.Route.Count>=2 &&
+                        lesson.Final.RelativeHumidityPercent<=100.001,
+                        "Ruta física en lección "+kind);
+            }
+            Check(TheoryLessonService.TryEvaluate("Cooling",25,80,1,101.325,
+                out var limited,out _) && limited!.Final is not null &&
+                Math.Abs(limited.Final.DryBulbC-limited.Initial.DewPointC)<.02 &&
+                limited.Warning.Contains("LIMITÓ"),
+                "Teoría detiene enfriamiento sensible al llegar a condensación");
+            Check(TheoryLessonService.TryEvaluate("Mixing",25,50,.25,101.325,
+                out var mixLesson,out _) &&
+                mixLesson!.Final is not null && mixLesson.Auxiliary is not null &&
+                mixLesson.Final.HumidityRatioKgPerKg>mixLesson.Initial.HumidityRatioKgPerKg &&
+                mixLesson.Final.HumidityRatioKgPerKg<mixLesson.Auxiliary.HumidityRatioKgPerKg,
+                "Interacción de mezcla mantiene W entre las entradas");
+            Check(!TheoryLessonService.TryEvaluate("Steam",25,50,2,101.325,out _,out _),
+                "Rechazo de intensidad docente fuera del dominio");
+            Check(TheoryLessonService.Variables.Count>=12,
+                "Diccionario de propiedades ASHRAE ampliado");
+            Check(TheoryLessonService.DescribeVariable("W",p).Contains("g/kgda") &&
+                TheoryLessonService.DescribeVariable("RH",p).Contains("HR"),
+                "Inspector de variables usa estado actual y ecuación");
+
             Console.WriteLine($"PRUEBAS SUPERADAS: {_checks}");
             return 0;
         }
