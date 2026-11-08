@@ -446,11 +446,8 @@ public static class EnthalpyDeviationLayer
     {
         return new Polyline
         {
-            Stroke =
-                Brushes.Gray,
-
-            StrokeThickness =
-                0.65,
+            Stroke = new SolidColorBrush(Color.FromRgb(0,117,120)),
+            StrokeThickness = 1.1,
 
             StrokeDashArray =
                 new DoubleCollection
@@ -574,26 +571,13 @@ public static class EnthalpyDeviationLayer
         TextBlock label =
             new()
             {
-                Text =
-                    PsychrometricUnits.EnthalpyFromSI(deviationKJPerKg,geometry.DisplayUnits).ToString(
-                        geometry.DisplayUnits == UnitSystem.SI ? "0.0" : "0.000", CultureInfo.CurrentCulture),
+                Text = "Δh " + PsychrometricUnits.EnthalpyFromSI(deviationKJPerKg,geometry.DisplayUnits).ToString(
+                    geometry.DisplayUnits == UnitSystem.SI ? "0.0" : "0.000", CultureInfo.CurrentCulture),
 
-                FontSize =
-                    9.0,
-
-                Foreground =
-                    Brushes.DimGray,
-
-                Background =
-                    Brushes.White,
-
-                LayoutTransform =
-                    new RotateTransform(
-                        Math.Atan2(
-                            deltaY,
-                            deltaX)
-                        * 180.0
-                        / Math.PI)
+                FontSize = 9.5,
+                Foreground = new SolidColorBrush(Color.FromRgb(0,103,107)),
+                Background = Brushes.White,
+                ToolTip = "Desviación de entalpía respecto de la entalpía saturada a Tbh. No es entropía."
             };
 
         canvas.Children.Add(
@@ -604,68 +588,31 @@ public static class EnthalpyDeviationLayer
                 double.PositiveInfinity,
                 double.PositiveInfinity));
 
-        Canvas.SetLeft(
-            label,
-            point.X
-            + normalX * offset
-            - label.DesiredSize.Width / 2.0);
-
-        Canvas.SetTop(
-            label,
-            point.Y
-            + normalY * offset
-            - label.DesiredSize.Height
-            - 1.0);
+        Rect visible=geometry.GetPlotRect(canvas.ActualWidth,canvas.ActualHeight);
+        double left=Math.Clamp(point.X+normalX*offset-label.DesiredSize.Width/2.0,
+            visible.Left+3, Math.Max(visible.Left+3,visible.Right-label.DesiredSize.Width-4));
+        double top=Math.Clamp(point.Y+normalY*offset-label.DesiredSize.Height-1,
+            visible.Top+2, Math.Max(visible.Top+2,visible.Bottom-label.DesiredSize.Height-2));
+        Canvas.SetLeft(label,left);
+        Canvas.SetTop(label,top);
     }
 
-    private static void DrawScaleTitle(
-        Canvas canvas,
-        Rect plotRect,
-        ChartGeometry geometry)
+    private static void DrawScaleTitle(Canvas canvas,Rect plotRect,ChartGeometry geometry)
     {
-        TextBlock title =
-            new()
-            {
-                Text =
-                    (geometry.DisplayUnits == UnitSystem.SI ? "Desviación de entalpía\n(kJ/kg aire seco)" : "Desviación de entalpía\n(Btu/lb aire seco)"),
-
-                FontSize =
-                    9.0,
-
-                FontWeight =
-                    FontWeights.SemiBold,
-
-                Foreground =
-                    Brushes.DimGray,
-
-                Background =
-                    Brushes.White,
-
-                TextAlignment =
-                    TextAlignment.Center,
-
-                LayoutTransform =
-                    new RotateTransform(
-                        -72.0)
-            };
-
-        canvas.Children.Add(
-            title);
-
-        title.Measure(
-            new Size(
-                double.PositiveInfinity,
-                double.PositiveInfinity));
-
-        Canvas.SetLeft(
-            title,
-            plotRect.Left
-            + plotRect.Width * 0.69);
-
-        Canvas.SetTop(
-            title,
-            plotRect.Top
-            + plotRect.Height * 0.43);
+        // Título legible en el margen superior sin atravesar curvas o puntos.
+        string unit=geometry.DisplayUnits==UnitSystem.SI?"kJ/kgda":"Btu/lbda";
+        var title=new TextBlock
+        {
+            Text=$"Δh = h − hsat(Tbh)  [{unit}]",
+            FontSize=10,
+            FontWeight=FontWeights.SemiBold,
+            Foreground=new SolidColorBrush(Color.FromRgb(0,103,107)),
+            Background=Brushes.White,
+            ToolTip="Desviación de entalpía aproximada del modelo Carrier/VALCON; distinta de la entropía."
+        };
+        canvas.Children.Add(title);
+        Canvas.SetLeft(title,plotRect.Left+8);
+        Canvas.SetTop(title,plotRect.Top+4);
     }
 
     // ------------------------------ Fin de sección 2.10.6 ------------------------------
