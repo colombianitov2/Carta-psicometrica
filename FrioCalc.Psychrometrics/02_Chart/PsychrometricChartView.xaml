@@ -57,6 +57,7 @@
                 <Canvas x:Name="ChartCanvas"
                         Background="#F6F6F6"
                         Cursor="Hand"
+                        ToolTip="Rueda: ampliar o reducir. Mantener clic izquierdo y arrastrar: desplazar carta (salvo Carta estándar, que fija el encuadre). Clic derecho: crear o quitar punto en el modo de selección."
                         MouseWheel="ChartCanvas_MouseWheel"
                         MouseLeftButtonDown="ChartCanvas_MouseLeftButtonDown"
                         MouseLeftButtonUp="ChartCanvas_MouseLeftButtonUp"
@@ -67,7 +68,7 @@
             </Border>
 
 
-            <ScrollBar x:Name="HorizontalChartScrollBar"
+            <ScrollBar x:Name="HorizontalChartScrollBar" Visibility="Collapsed"
                        Grid.Row="1"
                        Grid.Column="0"
                        Orientation="Horizontal"
@@ -76,7 +77,7 @@
                        ValueChanged="HorizontalChartScrollBar_ValueChanged"/>
 
 
-            <ScrollBar x:Name="VerticalChartScrollBar"
+            <ScrollBar x:Name="VerticalChartScrollBar" Visibility="Collapsed"
                        Grid.Row="0"
                        Grid.Column="1"
                        Orientation="Vertical"

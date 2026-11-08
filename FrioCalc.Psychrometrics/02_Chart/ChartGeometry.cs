@@ -29,7 +29,7 @@ public sealed class ChartGeometry
     public const double StandardMaxDryBulbC = 55.0;
 
     public const double StandardMinHumidityRatioKgPerKg = 0.0;
-    public const double StandardMaxHumidityRatioKgPerKg = 0.033;
+    public const double StandardMaxHumidityRatioKgPerKg = 0.060;
 
     public bool IsStandardChartMode { get; private set; }
 
@@ -60,11 +60,11 @@ public sealed class ChartGeometry
 
     public double MinDryBulbC { get; private set; } = -10.0;
 
-    public double MaxDryBulbC { get; private set; } = 120.0;
+    public double MaxDryBulbC { get; private set; } = 55.0;
 
     public double MinHumidityRatioKgPerKg { get; private set; } = 0.0;
 
-    public double MaxHumidityRatioKgPerKg { get; private set; } = 0.100;
+    public double MaxHumidityRatioKgPerKg { get; private set; } = 0.060;
 
     // ------------------------------ Fin de sección 2.2.3 ------------------------------
 
@@ -84,13 +84,13 @@ public sealed class ChartGeometry
 
     // ------------------------------ Sección 2.2.5 - Márgenes del área gráfica ------------------------------
 
-    public double LeftMargin { get; set; } = 50.0;
+    public double LeftMargin { get; set; } = 43.0;
 
-    public double TopMargin { get; set; } = 30.0;
+    public double TopMargin { get; set; } = 25.0;
 
-    public double RightMargin { get; set; } = 125.0;
+    public double RightMargin { get; set; } = 112.0;
 
-    public double BottomMargin { get; set; } = 90.0;
+    public double BottomMargin { get; set; } = 58.0;
 
     // ------------------------------ Fin de sección 2.2.5 ------------------------------
 
@@ -435,10 +435,10 @@ public sealed class ChartGeometry
         }
 
         MinDryBulbC = -10.0;
-        MaxDryBulbC = 120.0;
+        MaxDryBulbC = 55.0;
 
         MinHumidityRatioKgPerKg = 0.0;
-        MaxHumidityRatioKgPerKg = 0.100;
+        MaxHumidityRatioKgPerKg = 0.060;
     }
 
     // ------------------------------ Fin de sección 2.2.15 ------------------------------

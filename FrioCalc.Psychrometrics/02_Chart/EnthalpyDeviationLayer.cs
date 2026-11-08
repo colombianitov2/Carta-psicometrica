@@ -119,18 +119,15 @@ public static class EnthalpyDeviationLayer
                 continue;
             }
 
-            currentSegment ??=
-                CreateCurve(
-                    plotRect);
-
-            currentSegment.Points.Add(
-                new Point(
-                    geometry.XFromDryBulbC(
-                        dryBulbC,
-                        plotRect),
-                    geometry.YFromHumidityRatioKgPerKg(
-                        humidityRatio,
-                        plotRect)));
+            Point nextPoint=new(
+                geometry.XFromDryBulbC(dryBulbC,plotRect),
+                geometry.YFromHumidityRatioKgPerKg(humidityRatio,plotRect));
+            if(currentSegment is not null && currentSegment.Points.Count>0 &&
+               Math.Abs(currentSegment.Points[^1].Y-nextPoint.Y)>plotRect.Height*.12)
+                AddCompletedSegment(canvas,targetDeviationKJPerKg,geometry,
+                    ref currentSegment,ref labelDrawn);
+            currentSegment ??= CreateCurve(plotRect);
+            currentSegment.Points.Add(nextPoint);
         }
 
         AddCompletedSegment(
@@ -269,17 +266,11 @@ public static class EnthalpyDeviationLayer
                 return false;
             }
 
-            if (middleDeviation
-                < targetDeviationKJPerKg)
-            {
-                lowerWetBulbC =
-                    middleWetBulbC;
-            }
+            bool increasing = maximumDeviation >= minimumDeviation;
+            if ((middleDeviation < targetDeviationKJPerKg) == increasing)
+                lowerWetBulbC = middleWetBulbC;
             else
-            {
-                upperWetBulbC =
-                    middleWetBulbC;
-            }
+                upperWetBulbC = middleWetBulbC;
         }
 
         double wetBulbC =
@@ -472,8 +463,9 @@ public static class EnthalpyDeviationLayer
         ref Polyline? segment,
         ref bool labelDrawn)
     {
+        // Evitar microfragmentos de 1-3 muestras que no forman una isolínea legible.
         if (segment is null
-            || segment.Points.Count < 2)
+            || segment.Points.Count < 12)
         {
             segment =
                 null;
@@ -484,7 +476,7 @@ public static class EnthalpyDeviationLayer
         canvas.Children.Add(
             segment);
 
-        if (!labelDrawn)
+        if (!labelDrawn && segment.Points.Count >= 20)
         {
             DrawCurveLabel(
                 canvas,
