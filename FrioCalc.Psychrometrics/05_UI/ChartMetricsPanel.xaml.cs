@@ -33,6 +33,7 @@ public partial class ChartMetricsPanel : UserControl
     public event Action<bool>? SpecificVolumeVisibilityChanged;
 
     public event Action<bool>? EnthalpyDeviationVisibilityChanged;
+    public event Action<bool>? SpecificEntropyVisibilityChanged;
 
     public event Action<bool>? SensibleHeatFactorVisibilityChanged;
     public event Action<UnitSystem>? UnitsChanged;
@@ -183,6 +184,9 @@ public partial class ChartMetricsPanel : UserControl
 
     // ------------------------------ Sección 5.3C.7.4 - Desviación de entalpía ------------------------------
 
+    private void SpecificEntropyCheckBox_Changed(object sender,RoutedEventArgs e)
+        => SpecificEntropyVisibilityChanged?.Invoke(SpecificEntropyCheckBox.IsChecked==true);
+
     private void EnthalpyDeviationCheckBox_Changed(
         object sender,
         RoutedEventArgs e)
@@ -223,6 +227,8 @@ public partial class ChartMetricsPanel : UserControl
 
         EnthalpyDeviationCheckBox.IsChecked =
             true;
+        // Las isolíneas de entropía son una extensión opcional, no ASHRAE por defecto.
+        SpecificEntropyCheckBox.IsChecked = false;
         SensibleHeatFactorCheckBox.IsChecked = true;
     }
 

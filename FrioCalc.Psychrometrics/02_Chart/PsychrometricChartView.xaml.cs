@@ -38,6 +38,7 @@ public partial class PsychrometricChartView : UserControl
     private bool _specificVolumeVisible;
 
     private bool _enthalpyDeviationVisible;
+    private bool _specificEntropyVisible;
 
     private bool _sensibleHeatFactorVisible;
     private ChartPoint? _sensibleHeatFactorGuideOrigin;
@@ -225,6 +226,13 @@ public partial class PsychrometricChartView : UserControl
 
     // ------------------------------ Sección 2.1C.8.4 - Visibilidad de desviación de entalpía ------------------------------
 
+    // [2.1C.8.6] Isolíneas opcionales de entropía relativa (no curva ASHRAE estándar).
+    public void SetSpecificEntropyVisible(bool isVisible)
+    {
+        _specificEntropyVisible=isVisible;
+        RefreshChart();
+    }
+
     public void SetEnthalpyDeviationVisible(
         bool isVisible)
     {
@@ -313,6 +321,9 @@ public partial class PsychrometricChartView : UserControl
                 _geometry,
                 _pressureKPa);
         }
+
+        if (_specificEntropyVisible)
+            SpecificEntropyLayer.Draw(ChartCanvas,_geometry,_pressureKPa);
 
         if (_enthalpyDeviationVisible)
         {

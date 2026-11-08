@@ -122,8 +122,7 @@ public static class EnthalpyLayer
 
             bool valid =
                 IsPointInsideVisibleChartWindow(
-                    humidityRatio,
-                    geometry);
+                    humidityRatio, dryBulbC, totalPressureKPa, geometry);
 
             if (!valid)
             {
@@ -199,6 +198,8 @@ public static class EnthalpyLayer
 
     private static bool IsPointInsideVisibleChartWindow(
         double humidityRatioKgPerKg,
+        double dryBulbC,
+        double pressureKPa,
         ChartGeometry geometry)
     {
         if (!double.IsFinite(humidityRatioKgPerKg))
@@ -218,6 +219,13 @@ public static class EnthalpyLayer
             return false;
         }
 
+        // La carta de aire húmedo monofásico no admite HR > 100%.
+        double pws=SaturationVaporPressure.GetPressureKPa(dryBulbC);
+        if (pws < pressureKPa)
+        {
+            double saturatedW=SaturationHumidityRatio.FromPressuresKPa(pressureKPa,pws);
+            if (humidityRatioKgPerKg>saturatedW+1e-10) return false;
+        }
         return true;
     }
 

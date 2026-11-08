@@ -213,6 +213,11 @@ public partial class PointPropertiesPanel : UserControl
             FormatValue(PsychrometricUnits.VolumeFromSI(point.SpecificVolumeM3PerKgDryAir, _currentUnits), "0.000",
                 _currentUnits == UnitSystem.SI ? "m³/kg aire seco" : "ft³/lb aire seco"));
 
+        double specificEntropy=MoistAirSpecificEntropy.FromDryBulbAndHumidityRatio(
+            point.DryBulbC,point.HumidityRatioKgPerKg,point.PressureKPa);
+        AddProperty(content,"Entropía específica relativa s*",
+            FormatValue(PsychrometricUnits.EntropyFromSI(specificEntropy,_currentUnits),"0.000",
+                _currentUnits == UnitSystem.SI ? "kJ/(kgda·K)" : "Btu/(lbda·°F)"));
         AddProperty(content,"Método",point.Method);
         AddProperty(content,"Origen",point.Origin);
         if (point.InputConditions is { Count: > 0 })

@@ -262,6 +262,21 @@
                           Unchecked="EnthalpyDeviationCheckBox_Changed"/>
             </Grid>
 
+            <!-- [5.3X.5.1] Familia independiente: entropía ideal relativa; no equivale a desviación de entalpía -->
+            <Grid Margin="0,4,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Entropía específica relativa s* (kJ/(kg aire seco·K))"
+                           TextWrapping="Wrap" FontSize="13.5" Margin="0,0,10,0" VerticalAlignment="Center"
+                           ToolTip="Familia opcional adicional, modelo ideal. Referencia T=0 °C, p_da=101,325 kPa y p_v=0,611657 kPa."/>
+                <CheckBox x:Name="SpecificEntropyCheckBox" Grid.Column="1" VerticalAlignment="Center"
+                          Checked="SpecificEntropyCheckBox_Changed"
+                          Unchecked="SpecificEntropyCheckBox_Changed"
+                          ToolTip="No confundir con entalpía ni con la desviación de entalpía Carrier."/>
+            </Grid>
+
             <!-- Fin de sección 5.3X.5 -->
 
             <!-- [5.3X.6] Punto de rocío: dato de estado, no familia gráfica independiente -->

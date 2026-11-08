@@ -15,6 +15,12 @@ public static class PsychrometricUnits
         => units == UnitSystem.SI ? value / 1000.0 : value / 7000.0;
     public static double HumidityFromSI(double value, UnitSystem units)
         => units == UnitSystem.SI ? value * 1000.0 : value * 7000.0;
+    // Entropía específica: kJ/(kg_da K) a Btu/(lb_da °F), solo diferencia o referencia explícita.
+    public static double EntropyFromSI(double value, UnitSystem units)
+        => units == UnitSystem.SI ? value : value*0.23884589662749594;
+    public static double EntropyToSI(double value, UnitSystem units)
+        => units == UnitSystem.SI ? value : value/0.23884589662749594;
+
     public static double EnthalpyToSI(double value, UnitSystem units)
         => units == UnitSystem.SI ? value : value / 0.429922614;
     public static double EnthalpyFromSI(double value, UnitSystem units)

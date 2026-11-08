@@ -54,6 +54,8 @@ public partial class MainWindow : Window
 
         ChartMetricsPanel.EnthalpyDeviationVisibilityChanged +=
             OnEnthalpyDeviationVisibilityChanged;
+        ChartMetricsPanel.SpecificEntropyVisibilityChanged += visible =>
+            PsychrometricChart.SetSpecificEntropyVisible(visible);
 
         PsychrometricChart.SetPressure(
             AtmosphericPressure.StandardSeaLevelKPa);
