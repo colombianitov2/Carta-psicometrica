@@ -40,6 +40,7 @@ public static class PointLayer
             return;
         }
 
+        var visible=new List<ChartPoint>();
         foreach (ChartPoint point
                  in points)
         {
@@ -55,12 +56,10 @@ public static class PointLayer
                 continue;
             }
 
-            DrawPoint(
-                canvas,
-                geometry,
-                plotRect,
-                point);
+            visible.Add(point);
+            DrawPoint(canvas,geometry,plotRect,point);
         }
+        DrawLabels(canvas,geometry,plotRect,visible);
     }
 
     // ------------------------------ Fin de sección 2.12.2 ------------------------------
@@ -117,43 +116,86 @@ public static class PointLayer
         canvas.Children.Add(
             marker);
 
-        TextBlock label =
-            new()
-            {
-                Text = point.Name,
-                FontSize = 10.5,
-                FontWeight = FontWeights.SemiBold,
-                Foreground = pointBrush,
-                Background = Brushes.White,
-                Padding = new Thickness(2, 0, 2, 0),
-                IsHitTestVisible = false
-            };
 
-        canvas.Children.Add(
-            label);
-
-        label.Measure(
-            new Size(
-                double.PositiveInfinity,
-                double.PositiveInfinity));
-
-        Canvas.SetLeft(
-            label,
-            x + 8.0);
-
-        Canvas.SetTop(
-            label,
-            y
-            - label.DesiredSize.Height
-            - 5.0);
-
-        Panel.SetZIndex(
-            label,
-            1001);
     }
 
     // ------------------------------ Fin de sección 2.12.3 ------------------------------
 
+
+    // [2.12.3.1] Distribución de etiquetas sin superponer nombres ni
+    // ocultar marcadores adyacentes. También opera con zoom y presión distintos.
+    private static void DrawLabels(Canvas canvas,ChartGeometry geometry,
+        Rect plotRect,IReadOnlyList<ChartPoint> visible)
+    {
+        var occupied=new List<Rect>();
+        foreach(var point in visible)
+        {
+            double px=geometry.XFromDryBulbC(point.DryBulbC,plotRect);
+            double py=geometry.YFromHumidityRatioKgPerKg(point.HumidityRatioKgPerKg,plotRect);
+            occupied.Add(new Rect(px-14,py-14,28,28));
+        }
+
+        foreach(var point in visible)
+        {
+            double x=geometry.XFromDryBulbC(point.DryBulbC,plotRect);
+            double y=geometry.YFromHumidityRatioKgPerKg(point.HumidityRatioKgPerKg,plotRect);
+            var label=new TextBlock
+            {
+                Text=point.Name,
+                FontSize=10.5,
+                FontWeight=FontWeights.SemiBold,
+                Foreground=CreateBrush(point.ColorHex),
+                Background=Brushes.White,
+                Padding=new Thickness(2,0,2,0),
+                MaxWidth=Math.Max(40,plotRect.Width*.35),
+                TextTrimming=TextTrimming.CharacterEllipsis,
+                ToolTip=point.Name,
+                IsHitTestVisible=false
+            };
+            label.Measure(new Size(double.PositiveInfinity,double.PositiveInfinity));
+            double w=label.DesiredSize.Width,h=label.DesiredSize.Height;
+            var positions=new[]
+            {
+                new Point(x+15,y-h-9), new Point(x+15,y+9),
+                new Point(x-w-15,y-h-9), new Point(x-w-15,y+9),
+                new Point(x-w/2,y-h-22), new Point(x-w/2,y+22),
+                new Point(x+25,y-h/2), new Point(x-w-25,y-h/2)
+            };
+            double bestScore=double.PositiveInfinity;
+            Rect best=Rect.Empty;
+            for(int index=0;index<positions.Length;index++)
+            {
+                double left=Math.Clamp(positions[index].X,plotRect.Left+2,
+                    Math.Max(plotRect.Left+2,plotRect.Right-w-2));
+                double top=Math.Clamp(positions[index].Y,plotRect.Top+2,
+                    Math.Max(plotRect.Top+2,plotRect.Bottom-h-2));
+                var proposed=new Rect(left,top,w,h);
+                // Prioridad: sin colisiones. Penalizar mínimamente desplazar
+                // el nombre lejos de su posición habitual.
+                double score=index*.01;
+                foreach(var prior in occupied)
+                {
+                    double overlapX=Math.Max(0,Math.Min(proposed.Right,prior.Right)
+                        -Math.Max(proposed.Left,prior.Left));
+                    double overlapY=Math.Max(0,Math.Min(proposed.Bottom,prior.Bottom)
+                        -Math.Max(proposed.Top,prior.Top));
+                    score+=overlapX*overlapY;
+                }
+                if(score<bestScore)
+                {
+                    bestScore=score;
+                    best=proposed;
+                    if(score<.05)break;
+                }
+            }
+            if(best.IsEmpty)continue;
+            Canvas.SetLeft(label,best.Left);
+            Canvas.SetTop(label,best.Top);
+            Panel.SetZIndex(label,3000);
+            canvas.Children.Add(label);
+            occupied.Add(new Rect(best.Left-2,best.Top-2,best.Width+4,best.Height+4));
+        }
+    }
 
     // ------------------------------ Sección 2.12.4 - Conversión de color ------------------------------
 

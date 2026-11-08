@@ -180,6 +180,34 @@ internal static class Program
             Check(processChart.ActivePoints.Count==mainChart.ActivePoints.Count,
                 "Segunda carta sincronizada al editar predicción");
 
+            // [UI.6.3] Etiquetas de puntos cercanos no deben superponerse.
+            var proximityCanvas=new Canvas{Width=800,Height=520};
+            proximityCanvas.Measure(new Size(800,520));
+            proximityCanvas.Arrange(new Rect(0,0,800,520));
+            var proximityGeometry=new ChartGeometry();
+            proximityGeometry.SetStandardChartMode(true);
+            var nearby=new List<ChartPoint>();
+            foreach(var condition in new[]{
+                (T:25.0,W:.0100),(T:25.2,W:.0102),(T:24.9,W:.0099)})
+            {
+                int id=nearby.Count+1;
+                Check(PointPropertyCalculator.TryCreatePoint(id,$"C{id}","#336699",
+                    101.325,condition.T,condition.W,out var point)&&point!=null,
+                    "Estado de prueba de etiquetas");
+                nearby.Add(point!);
+            }
+            PointLayer.Draw(proximityCanvas,proximityGeometry,nearby);
+            var pointLabels=proximityCanvas.Children.OfType<TextBlock>()
+                .Where(t=>t.Text.StartsWith("C")).ToArray();
+            Check(pointLabels.Length==3,"Todas las etiquetas de tres puntos próximos");
+            var labelRects=pointLabels.Select(t=>new Rect(
+                Canvas.GetLeft(t),Canvas.GetTop(t),t.DesiredSize.Width,t.DesiredSize.Height)).ToArray();
+            bool labelOverlap=false;
+            for(int i=0;i<labelRects.Length;i++)
+            for(int j=i+1;j<labelRects.Length;j++)
+                if(labelRects[i].IntersectsWith(labelRects[j])) labelOverlap=true;
+            Check(!labelOverlap,"Etiquetas cercanas distribuidas sin cruces");
+
             // [UI.7] Auditoría geométrica de entalpías: nunca mostrar estados supersaturados.
             foreach(double pressure in new[]{84.54,101.325})
             {
