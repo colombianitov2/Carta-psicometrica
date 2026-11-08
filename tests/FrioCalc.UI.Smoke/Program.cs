@@ -140,6 +140,51 @@ internal static class Program
             Check(processTopics.SelectedIndex==0&&drySlider.Value==25,
                 "Restablecer escenario docente");
 
+            // [UI.12] Navegación real: 31 temas y 36 láminas, curso reactivo.
+            var curriculum=(TheoryCoursePanel)window.FindName("TheoryCoursePanel");
+            Check(curriculum is not null,"Zona 2 integra curso completo");
+            var chapterSelector=(ComboBox)curriculum.FindName("TopicSelector");
+            var slideSelector=(ComboBox)curriculum.FindName("SlideSelector");
+            var chapterSummary=(TextBlock)curriculum.FindName("TopicSummary");
+            var chapterSources=(TextBlock)curriculum.FindName("TopicReference");
+            var chapterEquation=(TextBlock)curriculum.FindName("TopicEquation");
+            var liveExplanation=(TextBlock)curriculum.FindName("LiveStateExplanation");
+            var courseChart=(Canvas)curriculum.FindName("ReadingCanvas");
+            Check(chapterSelector.Items.Count>=31 && slideSelector.Items.Count==36,
+                "Índice de 31 temas y 36 diapositivas");
+            curriculum.ShowSlide(36);
+            Check(curriculum.CurrentTopic?.LastSlide==36 &&
+                chapterSummary.Text.Contains("150 kW") &&
+                chapterSources.Text.Contains("A03"),
+                "A03/36: enunciado y procedencia completos");
+            slideSelector.SelectedItem=15;
+            Check(curriculum.CurrentTopic?.FirstSlide==15 &&
+                chapterEquation.Text.Contains("m_cond"),
+                "Ir a diapositiva 15 actualiza fórmula de condensado");
+            chapterSelector.SelectedItem=TheoryCourseCatalog.Find("BASE-03");
+            Check(chapterEquation.Text.Contains("W_sat") &&
+                courseChart.Children.OfType<Polyline>().Any(),
+                "Carta guiada resalta envolvente de saturación");
+            var topicRequest=typeof(TheoryCoursePanel).GetMethod("ExploreTopic_Click",
+                System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance);
+            Check(topicRequest!=null,"Enlace de teoría a laboratorio disponible");
+            chapterSelector.SelectedItem=TheoryCourseCatalog.Find("A03-12");
+            topicRequest!.Invoke(curriculum,new object[]{curriculum,new RoutedEventArgs(Button.ClickEvent)});
+            Check(processTopics.SelectedIndex==5,
+                "Curso lanza proceso mezcla en laboratorio");
+            Check(liveExplanation.Text.Contains("Tbs=") &&
+                liveExplanation.Text.Contains("W="),
+                "Curso explica estado actual después de cambiar simulación");
+            var exerciseRequest=typeof(TheoryCoursePanel).GetMethod("SolveTopicExercise_Click",
+                System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance);
+            Check(exerciseRequest!=null,"Enlace a ejercicio resuelto disponible");
+            chapterSelector.SelectedItem=TheoryCourseCatalog.Find("A03-19");
+            exerciseRequest!.Invoke(curriculum,new object[]{curriculum,new RoutedEventArgs(Button.ClickEvent)});
+            Check(((TextBlock)window.FindName("TheoryExampleResultText")).Text.Contains("DIAPOSITIVA 36"),
+                "Curso A03/36 produce cálculo auditable");
+            curriculum.ShowSlide(1);
+            Check(curriculum.CurrentTopic?.FirstSlide==1,"Volver a inicio de presentación");
+
             Check(window.FindName("TheoryExampleResultText") is TextBlock, "Ejercicios A03");
             Check(window.FindName("ProcessTheoryPanel") is ProcessTheoryPanel, "Laboratorio teórico");
             Check(window.FindName("BibliographyPanel") is BibliographyPanel, "Catálogo bibliográfico");

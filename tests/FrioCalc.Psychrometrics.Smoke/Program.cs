@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using FrioCalc.Psychrometrics.Core;
 using FrioCalc.Psychrometrics.Points;
 using FrioCalc.Psychrometrics.Processes;
@@ -475,6 +476,51 @@ static class Program
             Check(TheoryLessonService.DescribeVariable("W",p).Contains("g/kgda") &&
                 TheoryLessonService.DescribeVariable("RH",p).Contains("HR"),
                 "Inspector de variables usa estado actual y ecuación");
+
+            // [T14] Curso completo: teoría de carta y TODAS las 36 diapositivas.
+            Check(TheoryCourseCatalog.Topics.Count>=31,"Curso incluye carta y A03");
+            Check(TheoryCourseCatalog.Topics.Count(t=>t.Group=="Carta")>=12,
+                "Doce capítulos originales de lectura de la carta");
+            Check(TheoryCourseCatalog.CoveredSlides.SequenceEqual(
+                Enumerable.Range(1,36)),"A03: cobertura exacta de diapositivas 1..36");
+            foreach(var topic in TheoryCourseCatalog.Topics)
+            {
+                Check(!string.IsNullOrWhiteSpace(topic.Summary) &&
+                    !string.IsNullOrWhiteSpace(topic.PhysicalExplanation) &&
+                    !string.IsNullOrWhiteSpace(topic.ChartReading) &&
+                    !string.IsNullOrWhiteSpace(topic.Equation) &&
+                    !string.IsNullOrWhiteSpace(topic.Procedure) &&
+                    !string.IsNullOrWhiteSpace(topic.Limits) &&
+                    !string.IsNullOrWhiteSpace(topic.Source),
+                    "Tema académico íntegro: "+topic.Id);
+                Check(TheoryCourseCatalog.DetailedReading(topic).Contains("Procedencia:"),
+                    "Trazabilidad explícita: "+topic.Id);
+            }
+            for(int slide=1;slide<=36;slide++)
+            {
+                var topic=TheoryCourseCatalog.ForSlide(slide);
+                Check(topic is not null && topic.FirstSlide<=slide &&
+                    topic.LastSlide>=slide,"Navegación de diapositiva "+slide);
+            }
+            Check(TheoryCourseCatalog.Find("BASE-03")!.Equation.Contains("W_sat"),
+                "Envolvente de saturación está documentada");
+            Check(TheoryCourseCatalog.Find("BASE-10")!.Limits.Contains("referencias"),
+                "Entropía relativa distinta de Δh");
+            Check(TheoryCourseCatalog.ForSlide(28)!.Limits.Contains("NO datos de diseño"),
+                "Clima docente no implica dato meteorológico certificado");
+            Check(TheoryCourseCatalog.ForSlide(36)!.Summary.Contains("150 kW"),
+                "Enunciado auditorio completo conservado");
+            string slide36=SlideExamples.Evaluate(36,101.325);
+            Check(slide36.StartsWith("DIAPOSITIVA 36") &&
+                slide36.Contains("150 kW")&&slide36.Contains("50 kW") &&
+                slide36.Contains("serpentín")&&slide36.Contains("ṁ_agua fría"),
+                "A03/36 balance completo y caudal de agua");
+            Check(slide36.Contains("SUPUESTO") && slide36.Contains("NO es posible seleccionar"),
+                "A03/36 hipótesis explícitas y ausencia de equipo ficticio");
+            Check(SlideExamples.Evaluate(32,101.325).Contains("BF"),
+                "A03/32 incluye RSHF y bypass");
+            Check(!SlideExamples.Evaluate(36,101.325).Contains("No se pudo resolver"),
+                "A03/36 estados válidos a presión normal");
 
             Console.WriteLine($"PRUEBAS SUPERADAS: {_checks}");
             return 0;
