@@ -7,6 +7,8 @@ using FrioCalc.Psychrometrics.Chart;
 using FrioCalc.Psychrometrics.Points;
 using System.Collections.Generic;
 using System.Linq;
+using FrioCalc.Psychrometrics.Core;
+using System.Linq;
 using System.Windows.Shapes;
 
 namespace FrioCalc.UISmoke;
@@ -70,6 +72,32 @@ internal static class Program
             Check(mainChart.ActivePoints.Count==1,"Punto creado en carta principal");
             Check(processChart.ActivePoints.Count==1,
                 "Sincronización automática con segunda carta");
+            // [UI.5] Selección real de punto desde la tarjeta de propiedades.
+            var properties=(PointPropertiesPanel)window.FindName("PointPropertiesPanel");
+            var cards=properties.FindName("PointsWrapPanel") as WrapPanel;
+            Check(cards!=null && cards.Children.Count==1,"Tarjeta de punto creada");
+            var pointCard=(Border)cards!.Children[0];
+            var pointContents=(StackPanel)pointCard.Child;
+            var include=pointContents.Children.OfType<CheckBox>()
+                .FirstOrDefault(x=>x.Content?.ToString()=="Incluir en proceso");
+            Check(include!=null,"Casilla de selección de procesos");
+            include!.IsChecked=true;
+            Check(properties.SelectedPointIds.Count==1,
+                "Selección desde tarjeta compartida");
+            Check(((ListBox)window.FindName("ProcessSelectionList")).Items.Count==1,
+                "Selección sincronizada con pestaña de procesos");
+            include.IsChecked=false;
+            Check(properties.SelectedPointIds.Count==0,
+                "Desmarcado retira selección sin borrar punto");
+
+            // [UI.6] Conversión de unidades en controles, presión y puntos.
+            chartMetrics.SetUnitSystem(UnitSystem.IP);
+            var pressureUnit=pressurePanel.FindName("PressureUnitLabel") as TextBlock;
+            Check(pressureUnit?.Text=="psi abs","Selector presión muestra psi absoluta");
+            chartMetrics.SetUnitSystem(UnitSystem.SI);
+            Check(pressureUnit?.Text=="kPa abs","Selector presión restaura kPa absoluta");
+
+
 
             Check(window.FindName("StateMethodComboBox") == null, "Namescope aislado de control de métodos");
             // [UI.2] Capturas automáticas de referencia (no equivalen a aceptación visual).
