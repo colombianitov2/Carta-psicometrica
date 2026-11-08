@@ -85,6 +85,8 @@ public partial class PsychrometricChartView : UserControl
     private bool _isPanning;
 
     private Point _lastPanPoint;
+    private Point _panStartPoint;
+    private bool _panMoved;
 
     private bool _updatingScrollBars;
 
@@ -477,10 +479,11 @@ public partial class PsychrometricChartView : UserControl
             e.GetPosition(
                 ChartCanvas);
 
-        if (!plotRect.Contains(mousePoint))
-        {
-            return;
-        }
+        // La rueda funciona también sobre las escalas/márgenes: se usa el
+        // punto válido más próximo, sin entregar el gesto al ScrollViewer.
+        mousePoint = new Point(
+            Math.Clamp(mousePoint.X,plotRect.Left,plotRect.Right),
+            Math.Clamp(mousePoint.Y,plotRect.Top,plotRect.Bottom));
 
         double zoomFactor =
             e.Delta > 0
@@ -524,9 +527,9 @@ public partial class PsychrometricChartView : UserControl
         _isPanning =
             true;
 
-        _lastPanPoint =
-            mousePoint;
-
+        _lastPanPoint = mousePoint;
+        _panStartPoint = mousePoint;
+        _panMoved = false;
         ChartCanvas.CaptureMouse();
 
         ChartCanvas.Cursor =
@@ -550,9 +553,13 @@ public partial class PsychrometricChartView : UserControl
             return;
         }
 
-        Point currentPoint =
-            e.GetPosition(
-                ChartCanvas);
+        Point currentPoint = e.GetPosition(ChartCanvas);
+        if (!_panMoved && (currentPoint-_panStartPoint).Length < 5.0)
+        {
+            e.Handled=true;
+            return;
+        }
+        _panMoved=true;
 
         Rect plotRect =
             _geometry.GetPlotRect(
@@ -610,10 +617,13 @@ public partial class PsychrometricChartView : UserControl
         object sender,
         MouseButtonEventArgs e)
     {
+        bool click=_isPanning && !_panMoved &&
+            (e.GetPosition(ChartCanvas)-_panStartPoint).Length<5;
+        Point point=e.GetPosition(ChartCanvas);
         EndPanning();
-
-        e.Handled =
-            true;
+        if(click && _pointSelectionEnabled)
+            AddOrRemovePointAt(point);
+        e.Handled=true;
     }
 
     private void ChartCanvas_LostMouseCapture(
@@ -652,110 +662,53 @@ public partial class PsychrometricChartView : UserControl
 
     // ------------------------------ Sección 2.1C.14.1 - Selección de puntos con clic derecho ------------------------------
 
-    private void ChartCanvas_MouseRightButtonDown(
-        object sender,
-        MouseButtonEventArgs e)
+    private void ChartCanvas_MouseRightButtonDown(object sender,MouseButtonEventArgs e)
     {
-        if (!_pointSelectionEnabled)
+        if (_pointSelectionEnabled)
         {
-            return;
+            AddOrRemovePointAt(e.GetPosition(ChartCanvas));
+            e.Handled=true;
         }
+    }
 
-        Rect plotRect =
-            _geometry.GetPlotRect(
-                ChartCanvas.ActualWidth,
-                ChartCanvas.ActualHeight);
-
-        if (plotRect.IsEmpty)
+    // Click izquierdo breve: agregar/quitar. Clic izquierdo mantenido: mover
+    // la carta. Clic derecho también agrega/quita en modo de selección.
+    private void AddOrRemovePointAt(Point mousePoint)
+    {
+        if (!_pointSelectionEnabled)return;
+        Rect plotRect=_geometry.GetPlotRect(
+            ChartCanvas.ActualWidth,ChartCanvas.ActualHeight);
+        if(plotRect.IsEmpty||!plotRect.Contains(mousePoint))return;
+        int index=FindPointAt(mousePoint,plotRect);
+        if(index>=0)
         {
-            return;
-        }
-
-        Point mousePoint =
-            e.GetPosition(
-                ChartCanvas);
-
-        if (!plotRect.Contains(
-                mousePoint))
-        {
-            return;
-        }
-
-        int existingPointIndex =
-            FindPointAt(
-                mousePoint,
-                plotRect);
-
-        if (existingPointIndex >= 0)
-        {
-            int idToDelete=_chartPoints[existingPointIndex].Id;
-            if(PointDeletionRequested is not null && !PointDeletionRequested.Invoke(idToDelete))
-            {
-                e.Handled=true;
+            int id=_chartPoints[index].Id;
+            if(PointDeletionRequested is not null && !PointDeletionRequested.Invoke(id))
                 return;
-            }
             PointsAboutToChange?.Invoke();
-            _chartPoints.RemoveAt(
-                existingPointIndex);
-
+            _chartPoints.RemoveAt(index);
             NotifyPointsChanged();
-
             RefreshChart();
-
-            e.Handled =
-                true;
-
             return;
         }
-
-        double dryBulbC =
-            _geometry.DryBulbCFromX(
-                mousePoint.X,
-                plotRect);
-
-        double humidityRatioKgPerKg =
-            _geometry.HumidityRatioKgPerKgFromY(
-                mousePoint.Y,
-                plotRect);
-
-        int pointId =
-            _nextPointId;
-
-        string pointName =
-            $"P{pointId}";
-
-        string colorHex =
-            PointColorPalette.GetColorHex(
-                pointId);
-
-        if (PointPropertyCalculator.TryCreatePoint(
-                pointId,
-                pointName,
-                colorHex,
-                _pressureKPa,
-                dryBulbC,
-                humidityRatioKgPerKg,
-                out ChartPoint? point)
-            && point is not null)
+        double t=_geometry.DryBulbCFromX(mousePoint.X,plotRect);
+        double w=_geometry.HumidityRatioKgPerKgFromY(mousePoint.Y,plotRect);
+        int idNew=_nextPointId;
+        if(PointPropertyCalculator.TryCreatePoint(
+            idNew,$"P{idNew}",PointColorPalette.GetColorHex(idNew),
+            _pressureKPa,t,w,out ChartPoint? point)&&point is not null)
         {
             PointsAboutToChange?.Invoke();
-            _chartPoints.Add(point with { Origin = "Clic derecho", Method = "Tbs + W (ratón)" });
-
+            _chartPoints.Add(point with{Origin="Clic en carta",Method="Tbs + W (ratón)"});
             _nextPointId++;
-
             NotifyPointsChanged();
-
             RefreshChart();
+            return;
         }
-        else
-        {
-            MessageBox.Show("No es un estado válido del aire húmedo sin condensación a esta presión. "+
-                "Haga clic debajo de la curva de saturación y dentro de los límites visibles.",
-                "Punto no válido",MessageBoxButton.OK,MessageBoxImage.Information);
-        }
-
-        e.Handled =
-            true;
+        MessageBox.Show("No es un estado válido a la presión actual. "+
+            "Seleccione un punto entre W=0 y la curva HR=100%, dentro de la carta.",
+            "Punto psicrométrico no válido",MessageBoxButton.OK,
+            MessageBoxImage.Information);
     }
 
     // ------------------------------ Fin de sección 2.1C.14.1 ------------------------------
