@@ -25,6 +25,10 @@ jobs:
         run: dotnet run --project tests/FrioCalc.Psychrometrics.Smoke/FrioCalc.Psychrometrics.Smoke.csproj --configuration Debug
       - name: Run WPF UI initialization smoke test
         run: dotnet run --project tests/FrioCalc.UI.Smoke/FrioCalc.UI.Smoke.csproj --configuration Debug
+      - name: Run WPF UI smoke tests with Colombian Spanish locale
+        env:
+          FRIOCALC_UI_CULTURE: es-CO
+        run: dotnet run --project tests/FrioCalc.UI.Smoke/FrioCalc.UI.Smoke.csproj --configuration Debug
       - name: Preserve UI screenshots when available
         if: always()
         uses: actions/upload-artifact@v4
