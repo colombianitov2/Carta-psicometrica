@@ -749,6 +749,12 @@ public partial class PsychrometricChartView : UserControl
 
             RefreshChart();
         }
+        else
+        {
+            MessageBox.Show("No es un estado válido del aire húmedo sin condensación a esta presión. "+
+                "Haga clic debajo de la curva de saturación y dentro de los límites visibles.",
+                "Punto no válido",MessageBoxButton.OK,MessageBoxImage.Information);
+        }
 
         e.Handled =
             true;

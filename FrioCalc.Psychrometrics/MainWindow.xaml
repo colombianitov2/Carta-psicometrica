@@ -3,13 +3,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="clr-namespace:FrioCalc.Psychrometrics.UI"
         xmlns:chart="clr-namespace:FrioCalc.Psychrometrics.Chart"
-        Title="FrioCalc — Psicrometría y procesos" Width="1540" Height="900"
-        MinWidth="1150" MinHeight="700" WindowStartupLocation="CenterScreen">
+        Title="FrioCalc — Psicrometría y procesos" Width="1460" Height="850"
+        MinWidth="940" MinHeight="600" WindowStartupLocation="CenterScreen">
     <!-- [5.1X.1] Dos zonas: carta y procesos (Zona 1), teoría (Zona 2). -->
-    <Grid Margin="12">
+    <Grid Margin="8">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="385"/>
-            <ColumnDefinition Width="14"/>
+            <ColumnDefinition Width="335" MinWidth="290" MaxWidth="365"/>
+            <ColumnDefinition Width="9"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <!-- [5.1X.2] Controles de presión, unidades y propiedades -->
@@ -22,7 +22,7 @@
         </ScrollViewer>
         <TabControl Grid.Column="2" x:Name="WorkspaceTabs">
             <!-- [5.1X.3] Carta original conservada + panel de puntos -->
-            <TabItem Header="Zona 1 · Carta y puntos">
+            <TabItem Header="Carta psicrométrica">
                 <Grid Margin="5">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" MinHeight="280"/>
@@ -54,26 +54,24 @@
                 </Grid>
             </TabItem>
             <!-- [5.1X.4] Segunda carta para procesos múltiples -->
-            <TabItem Header="Zona 1 · Procesos">
+            <TabItem Header="Procesos">
                 <Grid Margin="5">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="3*" MinHeight="300"/>
-                        <RowDefinition Height="8"/>
-                        <RowDefinition Height="2*" MinHeight="160"/>
+                        <RowDefinition Height="0"/>
+                        <RowDefinition Height="0"/>
+                        <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <chart:PsychrometricChartView x:Name="ProcessChart" Grid.Row="0"/>
-                    <GridSplitter Grid.Row="1" Height="8" HorizontalAlignment="Stretch"
-                                  VerticalAlignment="Center" ResizeDirection="Rows"
-                                  Background="#E2E8F0"/>
+                    <chart:PsychrometricChartView x:Name="ProcessChart" Grid.Row="0" Visibility="Collapsed"/>
+                    <GridSplitter Grid.Row="1" Visibility="Collapsed" Height="0" HorizontalAlignment="Stretch" />
                     <ScrollViewer Grid.Row="2" Margin="0,8,0,0"
                                   HorizontalScrollBarVisibility="Disabled"
                                   VerticalScrollBarVisibility="Auto">
                         <StackPanel>
                             <TextBlock Text="CONSTRUIR PROCESO" FontSize="16" FontWeight="SemiBold"
                                        Margin="0,0,0,8"/>
-                            <TextBlock Text="Familias en la carta de procesos (independientes de la primera pestaña)"
+                            <TextBlock Text="La carta principal muestra estados y trayectorias. Aquí se editan parámetros, tablas y balances."
                                        FontSize="12" TextWrapping="Wrap" Foreground="#475569" Margin="0,0,0,4"/>
-                            <WrapPanel Margin="0,0,0,9">
+                            <WrapPanel Margin="0,0,0,9" Visibility="Collapsed">
                                 <CheckBox x:Name="ProcessEnthalpyToggle" Content="Entalpía"
                                           Checked="ProcessFamilyVisibility_Changed" Unchecked="ProcessFamilyVisibility_Changed"
                                           Margin="0,0,12,4"/>
@@ -88,7 +86,7 @@
                                           Checked="ProcessFamilyVisibility_Changed" Unchecked="ProcessFamilyVisibility_Changed"
                                           Margin="0,0,12,4"/>
                             </WrapPanel>
-                            <TextBlock Text="Seleccione puntos desde la pestaña Carta, en el orden del recorrido. Para mezcla seleccione dos entradas."
+                            <TextBlock Text="Seleccione puntos en Carta psicrométrica, en orden. Para mezclas seleccione dos entradas."
                                        TextWrapping="Wrap" FontSize="12" Foreground="#666"
                                        Margin="0,0,0,10"/>
                             <TextBlock Text="Secuencia seleccionada" FontWeight="SemiBold" Margin="0,0,0,3"/>
@@ -104,7 +102,7 @@
                                                FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,5"/>
                                     <TextBlock Text="Introduzca FCS entre 0 y 1 y seleccione el estado de referencia. La línea no determina por sí sola el punto de impulsión."
                                                TextWrapping="Wrap" FontSize="11" Margin="0,0,0,5"/>
-                                    <TextBox x:Name="FcsGuideTextBox" Height="27" Margin="0,0,0,5"/>
+                                    <TextBox x:Name="FcsGuideTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,5"/>
                                     <StackPanel Orientation="Horizontal">
                                         <Button Content="Dibujar guía" Click="DrawFcsGuide_Click" Padding="6" Margin="0,0,5,0"/>
                                         <Button Content="Quitar guía" Click="ClearFcsGuide_Click" Padding="6"/>
@@ -126,45 +124,45 @@
                             </ComboBox>
                             <TextBlock Text="Caudal másico de aire seco, kg/s (opcional salvo donde se requiera)"
                                        TextWrapping="Wrap" FontSize="12" Margin="0,0,0,3"/>
-                            <TextBox x:Name="DryFlowTextBox" Height="27" Margin="0,0,0,8"/>
+                            <TextBox x:Name="DryFlowTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"/>
                             <TextBlock Text="Temperatura del condensado para balance del serpentín (°C, opcional)"
                                        TextWrapping="Wrap" FontSize="12" Margin="0,0,0,3"/>
-                            <TextBox x:Name="CondensateTemperatureTextBox" Height="27" Margin="0,0,0,8"/>
+                            <TextBox x:Name="CondensateTemperatureTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"/>
                             <TextBlock Text="Mezcla de N entradas: caudales m³/h separados por punto y coma (opcional)"
                                        TextWrapping="Wrap" FontSize="12" Margin="0,0,0,3"/>
-                            <TextBox x:Name="MixFlowsListTextBox" Height="27" Margin="0,0,0,8"/>
+                            <TextBox x:Name="MixFlowsListTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"/>
                             <TextBlock Text="Alternativa para mezcla de solo dos entradas:" FontWeight="SemiBold"
                                        FontSize="11" Margin="0,0,0,4"/>
                             <TextBlock Text="Solo para mezcla: caudal de entrada 1, m³/h" FontSize="12" Margin="0,0,0,3"/>
-                            <TextBox x:Name="MixFlowFirstTextBox" Height="27" Margin="0,0,0,6"/>
+                            <TextBox x:Name="MixFlowFirstTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,6"/>
                             <TextBlock Text="Solo para mezcla: caudal de entrada 2, m³/h" FontSize="12" Margin="0,0,0,3"/>
-                            <TextBox x:Name="MixFlowSecondTextBox" Height="27" Margin="0,0,0,10"/>
+                            <TextBox x:Name="MixFlowSecondTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,10"/>
                             <TextBlock Text="División en 2 ramas: fracción de flujo hacia rama 1 (0–1)" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,3"/>
-                            <TextBox x:Name="BranchFractionTextBox" Height="27" Margin="0,0,0,8"
+                            <TextBox x:Name="BranchFractionTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"
                                      ToolTip="Seleccione primero entrada, luego salidas de rama 1 y rama 2. Requiere flujo másico total."/>
                             <TextBlock Text="Para salida predictiva con un punto de entrada"
                                        FontWeight="SemiBold" FontSize="12" Margin="0,0,0,4"/>
                             <TextBlock Text="Efectividad evaporativa ε (0–1)" FontSize="12" Margin="0,0,0,3"/>
-                            <TextBox x:Name="EffectivenessTextBox" Height="27" Margin="0,0,0,6"/>
+                            <TextBox x:Name="EffectivenessTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,6"/>
                             <TextBlock Text="ADP o punto de rocío del aparato (°C)" FontSize="12" Margin="0,0,0,3"/>
-                            <TextBox x:Name="ApparatusDewPointTextBox" Height="27" Margin="0,0,0,6"/>
+                            <TextBox x:Name="ApparatusDewPointTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,6"/>
                             <TextBlock Text="Factor de bypass BF (0–1)" FontSize="12" Margin="0,0,0,3"/>
-                            <TextBox x:Name="BypassFactorTextBox" Height="27" Margin="0,0,0,6"/>
+                            <TextBox x:Name="BypassFactorTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,6"/>
                             <TextBlock Text="Vapor añadido (g/kg aire seco)" FontSize="12" Margin="0,0,0,3"/>
-                            <TextBox x:Name="SteamAddedTextBox" Height="27" Margin="0,0,0,6"/>
+                            <TextBox x:Name="SteamAddedTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,6"/>
                             <TextBlock Text="Entalpía del vapor inyectado (kJ/kg de vapor)" FontSize="12" Margin="0,0,0,3"/>
-                            <TextBox x:Name="SteamEnthalpyTextBox" Height="27" Margin="0,0,0,10"/>
+                            <TextBox x:Name="SteamEnthalpyTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,10"/>
                             <TextBlock Text="Desecante: humedad retirada (g/kg aire seco)" FontSize="12" Margin="0,0,0,3"/>
-                            <TextBox x:Name="DesiccantRemovedTextBox" Height="27" Margin="0,0,0,6"/>
+                            <TextBox x:Name="DesiccantRemovedTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,6"/>
                             <TextBlock Text="Desecante: bulbo seco medido o especificado a la salida (°C)" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,3"/>
-                            <TextBox x:Name="DesiccantTemperatureTextBox" Height="27" Margin="0,0,0,8"/>
+                            <TextBox x:Name="DesiccantTemperatureTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"/>
                             <TextBlock Text="Estos métodos generan un estado de salida usando exactamente los datos del equipo indicados. No hay parámetros predeterminados ocultos."
                                        TextWrapping="Wrap" FontSize="11" Foreground="#666" Margin="0,0,0,9"/>
                             <CheckBox x:Name="CloseCycleCheckBox" Content="Cerrar recorrido regresando al punto inicial (método automático)"
                                       ToolTip="Se conserva el orden de los estados; cierra el polígono y verifica el balance del recorrido."
                                       Margin="0,0,0,10"/>
                             <TextBlock Text="Nombre del nuevo proceso (opcional)" FontSize="12" Margin="0,0,0,3"/>
-                            <TextBox x:Name="NewProcessNameTextBox" Height="27" Margin="0,0,0,8"/>
+                            <TextBox x:Name="NewProcessNameTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"/>
                             <Button Content="GRAFICAR PROCESO" Padding="8" FontWeight="SemiBold"
                                     Click="PlotProcess_Click" Margin="0,0,0,10"/>
                             <TextBlock Text="Procesos guardados" FontWeight="SemiBold" Margin="0,0,0,3"/>
@@ -172,7 +170,7 @@
                                      SelectionChanged="SavedProcessesList_SelectionChanged"/>
                             <TextBlock Text="Nombre para renombrar el proceso seleccionado" FontSize="11"
                                        TextWrapping="Wrap" Margin="0,0,0,3"/>
-                            <TextBox x:Name="RenameProcessTextBox" Height="27" Margin="0,0,0,7"/>
+                            <TextBox x:Name="RenameProcessTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,7"/>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                 <Button Content="Renombrar" Click="RenameProcess_Click"
                                         Padding="6" Margin="0,0,6,0"/>
@@ -194,7 +192,7 @@
                             </StackPanel>
                             <Button Content="Exportar informe Markdown (.md)" Click="ExportMarkdownReport_Click"
                                     Padding="7" Margin="0,0,0,6"/>
-                            <Button Content="Exportar carta de procesos PNG" Click="ExportChartPng_Click"
+                            <Button Content="Exportar carta principal con procesos PNG" Click="ExportChartPng_Click"
                                     Padding="7" Margin="0,0,0,6"/>
                             <Button Content="Exportar informe CSV" Click="ExportReport_Click"
                                     Padding="7"/>
@@ -203,7 +201,7 @@
                 </Grid>
             </TabItem>
             <!-- [5.1X.5] Zona 2: teoría según diapositivas 1-24 de A03 -->
-            <TabItem Header="Zona 2 · Teoría">
+            <TabItem Header="Teoría y fundamentos">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="24" MaxWidth="850" HorizontalAlignment="Left">
                         <TextBlock Text="PSICROMETRÍA Y PROCESOS PSICROMÉTRICOS"

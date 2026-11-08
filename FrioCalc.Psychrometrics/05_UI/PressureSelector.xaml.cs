@@ -33,6 +33,7 @@ public partial class PressureSelector : UserControl
     public event Action<bool>? StandardChartModeChanged;
 
     public event Action<bool>? PointSelectionModeChanged;
+    public event Action<UnitSystem>? UnitsSelectionChanged;
 
     // ============================================================
     // [5.2C.2] FIN - Estado y evento público
@@ -142,6 +143,19 @@ public partial class PressureSelector : UserControl
     public void SetStandardChartEnabled(bool isEnabled)
     {
         StandardChartToggle.IsChecked = isEnabled;
+    }
+
+    public void SetPointSelectionEnabled(bool isEnabled)
+    {
+        SelectPointsToggle.IsChecked = isEnabled;
+    }
+
+    private void WorkUnitsComboBox_SelectionChanged(object sender,SelectionChangedEventArgs e)
+    {
+        if (_updatingUi || WorkUnitsComboBox is null) return;
+        UnitSystem selected=WorkUnitsComboBox.SelectedIndex==1 ? UnitSystem.IP : UnitSystem.SI;
+        if(selected!=_currentUnits)
+            UnitsSelectionChanged?.Invoke(selected);
     }
 
     private void StandardChartToggle_Checked(
@@ -307,6 +321,9 @@ public partial class PressureSelector : UserControl
     public void SetUnitSystem(UnitSystem units)
     {
         if (_currentUnits == units) return;
+        _updatingUi = true;
+        WorkUnitsComboBox.SelectedIndex = units == UnitSystem.IP ? 1 : 0;
+        _updatingUi = false;
         _currentUnits = units;
         PressureUnitLabel.Text = units == UnitSystem.SI ? "kPa abs" : "psi abs";
         SetPressureText(CurrentPressureKPa);

@@ -37,6 +37,15 @@
             <!-- [5.2X.3] INICIO - Selector de preset              -->
             <!-- ================================================= -->
 
+            <StackPanel Margin="0,0,0,13">
+                <TextBlock Text="Sistema de unidades" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                <ComboBox x:Name="WorkUnitsComboBox" Height="31" Width="110"
+                          HorizontalAlignment="Left" SelectedIndex="0"
+                          SelectionChanged="WorkUnitsComboBox_SelectionChanged">
+                    <ComboBoxItem Content="SI (métrico)"/>
+                    <ComboBoxItem Content="IP (imperial)"/>
+                </ComboBox>
+            </StackPanel>
             <TextBlock Text="Condición de referencia"
                        FontWeight="SemiBold"
                        Margin="0,0,0,5"/>

@@ -23,7 +23,7 @@
 
 
             <!-- [5.3X.0] Entradas opcionales de estado y conversión de unidades -->
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,14" Visibility="Collapsed">
                 <TextBlock Text="Sistema de unidades" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <ComboBox x:Name="UnitsComboBox" Width="112" SelectionChanged="UnitsComboBox_SelectionChanged"
                           SelectedIndex="0">
@@ -31,27 +31,27 @@
                     <ComboBoxItem Content="IP"/>
                 </ComboBox>
             </StackPanel>
-            <TextBlock Text="Método para resolver puntos" FontWeight="SemiBold" Margin="0,0,0,4"/>
+            <TextBlock Text="Algoritmo interno para resolver puntos" FontWeight="SemiBold" Margin="0,0,0,4"/>
             <ComboBox x:Name="StateMethodComboBox" SelectedIndex="0" Margin="0,0,0,12">
-                <ComboBoxItem Content="Automático: directo cuando sea posible" Tag="Automatic"/>
-                <ComboBoxItem Content="Directo (requiere Tbs)" Tag="Direct"/>
-                <ComboBoxItem Content="Iterativo: búsqueda de raíces" Tag="Iterative"/>
+                <ComboBoxItem Content="Automático · directo o búsqueda" Tag="Automatic"/>
+                <ComboBoxItem Content="Directo · requiere Tbs" Tag="Direct"/>
+                <ComboBoxItem Content="Numérico · búsqueda de raíces" Tag="Iterative"/>
             </ComboBox>
-            <TextBlock Text="Las casillas muestran curvas. Los valores escritos son restricciones del punto aunque su casilla esté apagada."
+            <TextBlock Text="Las casillas muestran familias; los valores escritos definen restricciones del punto. Los algoritmos son internos de FrioCalc, no nombres ASHRAE."
                        Foreground="#666666" TextWrapping="Wrap" FontSize="11"
                        Margin="0,0,0,12"/>
 
-            <Grid Margin="0,4,0,12">
+            <Grid Margin="0,2,0,7">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="83"/>
+                    <ColumnDefinition Width="73"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0"
                            x:Name="DryBulbLabel"
                            Text="Temperatura de bulbo seco (°C)"
-                           FontSize="13.5"
+                           FontSize="12.5"
                            TextWrapping="Wrap"
                            VerticalAlignment="Center"
                            Margin="0,0,10,0"/>
@@ -63,22 +63,22 @@
                           Unchecked="DryBulbCheckBox_Changed"/>
 
                 <TextBox x:Name="DryBulbInput" Grid.Column="2" Margin="8,0,0,0"
-                         Height="26" VerticalContentAlignment="Center" FontSize="12"
+                         Height="25" VerticalContentAlignment="Center" FontSize="12"
                          ToolTip="Entrada opcional para determinar el estado. La casilla solo controla la visualización."/>
             </Grid>
 
 
-            <Grid Margin="0,4,0,12">
+            <Grid Margin="0,2,0,7">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="83"/>
+                    <ColumnDefinition Width="73"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0"
                            x:Name="HumidityRatioLabel"
                            Text="Humedad absoluta (g/kg aire seco)"
-                           FontSize="13.5"
+                           FontSize="12.5"
                            TextWrapping="Wrap"
                            VerticalAlignment="Center"
                            Margin="0,0,10,0"/>
@@ -90,12 +90,12 @@
                           Unchecked="HumidityRatioCheckBox_Changed"/>
 
                 <TextBox x:Name="HumidityRatioInput" Grid.Column="2" Margin="8,0,0,0"
-                         Height="26" VerticalContentAlignment="Center" FontSize="12"
+                         Height="25" VerticalContentAlignment="Center" FontSize="12"
                          ToolTip="Entrada opcional para determinar el estado. La casilla solo controla la visualización."/>
             </Grid>
 
 
-            <Grid Margin="0,4,0,12">
+            <Grid Margin="0,2,0,7">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
@@ -103,7 +103,7 @@
 
                 <TextBlock Grid.Column="0"
                            Text="Curva de saturación (100 % HR)"
-                           FontSize="13.5"
+                           FontSize="12.5"
                            TextWrapping="Wrap"
                            VerticalAlignment="Center"
                            Margin="0,0,10,0"/>
@@ -118,17 +118,17 @@
 
             <!-- Sección 5.3X.1 - Selector de entalpía -->
 
-            <Grid Margin="0,4,0,12">
+            <Grid Margin="0,2,0,7">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="83"/>
+                    <ColumnDefinition Width="73"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0"
                            x:Name="EnthalpyLabel"
                            Text="Entalpía (kJ/kg aire seco)"
-                           FontSize="13.5"
+                           FontSize="12.5"
                            TextWrapping="Wrap"
                            VerticalAlignment="Center"
                            Margin="0,0,10,0"/>
@@ -140,7 +140,7 @@
                           Unchecked="EnthalpyCheckBox_Changed"/>
 
                 <TextBox x:Name="EnthalpyInput" Grid.Column="2" Margin="8,0,0,0"
-                         Height="26" VerticalContentAlignment="Center" FontSize="12"
+                         Height="25" VerticalContentAlignment="Center" FontSize="12"
                          ToolTip="Entrada opcional para determinar el estado. La casilla solo controla la visualización."/>
             </Grid>
 
@@ -149,17 +149,17 @@
 
             <!-- Sección 5.3X.2 - Selector de humedad relativa -->
 
-            <Grid Margin="0,4,0,12">
+            <Grid Margin="0,2,0,7">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="83"/>
+                    <ColumnDefinition Width="73"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0"
                            x:Name="RelativeHumidityLabel"
                            Text="Humedad relativa (%)"
-                           FontSize="13.5"
+                           FontSize="12.5"
                            TextWrapping="Wrap"
                            VerticalAlignment="Center"
                            Margin="0,0,10,0"/>
@@ -171,7 +171,7 @@
                           Unchecked="RelativeHumidityCheckBox_Changed"/>
 
                 <TextBox x:Name="RelativeHumidityInput" Grid.Column="2" Margin="8,0,0,0"
-                         Height="26" VerticalContentAlignment="Center" FontSize="12"
+                         Height="25" VerticalContentAlignment="Center" FontSize="12"
                          ToolTip="Entrada opcional para determinar el estado. La casilla solo controla la visualización."/>
             </Grid>
 
@@ -180,17 +180,17 @@
 
             <!-- Sección 5.3X.3 - Selector de temperatura de bulbo húmedo -->
 
-            <Grid Margin="0,4,0,12">
+            <Grid Margin="0,2,0,7">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="83"/>
+                    <ColumnDefinition Width="73"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0"
                            x:Name="WetBulbLabel"
                            Text="Temperatura de bulbo húmedo (°C)"
-                           FontSize="13.5"
+                           FontSize="12.5"
                            TextWrapping="Wrap"
                            VerticalAlignment="Center"
                            Margin="0,0,10,0"/>
@@ -202,7 +202,7 @@
                           Unchecked="WetBulbCheckBox_Changed"/>
 
                 <TextBox x:Name="WetBulbInput" Grid.Column="2" Margin="8,0,0,0"
-                         Height="26" VerticalContentAlignment="Center" FontSize="12"
+                         Height="25" VerticalContentAlignment="Center" FontSize="12"
                          ToolTip="Entrada opcional para determinar el estado. La casilla solo controla la visualización."/>
             </Grid>
 
@@ -211,17 +211,17 @@
 
             <!-- Sección 5.3X.4 - Selector de volumen específico -->
 
-            <Grid Margin="0,4,0,12">
+            <Grid Margin="0,2,0,7">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="83"/>
+                    <ColumnDefinition Width="73"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0"
                            x:Name="SpecificVolumeLabel"
                            Text="Volumen específico (m³/kg aire seco)"
-                           FontSize="13.5"
+                           FontSize="12.5"
                            TextWrapping="Wrap"
                            VerticalAlignment="Center"
                            Margin="0,0,10,0"/>
@@ -233,7 +233,7 @@
                           Unchecked="SpecificVolumeCheckBox_Changed"/>
 
                 <TextBox x:Name="SpecificVolumeInput" Grid.Column="2" Margin="8,0,0,0"
-                         Height="26" VerticalContentAlignment="Center" FontSize="12"
+                         Height="25" VerticalContentAlignment="Center" FontSize="12"
                          ToolTip="Entrada opcional para determinar el estado. La casilla solo controla la visualización."/>
             </Grid>
 
@@ -242,7 +242,7 @@
 
             <!-- Sección 5.3X.5 - Selector de desviación de entalpía -->
 
-            <Grid Margin="0,4,0,12">
+            <Grid Margin="0,2,0,7">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
@@ -250,7 +250,7 @@
 
                 <TextBlock Grid.Column="0"
                            Text="Desviación de entalpía (kJ/kg aire seco)"
-                           FontSize="13.5"
+                           FontSize="12.5"
                            TextWrapping="Wrap"
                            VerticalAlignment="Center"
                            Margin="0,0,10,0"/>
@@ -263,13 +263,13 @@
             </Grid>
 
             <!-- [5.3X.5.1] Familia independiente: entropía ideal relativa; no equivale a desviación de entalpía -->
-            <Grid Margin="0,4,0,12">
+            <Grid Margin="0,2,0,7">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock x:Name="SpecificEntropyLabel" Text="Entropía específica relativa s* (kJ/(kg aire seco·K))"
-                           TextWrapping="Wrap" FontSize="13.5" Margin="0,0,10,0" VerticalAlignment="Center"
+                           TextWrapping="Wrap" FontSize="12.5" Margin="0,0,10,0" VerticalAlignment="Center"
                            ToolTip="Familia opcional adicional, modelo ideal. Referencia T=0 °C, p_da=101,325 kPa y p_v=0,611657 kPa."/>
                 <CheckBox x:Name="SpecificEntropyCheckBox" Grid.Column="1" VerticalAlignment="Center"
                           Checked="SpecificEntropyCheckBox_Changed"
@@ -280,27 +280,27 @@
             <!-- Fin de sección 5.3X.5 -->
 
             <!-- [5.3X.6] Punto de rocío: dato de estado, no familia gráfica independiente -->
-            <Grid Margin="0,4,0,12">
+            <Grid Margin="0,2,0,7">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="83"/>
+                    <ColumnDefinition Width="73"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock x:Name="DewPointLabel" Grid.Column="0" Text="Punto de rocío (°C)"
-                           FontSize="13.5" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                           FontSize="12.5" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <TextBlock Grid.Column="1" Text="—" ToolTip="El punto de rocío comparte las líneas horizontales de W."
                            VerticalAlignment="Center"/>
-                <TextBox x:Name="DewPointInput" Grid.Column="2" Height="26" Margin="8,0,0,0"
+                <TextBox x:Name="DewPointInput" Grid.Column="2" Height="25" Margin="8,0,0,0"
                          VerticalContentAlignment="Center" ToolTip="Condición opcional para resolver un punto."/>
             </Grid>
             <!-- [5.3X.7] Escala auxiliar del factor de calor sensible -->
-            <Grid Margin="0,4,0,12">
+            <Grid Margin="0,2,0,7">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="Factor de calor sensible (FCS)"
-                           FontSize="13.5" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                           FontSize="12.5" TextWrapping="Wrap" VerticalAlignment="Center"/>
                 <CheckBox x:Name="SensibleHeatFactorCheckBox" Grid.Column="1"
                           Checked="SensibleHeatFactorCheckBox_Changed"
                           Unchecked="SensibleHeatFactorCheckBox_Changed" VerticalAlignment="Center"/>

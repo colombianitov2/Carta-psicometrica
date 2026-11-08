@@ -47,6 +47,7 @@ public partial class MainWindow
             PsychrometricChart.SetSensibleHeatFactorVisible(visible);
             ProcessChart.SetSensibleHeatFactorVisible(visible);
         };
+        PressureSelector.UnitsSelectionChanged += units => ChartMetricsPanel.SetUnitSystem(units);
         ChartMetricsPanel.UnitsChanged += units =>
         {
             PressureSelector.SetUnitSystem(units);
@@ -77,6 +78,7 @@ public partial class MainWindow
         _processChartReady=true;
         ChartMetricsPanel.SetBasicView();
         PressureSelector.SetStandardChartEnabled(true);
+        PressureSelector.SetPointSelectionEnabled(true);
         RefreshSelectionList();
     }
 
@@ -823,7 +825,7 @@ public partial class MainWindow
         if(dialog.ShowDialog(this)!=true) return;
         try
         {
-            ProcessChart.ExportPng(dialog.FileName);
+            PsychrometricChart.ExportPng(dialog.FileName);
             ProcessResultText.Text="Carta de procesos exportada como PNG a resolución ampliada.";
         }
         catch(Exception ex) when(ex is InvalidOperationException or IOException)
