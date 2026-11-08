@@ -204,6 +204,26 @@ internal static class Program
             {
                 throw new InvalidOperationException("No se pudieron capturar las tres zonas WPF.",visualError);
             }
+            // [UI.8] Prueba real de archivo PNG exportado por la segunda carta.
+            tabs.SelectedIndex=1;
+            window.UpdateLayout();
+            string exportedChart=System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(),
+                "ui-snapshots","ProcessChart_Export.png");
+            processChart.ExportPng(exportedChart);
+            Check(System.IO.File.Exists(exportedChart) &&
+                new System.IO.FileInfo(exportedChart).Length>1500,
+                "Exportación PNG real de carta de procesos");
+
+            // [UI.9] Cambiar presión invalida puntos y mantiene sincronía.
+            pressurePanel.ApplyExternalPressure(84.54);
+            Check(mainChart.ActivePoints.Count==0 && processChart.ActivePoints.Count==0,
+                "Cambio de presión elimina puntos inconsistentes en ambas cartas");
+            Check(Math.Abs(pressurePanel.CurrentPressureKPa-84.54)<.0001,
+                "Presión personalizada realmente aplicada");
+            pressurePanel.ApplyExternalPressure(101.325);
+            Check(Math.Abs(pressurePanel.CurrentPressureKPa-101.325)<.0001,
+                "Presión estándar restaurada");
+
             writer.WriteLine($"PRUEBAS UI SUPERADAS: {checks}");
             window.Close();
             app.Shutdown();
