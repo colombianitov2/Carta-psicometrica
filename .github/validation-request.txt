@@ -34,3 +34,5 @@ AUDITORIA #14: matriz 48 estados multi-presión, A03 siete ejercicios, UI selecc
 AUDITORIA #15: geometría entalpía no sobresaturada dos presiones, desviación Δh=0 saturación, etiqueta s* SI/IP.
 
 AUDITORIA #16: test exportación PNG, presión 84,54/101,325, reporte markdown, bibliografía y geometría sobre saturación.
+
+AUDITORIA #17 2026-11-07: redondeos y redundancia de tres propiedades, rango y temperaturas negativas, BF seguro, borrado de puntos y metadatos.
