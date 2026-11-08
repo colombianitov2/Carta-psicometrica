@@ -491,6 +491,20 @@ internal static class Program
                     writer.WriteLine($"CAPTURA_WPF: {file} ({width}×{height})");
                 }
 
+                // [UI.3.1] Espacio completo para explicación y tablas en
+                // pantallas estrechas: ajustes solo visibles en Carta.
+                var sideSettings=(ScrollViewer)window.FindName("SettingsScrollViewer");
+                Check(sideSettings.Visibility==Visibility.Collapsed,
+                    "La teoría usa el ancho completo sin barra lateral de carta");
+                tabs.SelectedIndex=1;
+                window.UpdateLayout();
+                Check(sideSettings.Visibility==Visibility.Collapsed,
+                    "Procesos usa ancho completo para sus tablas");
+                tabs.SelectedIndex=0;
+                window.UpdateLayout();
+                Check(sideSettings.Visibility==Visibility.Visible,
+                    "Los ajustes reaparecen en Carta psicrométrica");
+
                 // [UI.4] Capturas aisladas de las dos magnitudes que el usuario confundía.
                 tabs.SelectedIndex=0;
                 window.UpdateLayout();
