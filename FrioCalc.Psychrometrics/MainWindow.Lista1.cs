@@ -284,7 +284,7 @@ public partial class MainWindow
         double? condensateTemperature = null;
         if (!string.IsNullOrWhiteSpace(CondensateTemperatureTextBox.Text))
         {
-            if (!TryReadPositiveOrZero(CondensateTemperatureTextBox.Text,out double condensateInput) ||
+            if (!TryReadFinite(CondensateTemperatureTextBox.Text,out double condensateInput) ||
                 condensateInput < -50 || condensateInput > 100)
             {
                 MessageBox.Show("Temperatura de condensado inválida. Se requiere −50 a 100 °C.",
@@ -308,7 +308,7 @@ public partial class MainWindow
             }
             else if (type == ProcessType.Bypass)
             {
-                if (!TryReadPositiveOrZero(ApparatusDewPointTextBox.Text,out double adp) ||
+                if (!TryReadFinite(ApparatusDewPointTextBox.Text,out double adp) ||
                     !TryReadUnitInterval(BypassFactorTextBox.Text,out double bf))
                 { MessageBox.Show("Indique ADP numérico (°C) y BF de 0 a 1.","Bypass",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
                 success = ProcessCalculator.TryBypassOutlet(inlet,adp,bf,0,inlet.ColorHex,
@@ -316,8 +316,8 @@ public partial class MainWindow
             }
             else if (type == ProcessType.Desiccant)
             {
-                if (!TryReadPositiveOrZero(DesiccantRemovedTextBox.Text,out double removed) || removed < 0 ||
-                    !TryReadPositiveOrZero(DesiccantTemperatureTextBox.Text,out double outputT))
+                if (!TryReadNonNegative(DesiccantRemovedTextBox.Text,out double removed) || removed < 0 ||
+                    !TryReadFinite(DesiccantTemperatureTextBox.Text,out double outputT))
                 {
                     MessageBox.Show("Se necesitan ΔW retirada ≥ 0 g/kgda y la Tbs de salida (°C), " +
                         "derivada de especificación o medición. No se inventa rendimiento del material.",
@@ -328,7 +328,7 @@ public partial class MainWindow
             }
             else
             {
-                if (!TryReadPositiveOrZero(SteamAddedTextBox.Text,out double waterGrams) ||
+                if (!TryReadNonNegative(SteamAddedTextBox.Text,out double waterGrams) ||
                     !TryReadPositive(SteamEnthalpyTextBox.Text,out double steamEnthalpy))
                 { MessageBox.Show("Indique vapor añadido ≥ 0 g/kg y entalpía positiva (kJ/kg).",
                     "Humidificación por vapor",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
@@ -577,15 +577,18 @@ public partial class MainWindow
             $"{p.Name} {(p.Visible ? "" : "[Oculto]")} · {p.Type} · {string.Join(" → ",p.PointIds.Select(id => "P"+id))}").ToArray();
     }
 
-    private static bool TryReadPositiveOrZero(string raw, out double value)
+    private static bool TryReadFinite(string raw, out double value)
     {
         bool valid = double.TryParse(raw.Trim(),NumberStyles.Float,CultureInfo.CurrentCulture,out value)
             || double.TryParse(raw.Trim().Replace(',','.'),NumberStyles.Float,CultureInfo.InvariantCulture,out value);
         return valid && double.IsFinite(value);
     }
 
+    private static bool TryReadNonNegative(string raw, out double value)
+        => TryReadFinite(raw,out value) && value >= 0;
+
     private static bool TryReadUnitInterval(string raw, out double value)
-        => TryReadPositiveOrZero(raw,out value) && value >= 0 && value <= 1;
+        => TryReadFinite(raw,out value) && value >= 0 && value <= 1;
 
     private static bool TryReadPositive(string raw, out double value)
     {

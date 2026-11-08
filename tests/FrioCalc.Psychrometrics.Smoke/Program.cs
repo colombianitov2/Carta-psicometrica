@@ -233,6 +233,25 @@ static class Program
             Check(Math.Abs(ashraeMix.WetBulbC-14.6)<1.2,
                 "ASHRAE ejemplo 4 Tbh mezcla ≈14.6°C");
 
+            // [T5.1] Carta estándar: rangos y zoom deben permanecer bloqueados.
+            var standardGeometry=new FrioCalc.Psychrometrics.Chart.ChartGeometry();
+            standardGeometry.SetStandardChartMode(true);
+            var rect=new System.Windows.Rect(0,0,900,600);
+            double standardMinT=standardGeometry.MinDryBulbC;
+            double standardMaxT=standardGeometry.MaxDryBulbC;
+            double standardMaxW=standardGeometry.MaxHumidityRatioKgPerKg;
+            standardGeometry.ZoomAt(rect,new System.Windows.Point(450,300),.50);
+            standardGeometry.PanBy(12,.01);
+            Check(Math.Abs(standardGeometry.MinDryBulbC-standardMinT)<1e-10 &&
+                Math.Abs(standardGeometry.MaxDryBulbC-standardMaxT)<1e-10 &&
+                Math.Abs(standardGeometry.MaxHumidityRatioKgPerKg-standardMaxW)<1e-10,
+                "Carta estándar inmoviliza zoom y desplazamiento");
+            standardGeometry.SetStandardChartMode(false);
+            double expanded=standardGeometry.MaxDryBulbC-standardGeometry.MinDryBulbC;
+            standardGeometry.ZoomAt(rect,new System.Windows.Point(450,300),.8);
+            Check(standardGeometry.MaxDryBulbC-standardGeometry.MinDryBulbC<expanded,
+                "Carta personalizada permite zoom");
+
             // [T6] Entropía específica: referencia termodinámica explícita.
             double sRef=MoistAirSpecificEntropy.FromDryBulbAndHumidityRatio(0,0,101.325);
             Check(Math.Abs(sRef)<1e-12,"Entropía referencia aire seco");

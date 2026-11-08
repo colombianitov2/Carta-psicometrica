@@ -104,7 +104,7 @@ public static class BibliographyCatalog
             "ṁda,1=f·ṁda,total; ṁda,2=(1−f)·ṁda,total; comparar entradas y salidas por rama.",
             "ProcessCalculator.TryBranchBalance","Balance de masa y energía en flujo estacionario",
             "Aplicación de balances por componente","No aplica",ASHRAE,
-            "Balance algebraico implementado; pérdidas de ducto y equipos no calculadas")
+            "Balance algebraico implementado; pérdidas de ducto y equipos no calculadas"),
         new BibliographyEntry("B21","Entropía específica relativa del aire húmedo ideal","s*",
             "kJ/(kgda·K)","Btu/(lbda·°F)",
             "Suma de las contribuciones de entropía de gases ideales por masa de aire seco; referencia convencional definida en código.",

@@ -199,6 +199,8 @@ public sealed class ChartGeometry
         Point anchorPoint,
         double zoomFactor)
     {
+        // En Carta estándar ASHRAE se inmovilizan límites, desplazamiento y zoom.
+        if (IsStandardChartMode) return;
         double dryBulbSpan =
             MaxDryBulbC - MinDryBulbC;
 
@@ -275,6 +277,7 @@ public sealed class ChartGeometry
         double dryBulbDeltaC,
         double humidityRatioDeltaKgPerKg)
     {
+        if (IsStandardChartMode) return;
         double newMinDryBulb =
             MinDryBulbC + dryBulbDeltaC;
 
