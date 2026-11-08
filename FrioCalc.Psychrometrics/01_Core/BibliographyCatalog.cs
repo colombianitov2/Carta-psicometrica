@@ -105,6 +105,16 @@ public static class BibliographyCatalog
             "ProcessCalculator.TryBranchBalance","Balance de masa y energía en flujo estacionario",
             "Aplicación de balances por componente","No aplica",ASHRAE,
             "Balance algebraico implementado; pérdidas de ducto y equipos no calculadas")
+        new BibliographyEntry("B21","Entropía específica relativa del aire húmedo ideal","s*",
+            "kJ/(kgda·K)","Btu/(lbda·°F)",
+            "Suma de las contribuciones de entropía de gases ideales por masa de aire seco; referencia convencional definida en código.",
+            "c_p,da ln(T/T*)−R_da ln(p_da/p_da*)+W[c_p,v ln(T/T*)−R_v ln(p_v/p_v*)].",
+            "MoistAirSpecificEntropy.FromDryBulbAndHumidityRatio",
+            "CoolProp Humid Air Properties y modelo clásico de mezcla de gases ideales",
+            "Entropy Sda y referencias; comparar con modelos no ideales de RP-1485",
+            "HTML, sin página impresa",
+            "https://coolprop.org/fluid_properties/HumidAir.html",
+            "Modelo ideal relativo propio; NO atribuir sus referencias arbitrarias a ASHRAE"),
     };
 
     // [1.12.2] CSV auditable, sin información sujeta a copyright reproducida en extenso.

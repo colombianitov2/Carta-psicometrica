@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using FrioCalc.Psychrometrics.Points;
+using FrioCalc.Psychrometrics.Core;
 
 namespace FrioCalc.Psychrometrics.Processes;
 
@@ -21,10 +22,12 @@ public static class ProcessReportService
         sb.AppendLine($"Presión absoluta: {F(pressureKPa)} kPa. Valores internos en SI.");
         sb.AppendLine();
         sb.AppendLine("## Estados");
-        sb.AppendLine("| Punto | Tbs °C | Tbh °C | Trocío °C | HR % | W g/kgda | h kJ/kgda | v m³/kgda | Método |");
-        sb.AppendLine("|---|---:|---:|---:|---:|---:|---:|---:|---|");
+        sb.AppendLine("| Punto | Tbs °C | Tbh °C | Trocío °C | HR % | W g/kgda | h kJ/kgda | v m³/kgda | s* kJ/(kgda·K) | Método |");
+        sb.AppendLine("|---|---:|---:|---:|---:|---:|---:|---:|---:|---|");
         foreach (ChartPoint p in points)
-            sb.AppendLine($"|{p.Name}|{F(p.DryBulbC)}|{F(p.WetBulbC)}|{F(p.DewPointC)}|{F(p.RelativeHumidityPercent)}|{F(p.HumidityRatioKgPerKg*1000)}|{F(p.EnthalpyKJPerKgDryAir)}|{F(p.SpecificVolumeM3PerKgDryAir)}|{p.Method}|");
+            sb.AppendLine($"|{p.Name}|{F(p.DryBulbC)}|{F(p.WetBulbC)}|{F(p.DewPointC)}|{F(p.RelativeHumidityPercent)}|{F(p.HumidityRatioKgPerKg*1000)}|{F(p.EnthalpyKJPerKgDryAir)}|{F(p.SpecificVolumeM3PerKgDryAir)}|{F(MoistAirSpecificEntropy.FromDryBulbAndHumidityRatio(p.DryBulbC,p.HumidityRatioKgPerKg,p.PressureKPa))}|{p.Method}|");
+        sb.AppendLine();
+        sb.AppendLine("s* es entropía relativa del aire húmedo ideal por kg de aire seco, con referencia T*=273,15 K, p_da*=101,325 kPa y p_v*=0,611657 kPa. No es entropía absoluta tabulada ni desviación de entalpía.");
         sb.AppendLine();
         sb.AppendLine("### Procedencia de los estados");
         foreach(var p in points)

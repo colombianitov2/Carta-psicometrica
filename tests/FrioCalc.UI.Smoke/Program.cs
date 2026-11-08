@@ -6,6 +6,8 @@ using FrioCalc.Psychrometrics.UI;
 using FrioCalc.Psychrometrics.Chart;
 using FrioCalc.Psychrometrics.Points;
 using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Shapes;
 
 namespace FrioCalc.UISmoke;
 
@@ -44,6 +46,10 @@ internal static class Program
             Check(chartMetrics.FindName("DryBulbCheckBox") is CheckBox dryBulb &&
                 dryBulb.IsChecked == true, "Bulbo seco inicial activo");
 
+            Check(chartMetrics.FindName("SpecificEntropyCheckBox") is CheckBox,
+                "Casilla independiente entropía");
+            Check(chartMetrics.FindName("EnthalpyDeviationCheckBox") is CheckBox,
+                "Casilla independiente desviación de entalpía");
             Check(window.FindName("ProcessSelectionList") is ListBox, "Selección ordenada");
             Check(window.FindName("SavedProcessesList") is ListBox, "Procesos guardados");
             Check(window.FindName("TheoryExampleResultText") is TextBlock, "Ejercicios A03");
@@ -70,6 +76,16 @@ internal static class Program
             try
             {
                 window.Show();
+                window.UpdateLayout();
+                var entropyToggle=(CheckBox)chartMetrics.FindName("SpecificEntropyCheckBox");
+                entropyToggle.IsChecked=true;
+                window.UpdateLayout();
+                var entropyCanvas=(Canvas)mainChart.FindName("ChartCanvas");
+                Check(entropyCanvas.Children.OfType<Path>().Any(),
+                    "Curvas de entropía dibujadas con geometría de trayectoria");
+                Check(entropyCanvas.Children.OfType<TextBlock>().Any(t=>t.Text.StartsWith("s*=")),
+                    "Etiquetas de entropía específica s* visibles");
+                entropyToggle.IsChecked=false;
                 window.UpdateLayout();
                 string folder=System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(),"ui-snapshots");
                 System.IO.Directory.CreateDirectory(folder);

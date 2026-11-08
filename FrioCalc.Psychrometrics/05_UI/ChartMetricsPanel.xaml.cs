@@ -75,6 +75,7 @@ public partial class ChartMetricsPanel : UserControl
 
         EnthalpyDeviationCheckBox.IsChecked =
             false;
+        SpecificEntropyCheckBox.IsChecked = false;
         SensibleHeatFactorCheckBox.IsChecked = false;
         _initialized = true;
     }

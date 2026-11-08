@@ -233,6 +233,24 @@ static class Program
             Check(Math.Abs(ashraeMix.WetBulbC-14.6)<1.2,
                 "ASHRAE ejemplo 4 Tbh mezcla ≈14.6°C");
 
+            // [T6] Entropía específica: referencia termodinámica explícita.
+            double sRef=MoistAirSpecificEntropy.FromDryBulbAndHumidityRatio(0,0,101.325);
+            Check(Math.Abs(sRef)<1e-12,"Entropía referencia aire seco");
+            double s25=MoistAirSpecificEntropy.FromDryBulbAndHumidityRatio(25,0,101.325);
+            Check(s25>0.085 && s25<0.09,"Entropía ideal T25 aire seco");
+            double s25Wet=MoistAirSpecificEntropy.FromDryBulbAndHumidityRatio(
+                p.DryBulbC,p.HumidityRatioKgPerKg,p.PressureKPa);
+            Check(double.IsFinite(s25Wet),"Entropía relativa de estado húmedo válida");
+            Check(double.IsFinite(MoistAirSpecificEntropy.FromDryBulbAndHumidityRatio(-10,0.001,101.325)),
+                "Entropía bajo cero físicamente admisible");
+            Check(double.IsNaN(MoistAirSpecificEntropy.FromDryBulbAndHumidityRatio(
+                25,0.08,101.325)),"Entropía no admite estado sobresaturado");
+            Check(Math.Abs(PsychrometricUnits.EntropyToSI(
+                PsychrometricUnits.EntropyFromSI(s25Wet,UnitSystem.IP),UnitSystem.IP)-s25Wet)<1e-10,
+                "Conversión entropía SI/IP");
+            Check(BibliographyCatalog.Entries.Any(e=>e.MethodId.Contains("MoistAirSpecificEntropy")),
+                "Bibliografía de modelo entropía relativa");
+
             // [T5] Unidades sin cambio de estado
             double original=101.325;
             Check(Math.Abs(PsychrometricUnits.PressureToSI(
