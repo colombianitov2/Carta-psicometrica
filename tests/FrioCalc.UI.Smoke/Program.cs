@@ -568,7 +568,10 @@ internal static class Program
                 System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance);
             Check(clickMethod!=null,"El clic del ratón dispone de un controlador propio");
             // El punto debe quedar dentro del dominio a 101,325 kPa.
-            var loc=new Point(chartCanvas.ActualWidth*.55,chartCanvas.ActualHeight*.90);
+            var clickPlot=new ChartGeometry().GetPlotRect(
+                chartCanvas.ActualWidth,chartCanvas.ActualHeight);
+            var loc=new Point(clickPlot.Left+clickPlot.Width*.55,
+                clickPlot.Bottom-clickPlot.Height*.08);
             clickMethod!.Invoke(mainChart,new object[]{loc});
             Check(mainChart.ActivePoints.Count==1,"Clic crea punto en carta");
             clickMethod.Invoke(mainChart,new object[]{loc});
