@@ -28,6 +28,8 @@ public static class PointPropertyCalculator
         if (!double.IsFinite(pressureKPa)
             || pressureKPa <= 0.0
             || !double.IsFinite(dryBulbC)
+            || dryBulbC < SaturationVaporPressure.MinSupportedTemperatureC
+            || dryBulbC > SaturationVaporPressure.MaxSupportedTemperatureC
             || !double.IsFinite(humidityRatioKgPerKg)
             || humidityRatioKgPerKg < 0.0)
         {

@@ -93,12 +93,31 @@ public static class StateInputSolver
             diagnostic = $"No hay estado que satisfaga todas las propiedades. Revise {inconsistent.Key}={inconsistent.Value:G6} y las restantes entradas.";
             return false;
         }
-        if (consistent.Count > 1)
+        // [3.4.2] Propiedades redondeadas pueden producir varias raíces
+        // numéricas indistinguibles dentro de la resolución de entrada.
+        // Agrupar estados cercanos antes de declararlos ambiguos.
+        var clusters=new List<List<ChartPoint>>();
+        foreach(var candidate in consistent)
         {
-            diagnostic = "Las restricciones permiten varios estados. Introduzca otra propiedad independiente.";
+            var matching=clusters.FirstOrDefault(cluster =>
+                Math.Abs(cluster[0].DryBulbC-candidate.DryBulbC)<=0.12 &&
+                Math.Abs(cluster[0].HumidityRatioKgPerKg-candidate.HumidityRatioKgPerKg)<=0.00015);
+            if(matching is null)clusters.Add(new List<ChartPoint>{candidate});
+            else matching.Add(candidate);
+        }
+        if (clusters.Count > 1)
+        {
+            diagnostic = "Las restricciones permiten varios estados físicamente diferentes. Introduzca otra propiedad independiente.";
             return false;
         }
-        var solution = consistent[0];
+        // Preferir la solución que minimiza el error frente a TODAS las
+        // condiciones, normalizado por la tolerancia definida para cada variable.
+        var solution = clusters[0].OrderBy(candidate => conditions.Sum(input =>
+        {
+            double scaled=(ValueOf(input.Key,candidate)-input.Value)/
+                Tolerance(input.Key,input.Value);
+            return scaled*scaled;
+        })).First();
         point = solution with { Method = method.ToString(), Origin = "Entrada numérica",
             InputConditions = new Dictionary<StateProperty,double>(conditions) };
         diagnostic = "Estado único calculado y verificado frente a todas las propiedades introducidas.";
@@ -141,7 +160,7 @@ public static class StateInputSolver
         KeyValuePair<StateProperty, double> target,
         double pressure, int id, string color, List<ChartPoint> results)
     {
-        const double minT = -50.0, maxT = 110.0;
+        const double minT = -50.0, maxT = 120.0;
         double previousT = minT, previousError = double.NaN;
         for (double temperature = minT; temperature <= maxT + .00001; temperature += 1.0)
         {
@@ -195,7 +214,7 @@ public static class StateInputSolver
         StateProperty property, double value, double dryBulbC, double pressure, out double humidityRatio)
     {
         humidityRatio = double.NaN;
-        if (!double.IsFinite(dryBulbC) || dryBulbC < -50 || dryBulbC > 110) return false;
+        if (!double.IsFinite(dryBulbC) || dryBulbC < -50 || dryBulbC > 120) return false;
         try
         {
             humidityRatio = property switch

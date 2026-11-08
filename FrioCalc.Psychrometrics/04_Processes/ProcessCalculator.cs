@@ -161,6 +161,14 @@ public static class ProcessCalculator
         double pws = SaturationVaporPressure.GetPressureKPa(apparatusDewPointC);
         if (pws >= inlet.PressureKPa) { diagnostic="Presión de saturación ADP incompatible."; return false; }
         double ws = SaturationHumidityRatio.FromPressuresKPa(inlet.PressureKPa,pws);
+        // [4.5.1] Un serpentín etiquetado como deshumidificador no
+        // puede añadir vapor al aire; este caso también cubre W1=0,
+        // donde el punto de rocío se representa como NaN.
+        if(bypassFactor<1.0 && ws>inlet.HumidityRatioKgPerKg+1e-10)
+        {
+            diagnostic="El ADP indicado aumentaría W; no es un serpentín deshumidificador.";
+            return false;
+        }
         double hs = MoistAirEnthalpy.FromDryBulbAndHumidityRatio(apparatusDewPointC,ws);
         double w2 = bypassFactor*inlet.HumidityRatioKgPerKg+(1-bypassFactor)*ws;
         double h2 = bypassFactor*inlet.EnthalpyKJPerKgDryAir+(1-bypassFactor)*hs;

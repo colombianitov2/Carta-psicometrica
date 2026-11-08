@@ -330,6 +330,45 @@ static class Program
                 StringComparison.OrdinalIgnoreCase),
                 "A03 diapositiva 24, BF y FCS no inventan impulsión");
 
+            // [T10] Redundancia numérica: tres propiedades compatibles,
+            // redondeadas al 0,1 g/kgda, deben representar un estado único.
+            var redundantPoint=Create(7000,25,60);
+            double roundedW=Math.Round(redundantPoint.HumidityRatioKgPerKg*1000,1)/1000;
+            var redundantInputs=new Dictionary<StateProperty,double>
+            {
+                [StateProperty.DryBulb]=25,
+                [StateProperty.RelativeHumidity]=60,
+                [StateProperty.HumidityRatio]=roundedW
+            };
+            Check(StateInputSolver.TrySolve(redundantInputs,101.325,7001,"#446688",
+                StateSolveMethod.Automatic,out var redundancyResolved,out var redundantError)
+                && redundancyResolved is not null,"Tres propiedades redundantes redondeadas: "+redundantError);
+            Check(Math.Abs(redundancyResolved!.DryBulbC-25)<.01 &&
+                  Math.Abs(redundancyResolved.RelativeHumidityPercent-60)<.35,
+                "Estado redundante conserva Tbs y HR");
+            var impossibleInputs=new Dictionary<StateProperty,double>
+            {
+                [StateProperty.DryBulb]=25,
+                [StateProperty.RelativeHumidity]=60,
+                [StateProperty.HumidityRatio]=roundedW*1.4
+            };
+            Check(!StateInputSolver.TrySolve(impossibleInputs,101.325,7002,"#446688",
+                StateSolveMethod.Automatic,out _,out _),"Inconsistencia de entradas detectada");
+
+            // [T11] Límite del dominio y convenciones Try sin excepciones.
+            Check(!PointPropertyCalculator.TryCreatePoint(7003,"Fuera","#446688",
+                101.325,-101.0,0.001,out _),"Fuera del rango ASHRAE bajo: retorno false");
+            Check(!PointPropertyCalculator.TryCreatePoint(7004,"Fuera","#446688",
+                101.325,201.0,0.001,out _),"Fuera del rango ASHRAE alto: retorno false");
+            Check(StateInputSolver.TrySolve(new Dictionary<StateProperty,double>{
+                [StateProperty.DryBulb]=115.0,[StateProperty.RelativeHumidity]=5.0},
+                101.325,7005,"#446688",StateSolveMethod.Direct,
+                out var hotState,out _ ) && hotState is not null,
+                "Estado directo admitido a 115 C (dentro del alcance gráfico extendido)");
+            var airDry=Create(7006,25,0);
+            Check(!ProcessCalculator.TryBypassOutlet(airDry,15,.5,7007,"#446688",
+                out _,out _),"ADP que humidifica aire seco no es deshumidificación");
+
             // [T9] Informes: propiedades y fuentes exportables en formato verificable.
             string markdown=ProcessReportService.BuildMarkdown(101.325,
                 new List<ChartPoint>{p,humidIn},Array.Empty<PsychrometricProcess>());
