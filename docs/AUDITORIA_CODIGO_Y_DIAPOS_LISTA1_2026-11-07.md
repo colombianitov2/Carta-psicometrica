@@ -59,7 +59,7 @@ La denominación docente «Rendimiento de Hendrickson» figura en la diapositiva
 
 ## 4. Evidencia de pruebas
 
-**Última validación completa comprobada: GitHub Actions [#42431421445](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42431421445)**. Resultado: **compilación correcta con 0 errores y 0 advertencias; 504 pruebas numéricas y 48 pruebas WPF aprobadas**. La ejecución cargó artefacto con las tres zonas, capas de s* y Δh, y una exportación PNG de la segunda carta.
+**Última validación completa comprobada: GitHub Actions [#42436851686](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42436851686)**. Resultado: **compilación correcta con 0 errores y 0 advertencias; 519 pruebas numéricas y 76 pruebas WPF aprobadas**. La ejecución cargó artefacto con las tres zonas, capas de s* y Δh, y una exportación PNG de la segunda carta.
 
 El test WPF inspecciona directamente los vértices dibujados por la capa de entalpía a **84,54 y 101,325 kPa** para verificar que ninguno está por encima de la humedad de saturación. La prueba confirma además que un cambio real de presión elimina puntos antiguos en ambas cartas y que se exporta un PNG no vacío.
 
@@ -71,6 +71,8 @@ El test WPF inspecciona directamente los vértices dibujados por la capa de enta
 - UI: creación de puntos, sincronización entre cartas, selección desde tarjeta, SI/IP, elementos de la Zona 2, etiquetas y trazados; se generan capturas en el escritorio virtual del runner.
 - **La resolución gráfica automáticamente capturada es 1150×788.** No afirmar que el runner Windows ha validado el comportamiento real a 1540×900 en el PC local.
 - Las capturas de UI no demuestran que todos los controles hayan recibido clics ni que se hayan completado rutas de usuario con grandes proyectos. La auditoría presencial es una etapa diferente.
+
+**Actualización de auditoría 2026-11-07:** las pruebas adicionales cubren estados con restricciones redundantes redondeadas, importación JSON manipulada, rocío indefinido en aire seco, operación predictiva con re-edición y distribución de nombres de puntos próximos. Ver [auditoría complementaria](AUDITORIA_COMPLEMENTARIA_LISTA1_2026-11-07.md).
 
 ## 5. Límites pendientes y por qué no puede declararse «perfecto»
 

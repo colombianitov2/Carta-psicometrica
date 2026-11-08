@@ -1,6 +1,6 @@
 # Lista 1 — Estado de construcción de FrioCalc
 
-**Versión de seguimiento:** 1.3 — candidata de auditoría · **Fecha:** 7 de noviembre de 2026 · **Rama:** `chatgpt/friocalc-lista1-2026-11-07`.
+**Versión de seguimiento:** 1.4 — candidata de auditoría · **Fecha:** 7 de noviembre de 2026 · **Rama:** `chatgpt/friocalc-lista1-2026-11-07`.
 
 **No se ha fusionado con `main` ni con la rama psicrométrica anterior.** Este registro diferencia compilación correcta, implementación funcional parcial y auditoría visual pendiente. No debe interpretarse como aprobación final del software.
 
@@ -13,11 +13,11 @@
 ### Evidencia de integración
 
 - Auditoría WPF con tres capturas reales a 1150×788 (carta, procesos y teoría). Los otros tamaños deben inspeccionarse en el computador local; el runner no permite simular válidamente 1540×900. Se corrigieron la distribución y la carta estándar antes de la ejecución final.
-- [Artefacto con tres capturas en Actions #42431421445](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42431421445): descargar desde los artefactos de la ejecución.
+- [Artefacto con tres capturas en Actions #42436851686](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42436851686): descargar desde los artefactos de la ejecución.
 
 
-- Validación Windows GitHub Actions **#42431421445**: 0 errores, 0 advertencias, **504 pruebas numéricas** y **48 comprobaciones WPF** correctas.
-- Enlace: https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42431421445
+- Validación Windows GitHub Actions **#42436851686**: 0 errores, 0 advertencias, **519 pruebas numéricas** y **76 comprobaciones WPF** correctas.
+- Enlace: https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42436851686
 - Flujo controlado: solo se ejecuta mediante solicitud manual o al modificar `.github/validation-request.txt`; los commits ordinarios no desencadenan compilación.
 - Carpeta de auditoría local: `06_Tools/Auditar-FrioCalc-Lista1.ps1` con evidencias fuera del repositorio.
 - **Limitación:** el éxito de pruebas no sustituye pruebas humanas de interacción, inspección de carta ni verificación con documentación paginada.
@@ -111,6 +111,14 @@
 | L1.56 | Sesiones JSON con propiedades | Código presente; falta auditoría visual de aceptación |
 | L1.57 | Informes CSV, Markdown, PNG | Código presente; falta auditoría visual de aceptación |
 | L1.58 | GitHub, VS y auditoría integral | Parcial; faltan modelos, casos o referencias |
+
+## Auditoría complementaria de puntos, procesos y sesiones
+
+La validación integral [#42436851686](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42436851686) pasó con **0 errores, 0 advertencias, 519 pruebas numéricas y 76 verificaciones WPF**. Los 76 controles de UI incluyen crear, eliminar, deshacer, editar y recalcular procesos predictivos sin dejar salidas generadas huérfanas, además de verificar etiquetas de tres puntos muy cercanos.
+
+Se corrigieron raíces redundantes con entradas redondeadas, dominio de temperatura, control de bypass que no debe aumentar W, confirmación de eliminación por clic derecho, serialización de estados de aire seco con punto de rocío indefinido, integridad de archivos JSON, reemplazo de salidas generadas y sincronización bidireccional de la selección entre paneles.
+
+**Documento complementario:** [AUDITORIA_COMPLEMENTARIA_LISTA1_2026-11-07.md](AUDITORIA_COMPLEMENTARIA_LISTA1_2026-11-07.md). El alcance pendiente de validación de fabricante y prueba manual no se modifica artificialmente.
 
 ## Auditoría de entropía y saturación
 
