@@ -28,3 +28,5 @@ AUDITORIA ENTROPIA #11: verificar iso-s*, normalización, recorte bajo saturaci�
 AUDITORIA #12: fix sintaxis bibliografía, carta estándar inmóvil, test entropía y capturas de ambas curvas.
 
 AUDITORIA #13: compilar recorte físico de entalpía propagando presión; comprobar isoentrópicas y capturas.
+
+AUDITORIA #14: matriz 48 estados multi-presión, A03 siete ejercicios, UI selección SI/IP, títulos Δh claros.
