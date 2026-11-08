@@ -98,7 +98,8 @@ public static class TheoryLessonService
     };
 
     public static bool TryEvaluate(string kind,double dryBulbC,double relativeHumidityPercent,
-        double intensity,double pressureKPa,out TheoryLesson? lesson,out string error)
+        double intensity,double pressureKPa,out TheoryLesson? lesson,out string error,
+        double secondDryBulbC=35,double secondRelativeHumidityPercent=60)
     {
         lesson=null;error="";
         if(!double.IsFinite(dryBulbC)||!double.IsFinite(relativeHumidityPercent)||
@@ -106,6 +107,11 @@ public static class TheoryLessonService
            relativeHumidityPercent<=0||relativeHumidityPercent>100||
            intensity<0||intensity>1||pressureKPa<=0)
         {error="Compruebe Tbs, HR entre 0 y 100 %, intensidad entre 0 y 1 y presión absoluta positiva.";return false;}
+
+        if(kind=="Mixing" && (!double.IsFinite(secondDryBulbC) ||
+            !double.IsFinite(secondRelativeHumidityPercent) ||
+            secondRelativeHumidityPercent<=0 || secondRelativeHumidityPercent>100))
+        {error="La segunda corriente requiere temperatura y humedad relativa válidas.";return false;}
 
         try
         {
@@ -222,8 +228,9 @@ public static class TheoryLessonService
 
                 case "Mixing":
                     title="Mezcla adiabática de dos corrientes";
-                    double otherW=RelativeHumidity.HumidityRatioFromDryBulbAndRelativeHumidity(35,.60,pressureKPa);
-                    if(!Make(3,"Exterior",pressureKPa,35,otherW,out aux))
+                    double otherW=RelativeHumidity.HumidityRatioFromDryBulbAndRelativeHumidity(
+                        secondDryBulbC,secondRelativeHumidityPercent/100,pressureKPa);
+                    if(!Make(3,"Exterior",pressureKPa,secondDryBulbC,otherW,out aux))
                     {error="La corriente exterior del ejemplo no es válida a esta presión.";return false;}
                     if(intensity==0) finish=start! with {Id=2,Name="Mezcla"};
                     else if(intensity==1) finish=aux! with {Id=2,Name="Mezcla"};
@@ -232,7 +239,7 @@ public static class TheoryLessonService
                     description="Las corrientes se mezclan sin intercambio de calor externo ni condensación. El peso de cada propiedad es el flujo MÁSICO de aire seco, nunca el caudal volumétrico bruto.";
                     formula="ṁda,total=Σṁda; W3=Σ(ṁda·W)/Σṁda; h3=Σ(ṁda·h)/Σṁda.";
                     steps=$"1. Estado 1: T={start!.DryBulbC:0.###} °C, W={w*1000:0.###} g/kgda.\n" +
-                        $"2. Estado exterior: T=35 °C, HR=60 %, W={aux!.HumidityRatioKgPerKg*1000:0.###} g/kgda.\n" +
+                        $"2. Estado exterior: T={secondDryBulbC:0.##} °C, HR={secondRelativeHumidityPercent:0.##} %, W={aux!.HumidityRatioKgPerKg*1000:0.###} g/kgda.\n" +
                         $"3. Fracciones de m_da: m1={1-intensity:0.###}; m2={intensity:0.###} (escala normalizada).\n" +
                         $"4. W3=({1-intensity:0.###}·{w*1000:0.###}+{intensity:0.###}·{aux.HumidityRatioKgPerKg*1000:0.###})={finish!.HumidityRatioKgPerKg*1000:0.###} g/kgda.\n" +
                         $"5. h3={finish.EnthalpyKJPerKgDryAir:0.###} kJ/kgda; T3={finish.DryBulbC:0.###} °C.";
