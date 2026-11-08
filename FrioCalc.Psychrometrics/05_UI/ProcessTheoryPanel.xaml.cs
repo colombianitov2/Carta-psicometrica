@@ -320,7 +320,7 @@ public partial class ProcessTheoryPanel : UserControl
         double maxT=Math.Max(60,states.Max(p=>p.DryBulbC)+5);
         const double minW=0;
         double maxW=Math.Max(.045,states.Max(p=>p.HumidityRatioKgPerKg)*1.12+.001);
-        int upperGrams=(int)Math.Ceiling(maxW*1000/10)*10;
+        int upperGrams=(int)Math.Floor(maxW*1000/10)*10;
         double X(double t)=>left+(t-minT)/(maxT-minT)*plotW;
         double Y(double w)=>top+(maxW-w)/(maxW-minW)*plotH;
         for(double tc=Math.Ceiling(minT/10)*10;tc<=maxT;tc+=10)
