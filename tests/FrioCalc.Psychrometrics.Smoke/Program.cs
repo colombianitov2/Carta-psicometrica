@@ -330,6 +330,19 @@ static class Program
                 StringComparison.OrdinalIgnoreCase),
                 "A03 diapositiva 24, BF y FCS no inventan impulsión");
 
+            // [T9] Informes: propiedades y fuentes exportables en formato verificable.
+            string markdown=ProcessReportService.BuildMarkdown(101.325,
+                new List<ChartPoint>{p,humidIn},Array.Empty<PsychrometricProcess>());
+            Check(markdown.Contains("s* kJ/(kgda·K)",StringComparison.Ordinal),
+                "Informe incluye entropía relativa y unidades");
+            Check(markdown.Contains("Presión absoluta",StringComparison.Ordinal),
+                "Informe conserva presión absoluta");
+            Check(markdown.Contains("Procedencia de los estados",StringComparison.Ordinal),
+                "Informe conserva trazabilidad del método");
+            Check(BibliographyCatalog.ExportCsv().Contains("MoistAirSpecificEntropy",
+                StringComparison.Ordinal),
+                "Bibliografía exporta referencia del modelo de entropía");
+
             // [T5] Unidades sin cambio de estado
             double original=101.325;
             Check(Math.Abs(PsychrometricUnits.PressureToSI(
