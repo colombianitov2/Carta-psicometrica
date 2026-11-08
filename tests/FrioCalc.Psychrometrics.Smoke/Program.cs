@@ -330,6 +330,32 @@ static class Program
                 StringComparison.OrdinalIgnoreCase),
                 "A03 diapositiva 24, BF y FCS no inventan impulsión");
 
+            // [T12] Persistencia completa de aire seco y defensa contra sesión adulterada.
+            var drySessionPoint=Create(8800,20,0);
+            string dryJson=System.Text.Json.JsonSerializer.Serialize(drySessionPoint,
+                SessionFileIntegrity.JsonOptions(indented:true));
+            var dryReloaded=System.Text.Json.JsonSerializer.Deserialize<ChartPoint>(
+                dryJson,SessionFileIntegrity.JsonOptions());
+            Check(dryReloaded is not null && double.IsNaN(dryReloaded.DewPointC),
+                "Sesión serializa y restaura punto de rocío indefinido del aire seco");
+            Check(SessionFileIntegrity.TryValidate(101.325,
+                new[]{dryReloaded!},Array.Empty<PsychrometricProcess>(),out var sessionMsg),
+                "Sesión válida, propiedades recalculadas: "+sessionMsg);
+            Check(!SessionFileIntegrity.TryValidate(101.325,
+                new[]{dryReloaded! with {RelativeHumidityPercent=45.0}},
+                Array.Empty<PsychrometricProcess>(),out _),
+                "Rechazo de propiedades derivadas manipuladas");
+            Check(!SessionFileIntegrity.TryValidate(101.325,
+                new[]{dryReloaded!},
+                new[]{new PsychrometricProcess(1,"M","#ZZZZZZ",
+                    ProcessType.Automatic,new[]{8800,8800},1.0)},out _),
+                "Rechazo de color inválido antes de dibujar procesos");
+            Check(!SessionFileIntegrity.TryValidate(101.325,
+                new[]{dryReloaded!},
+                new[]{new PsychrometricProcess(1,"M","#123ABC",
+                    ProcessType.Automatic,new[]{8800,999999},1.0)},out _),
+                "Rechazo de procesos con referencias inexistentes");
+
             // [T10] Redundancia numérica: tres propiedades compatibles,
             // redondeadas al 0,1 g/kgda, deben representar un estado único.
             var redundantPoint=Create(7000,25,60);

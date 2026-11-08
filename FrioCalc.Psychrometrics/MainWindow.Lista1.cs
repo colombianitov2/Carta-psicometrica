@@ -667,9 +667,20 @@ public partial class MainWindow
         var session = new SessionV1(1, PressureSelector.CurrentPressureKPa,
             ChartMetricsPanel.CurrentUnits, PsychrometricChart.ActivePoints.ToList(),
             new List<PsychrometricProcess>(_savedProcesses));
-        File.WriteAllText(dialog.FileName,
-            JsonSerializer.Serialize(session,new JsonSerializerOptions { WriteIndented=true }),
-            new UTF8Encoding(false));
+        try
+        {
+            if(!SessionFileIntegrity.TryValidate(session.PressureKPa,session.Points,
+                session.Processes,out string diagnostic))
+                throw new InvalidDataException(diagnostic);
+            File.WriteAllText(dialog.FileName,JsonSerializer.Serialize(session,
+                SessionFileIntegrity.JsonOptions(indented:true)),new UTF8Encoding(false));
+        }
+        catch(Exception ex) when (ex is IOException or UnauthorizedAccessException or
+            JsonException or InvalidDataException or NotSupportedException)
+        {
+            MessageBox.Show("No se pudo guardar la sesión: "+ex.Message,
+                "FrioCalc",MessageBoxButton.OK,MessageBoxImage.Error);
+        }
     }
 
     private void LoadSession_Click(object sender, RoutedEventArgs e)
@@ -681,20 +692,15 @@ public partial class MainWindow
         if (dialog.ShowDialog(this) != true) return;
         try
         {
-            var session=JsonSerializer.Deserialize<SessionV1>(File.ReadAllText(dialog.FileName));
+            var session=JsonSerializer.Deserialize<SessionV1>(File.ReadAllText(dialog.FileName),
+                SessionFileIntegrity.JsonOptions());
             if (session is null || session.Version != 1 || session.Points is null ||
                 session.Processes is null || !double.IsFinite(session.PressureKPa) ||
                 session.PressureKPa <= 0)
                 throw new InvalidDataException("Archivo de sesión incompatible.");
-            if (session.Points.Any(p => p.Id <= 0 || !PointPropertyCalculator.TryCreatePoint(
-                p.Id,p.Name,p.ColorHex,p.PressureKPa,p.DryBulbC,
-                p.HumidityRatioKgPerKg,out var recomputed) || recomputed is null ||
-                Math.Abs(recomputed.EnthalpyKJPerKgDryAir-p.EnthalpyKJPerKgDryAir) > .03))
-                throw new InvalidDataException("La sesión contiene estados que no corresponden a propiedades psicrométricas válidas.");
-            if (session.Points.Any(p=>Math.Abs(p.PressureKPa-session.PressureKPa)>1e-6) ||
-                session.Points.GroupBy(p=>p.Id).Any(g=>g.Count()>1) ||
-                session.Processes.Any(p=>p.PointIds.Any(id=>!session.Points.Any(x=>x.Id==id))))
-                throw new InvalidDataException("Puntos o procesos contradictorios en el archivo.");
+            if (!SessionFileIntegrity.TryValidate(session.PressureKPa,session.Points,
+                session.Processes,out string validationError))
+                throw new InvalidDataException(validationError);
             if (MessageBox.Show("Esto reemplazará los puntos y procesos actuales. ¿Continuar?",
                 "Abrir sesión",MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes) return;
             // Restaurar unidades ANTES de escribir la presión de la sesión.
@@ -712,7 +718,8 @@ public partial class MainWindow
             WorkspaceTabs.SelectedIndex=0;
             ProcessResultText.Text="Sesión cargada. Confirme la coherencia de cálculos y métodos.";
         }
-        catch (Exception ex) when (ex is IOException or JsonException or InvalidDataException or ArgumentException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
+            JsonException or InvalidDataException or ArgumentException or NotSupportedException)
         {
             MessageBox.Show(ex.Message,"Error al abrir sesión",MessageBoxButton.OK,MessageBoxImage.Error);
         }
