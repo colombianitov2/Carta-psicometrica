@@ -1,6 +1,6 @@
 # Lista 1 — Estado de construcción de FrioCalc
 
-**Versión de seguimiento:** 1.2 — candidata de auditoría · **Fecha:** 7 de noviembre de 2026 · **Rama:** `chatgpt/friocalc-lista1-2026-11-07`.
+**Versión de seguimiento:** 1.3 — candidata de auditoría · **Fecha:** 7 de noviembre de 2026 · **Rama:** `chatgpt/friocalc-lista1-2026-11-07`.
 
 **No se ha fusionado con `main` ni con la rama psicrométrica anterior.** Este registro diferencia compilación correcta, implementación funcional parcial y auditoría visual pendiente. No debe interpretarse como aprobación final del software.
 
@@ -12,12 +12,12 @@
 
 ### Evidencia de integración
 
-- Auditoría de WPF visual (capturas generadas automáticamente): tres zonas inspeccionadas en 1150×788. Se corrigieron la distribución y la carta estándar antes de la ejecución final.
-- [Artefacto con capturas en Actions #42425602980](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42425602980): descargar desde los artefactos de la ejecución.
+- Auditoría WPF con tres capturas reales a 1150×788 (carta, procesos y teoría). Los otros tamaños deben inspeccionarse en el computador local; el runner no permite simular válidamente 1540×900. Se corrigieron la distribución y la carta estándar antes de la ejecución final.
+- [Artefacto con tres capturas en Actions #42427980132](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42427980132): descargar desde los artefactos de la ejecución.
 
 
-- Validación Windows GitHub Actions **#42425602980**: 0 errores, 0 advertencias, **65 pruebas numéricas** y **25 pruebas de inicialización UI** correctas.
-- Enlace: https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42425602980
+- Validación Windows GitHub Actions **#42427980132**: 0 errores, 0 advertencias, **89 pruebas numéricas** y **25 pruebas de inicialización UI** correctas.
+- Enlace: https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42427980132
 - Flujo controlado: solo se ejecuta mediante solicitud manual o al modificar `.github/validation-request.txt`; los commits ordinarios no desencadenan compilación.
 - Carpeta de auditoría local: `06_Tools/Auditar-FrioCalc-Lista1.ps1` con evidencias fuera del repositorio.
 - **Limitación:** el éxito de pruebas no sustituye pruebas humanas de interacción, inspección de carta ni verificación con documentación paginada.

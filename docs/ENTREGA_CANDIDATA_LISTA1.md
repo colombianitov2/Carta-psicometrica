@@ -23,13 +23,13 @@ La carta y el motor de puntos/procesos están integrados para una auditoría con
 
 ## Integración verificada al cierre
 
-**GitHub Actions #42425602980** — ejecución Windows con resultado satisfactorio.
+**GitHub Actions #42427980132** — ejecución Windows con resultado satisfactorio.
 
 - Compilación `net10.0-windows` con advertencias como errores: **0 errores y 0 advertencias**.
-- **65 pruebas numéricas**: estados inversos, conservación, modelos, unidades, contraste ASHRAE 2025 y condiciones imposibles.
-- **25 pruebas de inicialización WPF y sincronización de puntos**, más capturas de las tres zonas de la interfaz. La captura automática de GitHub está limitada al escritorio virtual de 1150×788. La comprobación a 1540×900 se realiza en Visual Studio local.
+- **89 pruebas numéricas**: estados inversos, conservación, modelos, unidades, contraste ASHRAE 2025 y condiciones imposibles.
+- **25 pruebas de inicialización WPF y sincronización de puntos**, y tres capturas efectivas de la interfaz a 1150×788. No se ha verificado automáticamente 1540×900 en el runner. La captura automática de GitHub está limitada al escritorio virtual de 1150×788. La comprobación a 1540×900 se realiza en Visual Studio local.
 - La validación se realizó sobre la rama aislada; no hubo fusión.
-- Consultar [evidencias de la compilación y PNG](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42425602980).
+- Consultar [evidencias de la compilación y PNG](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42427980132).
 
 ## Verificación técnica
 
@@ -37,7 +37,7 @@ El flujo `.github/workflows/wpf-build.yml` compila WPF en Windows .NET 10 con ad
 
 Compilación **bajo solicitud explícita**: no se ejecuta por commits ordinarios, para reducir notificaciones de GitHub.
 
-La validación numérica incluye referencias independientes publicadas en el capítulo 1 de ASHRAE 2025, pero no es una certificación de exactitud en todo el dominio de presión, temperatura y contenido de humedad.
+La validación numérica incluye cuatro ejemplos y comparación de cartas 1 y 6 del capítulo 1 de ASHRAE 2025 (101,325 y 84,54 kPa). No certifica exactitud en todo el dominio de presión, temperatura y humedad.
 
 ## Fuentes verificadas
 
