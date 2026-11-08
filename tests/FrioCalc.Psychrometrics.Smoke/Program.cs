@@ -465,6 +465,11 @@ static class Program
                 "Interacción de mezcla mantiene W entre las entradas");
             Check(!TheoryLessonService.TryEvaluate("Steam",25,50,2,101.325,out _,out _),
                 "Rechazo de intensidad docente fuera del dominio");
+            Check(TheoryLessonService.TryEvaluate("Mixing",24,55,.13,101.325,
+                out var mixFromA03,out _,32,70) && mixFromA03?.Auxiliary is not null &&
+                Math.Abs(mixFromA03.Auxiliary.DryBulbC-32)<1e-9 &&
+                Math.Abs(mixFromA03.Auxiliary.RelativeHumidityPercent-70)<.005,
+                "A03/23 entrada exterior 32°C/70% HR parametrizable");
             Check(TheoryLessonService.Variables.Count>=12,
                 "Diccionario de propiedades ASHRAE ampliado");
             Check(TheoryLessonService.DescribeVariable("W",p).Contains("g/kgda") &&

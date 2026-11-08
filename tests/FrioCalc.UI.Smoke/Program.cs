@@ -99,6 +99,27 @@ internal static class Program
             variableSelector.SelectedIndex=4; // W.
             Check(variableInfo.Text.Contains("Humedad")&&variableInfo.Text.Contains("Ecuación"),
                 "Inspector de propiedades explica y cita ecuación");
+            // [UI.10] Ejercicio real A03/23 enlaza ambas corrientes y
+            // muestra las condiciones de la UTA en el laboratorio.
+            string linked=teaching.LoadSlideExample(23);
+            Check(linked.Contains("3000")&&linked.Contains("500"),
+                "Enlace docente A03/23 conserva caudales de ambas corrientes");
+            Check(processTopics.SelectedIndex==5,
+                "A03/23 selecciona mezcla adiabática");
+            var secondStream=(StackPanel)teaching.FindName("SecondStreamControls");
+            var secondDry=(Slider)teaching.FindName("SecondDryBulbSlider");
+            var secondHum=(Slider)teaching.FindName("SecondHumiditySlider");
+            Check(secondStream.Visibility==Visibility.Visible &&
+                Math.Abs(secondDry.Value-32)<.01&&Math.Abs(secondHum.Value-70)<.01,
+                "A03/23 configura 32°C y HR70% en segunda corriente");
+            secondDry.Value=34;
+            Check(change.Text.Contains("Tbs exterior")&&steps.Text.Contains("34"),
+                "Cambiar Tbs exterior actualiza la explicación dinámica");
+            Check(teaching.LoadSlideExample(24).Contains("FCSi=0,75") &&
+                ((TextBlock)teaching.FindName("TheoryValues")).Text.Contains("INDETERMINADO"),
+                "A03/24 no inventa impulsión a partir de FCS/BF");
+            Check(teaching.LoadSlideExample(22).Contains("no incluyen envolvente"),
+                "A03/22 advierte sobre carga total no resoluble");
             // Restore the tutorial to its reference state for the visual captures.
             var resetLesson=typeof(ProcessTheoryPanel).GetMethod("ResetTheoryExample_Click",
                 System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance);
