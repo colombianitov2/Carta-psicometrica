@@ -16,6 +16,8 @@ namespace FrioCalc.Psychrometrics.UI;
 // [5.5C.1] Demostraciones psicrométricas físicamente acotadas; sin falsas potencias.
 public partial class ProcessTheoryPanel : UserControl
 {
+    public event Action<TheoryLesson?>? LessonChanged;
+    public TheoryLesson? CurrentLesson=>_currentLesson;
     private bool _ready;
     private bool _updatingControls;
     private double _pressureKPa = AtmosphericPressure.StandardSeaLevelKPa;
@@ -45,6 +47,21 @@ public partial class ProcessTheoryPanel : UserControl
         if (!double.IsFinite(pressureKPa) || pressureKPa <= 0) return;
         _pressureKPa = pressureKPa;
         Recompute();
+    }
+
+    public void SelectKind(string kind)
+    {
+        int index=0;
+        foreach(ComboBoxItem item in ProcessSelector.Items)
+        {
+            if(item.Tag?.ToString()==kind)
+            {
+                if(ProcessSelector.SelectedIndex==index) Recompute();
+                else ProcessSelector.SelectedIndex=index;
+                return;
+            }
+            index++;
+        }
     }
 
     // [5.5C.6] Vincular ejercicios A03 al laboratorio sin sustituir
@@ -94,8 +111,13 @@ public partial class ProcessTheoryPanel : UserControl
                     explanation="A03/23: mezcla de 3000 m³/h de retorno y 500 m³/h exterior. El control muestra la fracción MÁSICA calculada usando v de cada corriente.";
                     break;
                 case 24:
+                case 32:
                     kind="SHR";t=24;rh=55;intensity=.75;
                     explanation="A03/24: se muestra FCSi=0,75 sin fabricar una impulsión. El BF=0,20 por sí solo tampoco fija ADP ni salida.";
+                    break;
+                case 36:
+                    kind="Mixing";t=24;rh=50;secondT=34;secondRH=70;intensity=.2;
+                    explanation="A03/36: se explora la mezcla con 20% de aire exterior SUPUESTO en masa seca. Serpentín a 11°C/95% HR y ventilador +1,5°C se calculan por separado en el informe del ejercicio, verificando la carga del local.";
                     break;
                 default:return "Esta diapositiva no tiene un caso numérico parametrizado en el laboratorio.";
             }
@@ -233,6 +255,7 @@ public partial class ProcessTheoryPanel : UserControl
         _previousRH=rh;
         _previousFraction=intensity;
         _previousPressure=_pressureKPa;
+        LessonChanged?.Invoke(lesson);
         _previousSecondT=tSecond;
         _previousSecondRH=rhSecond;
     }
@@ -265,6 +288,7 @@ public partial class ProcessTheoryPanel : UserControl
         TheoryValues.Text="No se dibuja un punto fuera de saturación o de las hipótesis.";
         TheoryFeedbackText.Text="";
         DiagramCanvas.Children.Clear();
+        LessonChanged?.Invoke(null);
     }
 
     private void VariableSelector_Changed(object sender,SelectionChangedEventArgs e)

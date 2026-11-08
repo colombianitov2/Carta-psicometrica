@@ -60,6 +60,18 @@ public partial class MainWindow : Window
         PsychrometricChart.SetPressure(
             AtmosphericPressure.StandardSeaLevelKPa);
         InitializeLista1();
+        ProcessTheoryPanel.LessonChanged += TheoryCoursePanel.SetContext;
+        TheoryCoursePanel.SetContext(ProcessTheoryPanel.CurrentLesson);
+        TheoryCoursePanel.LessonRequested += kind =>
+        {
+            ProcessTheoryPanel.SelectKind(kind);
+            ProcessTheoryPanel.BringIntoView();
+        };
+        TheoryCoursePanel.ExerciseRequested += slide =>
+        {
+            TheoryCoursePanel.ShowSlide(slide);
+            ShowEducationalSlide(slide);
+        };
     }
 
     // ------------------------------ Fin de sección 5.1C.2 ------------------------------

@@ -213,6 +213,7 @@
                         <TextBlock Text="Propiedades del aire húmedo" FontSize="17" FontWeight="SemiBold"/>
                         <TextBlock Text="Tbs: temperatura de bulbo seco. Tbh: temperatura de bulbo húmedo termodinámico. Trocío: temperatura de condensación. HR: humedad relativa (%). W: masa de vapor de agua por masa de aire seco. h: entalpía por masa de aire seco. v: volumen por masa de aire seco. P: presión absoluta."
                                    TextWrapping="Wrap" Margin="0,5,0,15"/>
+                        <ui:TheoryCoursePanel x:Name="TheoryCoursePanel" MaxWidth="780" HorizontalAlignment="Stretch"/>
                         <ui:ProcessTheoryPanel x:Name="ProcessTheoryPanel" MaxWidth="780" HorizontalAlignment="Stretch"/>
                         <ui:BibliographyPanel x:Name="BibliographyPanel" MaxWidth="780" HorizontalAlignment="Stretch"/>
                         <TextBlock Text="Nota técnica: en los controles se conserva «Humedad absoluta» como etiqueta solicitada, pero W en g/kg de aire seco es la razón de humedad. La humedad absoluta volumétrica tiene unidades kg de vapor/m³."
@@ -233,7 +234,7 @@
                                    FontSize="16" FontWeight="SemiBold"/>
                         <TextBlock Text="Calentamiento+humidificación, enfriamiento+deshumidificación y mezcla adiabática son secuencias o balances de múltiples corrientes. En mezcla se conservan ṁda, ṁda·W y ṁda·h; no es válido promediar directamente caudales volumétricos."
                                    TextWrapping="Wrap" Margin="0,4,0,17"/>
-                        <TextBlock Text="4. Ejercicios de las diapositivas 22–24" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock Text="4. Ejercicios de las diapositivas 22–24 y 32–36" FontSize="16" FontWeight="SemiBold"/>
                         <TextBlock Text="Auditorio: 300 personas y 8 L/s por persona; para la carga total se necesitan estados y un modelo de flujos/cargas. UTA: 3000 m³/h de retorno y 500 m³/h de aire exterior, convertir cada volumen por su propio volumen específico. FCS interior 0,75 y BF 0,2 no determinan por sí solos un estado único de impulsión sin datos suficientes del serpentín y cargas."
                                    TextWrapping="Wrap" Margin="0,4,0,16"/>
                         <TextBlock Text="EJERCICIOS RESUELTOS DESDE EL MOTOR (A03)"
@@ -246,6 +247,8 @@
                             <Button Content="Diapo 22" Tag="22" Click="ComputeSlideExample_Click" Padding="9,5" Margin="0,0,6,6"/>
                             <Button Content="Diapo 23" Tag="23" Click="ComputeSlideExample_Click" Padding="9,5" Margin="0,0,6,6"/>
                             <Button Content="Diapo 24" Tag="24" Click="ComputeSlideExample_Click" Padding="9,5" Margin="0,0,6,6"/>
+                             <Button Content="Diapo 32" Tag="32" Click="ComputeSlideExample_Click" Padding="9,5" Margin="0,0,6,6"/>
+                             <Button Content="Diapo 36" Tag="36" Click="ComputeSlideExample_Click" Padding="9,5" Margin="0,0,6,6"/>
                         </WrapPanel>
                         <Border Padding="14" BorderBrush="#CCD0D4" BorderThickness="1"
                                 CornerRadius="6" Background="#FAFAFA" Margin="0,0,0,18">
