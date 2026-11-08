@@ -180,6 +180,7 @@ internal static class Program
             try
             {
                 window.Show();
+                tabs.SelectedIndex=0; // La integración de procesos puede dejar activa la segunda carta.
                 window.UpdateLayout();
                 var entropyToggle=(CheckBox)chartMetrics.FindName("SpecificEntropyCheckBox");
                 entropyToggle.IsChecked=true;
