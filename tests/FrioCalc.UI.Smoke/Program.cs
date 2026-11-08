@@ -464,8 +464,8 @@ internal static class Program
             tabs.SelectedIndex=1;
             window.UpdateLayout();
             string exportedChart=System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(),
-                "ui-snapshots","ProcessChart_Export.png");
-            processChart.ExportPng(exportedChart);
+                "ui-snapshots","MainChart_With_Processes.png");
+            mainChart.ExportPng(exportedChart);
             Check(System.IO.File.Exists(exportedChart) &&
                 new System.IO.FileInfo(exportedChart).Length>1500,
                 "Exportación PNG real de carta de procesos");
