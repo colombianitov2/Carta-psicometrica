@@ -48,6 +48,8 @@ public partial class MainWindow
             ProcessChart.SetSensibleHeatFactorVisible(visible);
         };
         PressureSelector.UnitsSelectionChanged += units => ChartMetricsPanel.SetUnitSystem(units);
+        ChartMetricsPanel.NumberVisibilityChanged += (family,visible) =>
+            PsychrometricChart.SetNumberVisibility(family,visible);
         ChartMetricsPanel.UnitsChanged += units =>
         {
             PressureSelector.SetUnitSystem(units);

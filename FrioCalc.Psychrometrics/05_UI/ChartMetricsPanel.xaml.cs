@@ -37,6 +37,61 @@ public partial class ChartMetricsPanel : UserControl
 
     public event Action<bool>? SensibleHeatFactorVisibilityChanged;
     public event Action<UnitSystem>? UnitsChanged;
+    public event Action<string,bool>? NumberVisibilityChanged;
+    public static readonly (string Key,string Label)[] NumericLabelFamilies =
+    {
+        ("DryBulb","Temperatura de bulbo seco"),
+        ("HumidityRatio","Razón de humedad W"),
+        ("Saturation","Curva de saturación"),
+        ("Enthalpy","Entalpía"),
+        ("RelativeHumidity","Humedad relativa"),
+        ("WetBulb","Temperatura de bulbo húmedo"),
+        ("SpecificVolume","Volumen específico"),
+        ("EnthalpyDeviation","Desviación de entalpía"),
+        ("SpecificEntropy","Entropía específica relativa"),
+        ("FCS","Factor de calor sensible")
+    };
+    private readonly Dictionary<string,bool> _visibleNumericLabels = new();
+
+    public bool AreNumbersVisible(string key) =>
+        !_visibleNumericLabels.TryGetValue(key,out bool enabled)||enabled;
+
+    public void SetNumberVisibility(string key,bool visible)
+    {
+        _visibleNumericLabels[key]=visible;
+        NumberVisibilityChanged?.Invoke(key,visible);
+    }
+
+    private void NumberLabelsButton_Click(object sender,RoutedEventArgs e)
+    {
+        var content=new StackPanel{Margin=new Thickness(15)};
+        content.Children.Add(new TextBlock
+        {
+            Text="Desmarque las propiedades cuyos números desea ocultar. Las curvas permanecerán visibles.",
+            TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,12)
+        });
+        foreach(var (key,label) in NumericLabelFamilies)
+        {
+            string targetKey=key;
+            var check=new CheckBox{Content=label,IsChecked=AreNumbersVisible(key),
+                Margin=new Thickness(0,0,0,11)};
+            check.Checked+=(s,args)=>SetNumberVisibility(targetKey,true);
+            check.Unchecked+=(s,args)=>SetNumberVisibility(targetKey,false);
+            content.Children.Add(check);
+        }
+        var close=new Button{Content="Cerrar",Height=30,Width=110,HorizontalAlignment=HorizontalAlignment.Right};
+        content.Children.Add(close);
+        var dialog=new Window
+        {
+            Title="Números de las propiedades de la carta",Width=390,Height=480,
+            MinWidth=340,MinHeight=360,WindowStartupLocation=WindowStartupLocation.CenterOwner,
+            Owner=Window.GetWindow(this),
+            Content=new ScrollViewer{VerticalScrollBarVisibility=ScrollBarVisibility.Auto,Content=content}
+        };
+        close.Click+=(s,args)=>dialog.Close();
+        dialog.ShowDialog();
+    }
+
     public UnitSystem CurrentUnits { get; private set; } = UnitSystem.SI;
     public StateSolveMethod SelectedSolveMethod =>
         Enum.TryParse((StateMethodComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString(),

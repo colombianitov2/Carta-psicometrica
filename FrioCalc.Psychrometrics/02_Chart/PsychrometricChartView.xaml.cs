@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
@@ -56,6 +57,25 @@ public partial class PsychrometricChartView : UserControl
 
     public event Action<IReadOnlyList<ChartPoint>>? PointsChanged;
     public event Action? PointsAboutToChange;
+    private readonly Dictionary<string,bool> _numberVisibility = new();
+
+    // Etiquetas y trazos se controlan por separado: apagar números NO borra las curvas.
+    public void SetNumberVisibility(string family,bool visible)
+    {
+        _numberVisibility[family]=visible;
+        RefreshChart();
+    }
+
+    private void DrawWithLabelPreference(string family,Action render)
+    {
+        int first=ChartCanvas.Children.Count;
+        render();
+        if(_numberVisibility.TryGetValue(family,out bool show) && !show)
+            foreach(var item in ChartCanvas.Children.Cast<UIElement>().Skip(first))
+                if(item is TextBlock label && label.Text.Any(char.IsDigit))
+                    label.Visibility=Visibility.Collapsed;
+    }
+
     // Confirmar antes de quitar con clic derecho un punto usado por procesos.
     public event Func<int,bool>? PointDeletionRequested;
 
@@ -272,72 +292,50 @@ public partial class PsychrometricChartView : UserControl
 
         if (_humidityRatioVisible)
         {
-            HumidityRatioLayer.Draw(
-                ChartCanvas,
-                _geometry);
+            DrawWithLabelPreference("HumidityRatio",()=>HumidityRatioLayer.Draw(ChartCanvas,_geometry));
         }
 
         if (_dryBulbVisible)
         {
-            DryBulbLayer.Draw(
-                ChartCanvas,
-                _geometry);
+            DrawWithLabelPreference("DryBulb",()=>DryBulbLayer.Draw(ChartCanvas,_geometry));
         }
 
         if (_relativeHumidityVisible)
         {
-            RelativeHumidityLayer.Draw(
-                ChartCanvas,
-                _geometry,
-                _pressureKPa);
+            DrawWithLabelPreference("RelativeHumidity",()=>RelativeHumidityLayer.Draw(ChartCanvas,_geometry,_pressureKPa));
         }
 
         if (_specificVolumeVisible)
         {
-            SpecificVolumeLayer.Draw(
-                ChartCanvas,
-                _geometry,
-                _pressureKPa);
+            DrawWithLabelPreference("SpecificVolume",()=>SpecificVolumeLayer.Draw(ChartCanvas,_geometry,_pressureKPa));
         }
 
         if (_enthalpyVisible)
         {
-            EnthalpyLayer.Draw(
-                ChartCanvas,
-                _geometry,
-                _pressureKPa);
+            DrawWithLabelPreference("Enthalpy",()=>EnthalpyLayer.Draw(ChartCanvas,_geometry,_pressureKPa));
         }
 
         if (_wetBulbVisible)
         {
-            WetBulbLayer.Draw(
-                ChartCanvas,
-                _geometry,
-                _pressureKPa);
+            DrawWithLabelPreference("WetBulb",()=>WetBulbLayer.Draw(ChartCanvas,_geometry,_pressureKPa));
         }
 
         if (_saturationCurveVisible)
         {
-            SaturationCurveLayer.Draw(
-                ChartCanvas,
-                _geometry,
-                _pressureKPa);
+            DrawWithLabelPreference("Saturation",()=>SaturationCurveLayer.Draw(ChartCanvas,_geometry,_pressureKPa));
         }
 
         if (_specificEntropyVisible)
-            SpecificEntropyLayer.Draw(ChartCanvas,_geometry,_pressureKPa);
+            DrawWithLabelPreference("SpecificEntropy",()=>SpecificEntropyLayer.Draw(ChartCanvas,_geometry,_pressureKPa));
 
         if (_enthalpyDeviationVisible)
         {
-            EnthalpyDeviationLayer.Draw(
-                ChartCanvas,
-                _geometry,
-                _pressureKPa);
+            DrawWithLabelPreference("EnthalpyDeviation",()=>EnthalpyDeviationLayer.Draw(ChartCanvas,_geometry,_pressureKPa));
         }
 
         if (_sensibleHeatFactorVisible)
         {
-            SensibleHeatFactorScaleLayer.Draw(ChartCanvas, _geometry);
+            DrawWithLabelPreference("FCS",()=>SensibleHeatFactorScaleLayer.Draw(ChartCanvas,_geometry));
         }
 
         ProcessLayer.Draw(ChartCanvas, _geometry, _chartPoints, _processes);
