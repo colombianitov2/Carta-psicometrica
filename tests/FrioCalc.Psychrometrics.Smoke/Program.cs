@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using FrioCalc.Psychrometrics.Core;
 using FrioCalc.Psychrometrics.Points;
+using FrioCalc.Psychrometrics.Chart;
 using FrioCalc.Psychrometrics.Processes;
 
 // [T1] Pruebas sin paquetes externos. Ejecutar en Windows con .NET 10.
