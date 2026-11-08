@@ -18,6 +18,10 @@
                 <ComboBoxItem Content="Humidificación mediante vapor" Tag="Steam"/>
                 <ComboBoxItem Content="Enfriamiento y deshumidificación" Tag="Dehumidification"/>
                 <ComboBoxItem Content="Mezcla de dos corrientes" Tag="Mixing"/>
+                <ComboBoxItem Content="Calentamiento y humidificación en dos etapas" Tag="HeatingHumidification"/>
+                <ComboBoxItem Content="Deshumidificación por desecante (datos supuestos)" Tag="Desiccant"/>
+                <ComboBoxItem Content="Serpentín con bypass ideal (ADP supuesto)" Tag="Bypass"/>
+                <ComboBoxItem Content="Factor de calor sensible FCS (estado indeterminado)" Tag="SHR"/>
             </ComboBox>
             <Grid Margin="0,0,0,10">
                 <Grid.ColumnDefinitions>
@@ -42,8 +46,31 @@
             <Slider x:Name="ParameterSlider" Minimum="0" Maximum="100" Value="50"
                     TickFrequency="1" IsSnapToTickEnabled="True"
                     ValueChanged="ControlsChanged" Margin="0,0,0,10"/>
-            <TextBlock x:Name="TheoryExplanation" TextWrapping="Wrap" FontSize="12"
+            <TextBlock Text="Nivel de explicación" FontWeight="SemiBold" Margin="0,0,0,4"/>
+            <ComboBox x:Name="ExplanationLevelComboBox" Height="30" Margin="0,0,0,10"
+                      SelectedIndex="1" SelectionChanged="ControlsChanged">
+                <ComboBoxItem Content="Conceptual — ¿qué sucede y por qué?"/>
+                <ComboBoxItem Content="Universitario — procedimiento y ecuaciones"/>
+                <ComboBoxItem Content="Ingeniería — hipótesis, límites y referencias"/>
+            </ComboBox>
+            <Border Padding="12" Background="#E9F2FE" CornerRadius="5" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="EXPLICACIÓN SEGÚN SUS CAMBIOS" FontWeight="SemiBold"
+                               Foreground="#183B67" Margin="0,0,0,4"/>
+                    <TextBlock x:Name="TheoryChangeText" FontSize="12.5" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+            <TextBlock x:Name="TheoryExplanation" TextWrapping="Wrap" FontSize="13"
                        Margin="0,0,0,9"/>
+            <TextBlock Text="ECUACIÓN DEL PROCESO" FontWeight="SemiBold" Margin="0,4,0,4"/>
+            <TextBlock x:Name="TheoryFormulaText" TextWrapping="Wrap" FontFamily="Consolas"
+                       FontSize="12.5" Margin="0,0,0,9"/>
+            <TextBlock Text="DESARROLLO CON SUS DATOS" FontWeight="SemiBold" Margin="0,0,0,4"/>
+            <TextBlock x:Name="TheoryStepsText" TextWrapping="Wrap" FontFamily="Consolas"
+                       FontSize="12.5" Margin="0,0,0,10"/>
+            <Border Padding="10" Background="#FEF5E7" CornerRadius="4" Margin="0,0,0,10">
+                <TextBlock x:Name="TheoryWarningText" TextWrapping="Wrap" FontSize="12.5"/>
+            </Border>
             <Border BorderBrush="#CBD5E1" BorderThickness="1" Background="White"
                     CornerRadius="4" Margin="0,0,0,9">
                 <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Stretch">
@@ -53,8 +80,29 @@
             </Border>
             <TextBlock x:Name="TheoryValues" FontFamily="Consolas" FontSize="12"
                        TextWrapping="Wrap" Margin="0,0,0,7"/>
-            <TextBlock Text="Fuente metodológica: ASHRAE Handbook—Fundamentals (Psychrometrics); contrastes PsychroLib y CoolProp. Para mezclas, balance ideal sin condensación."
-                       Foreground="#64748B" FontSize="11" TextWrapping="Wrap"/>
+            <TextBlock Text="DICCIONARIO INTERACTIVO: SELECCIONE UNA VARIABLE"
+                       FontWeight="SemiBold" Margin="6,8,0,5"/>
+            <ComboBox x:Name="VariableSelector" Height="30" Margin="0,0,0,6"
+                      SelectionChanged="VariableSelector_Changed" DisplayMemberPath="Title"/>
+            <Border BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="5"
+                    Padding="10" Margin="0,0,0,15">
+                <TextBlock x:Name="VariableExplanationText" TextWrapping="Wrap" FontSize="12"/>
+            </Border>
+            <TextBlock Text="COMPRUEBE SU COMPRENSIÓN" FontWeight="SemiBold" Margin="0,0,0,7"/>
+            <TextBlock x:Name="TheoryQuestionText" TextWrapping="Wrap" Margin="0,0,0,7"/>
+            <ComboBox x:Name="TheoryAnswerCombo" Height="30" Margin="0,0,0,8"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                <Button Content="Comprobar respuesta" Click="CheckTheoryAnswer_Click"
+                        Padding="10,6" Margin="0,0,8,0"/>
+                <Button Content="Reiniciar ejemplo" Click="ResetTheoryExample_Click"
+                        Padding="10,6"/>
+            </StackPanel>
+            <TextBlock x:Name="TheoryFeedbackText" FontWeight="SemiBold" TextWrapping="Wrap"
+                       FontSize="12.5" Margin="0,0,0,10"/>
+            <TextBlock Text="TRAZABILIDAD DE LA EXPLICACIÓN" FontWeight="SemiBold"
+                       Margin="0,0,0,5"/>
+            <TextBlock x:Name="TheorySourceText" Foreground="#64748B"
+                       TextWrapping="Wrap" FontSize="11"/>
         </StackPanel>
     </Border>
 </UserControl>
