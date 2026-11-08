@@ -21,6 +21,15 @@ internal static class Program
     [STAThread]
     private static int Main()
     {
+        // La máquina de CI utiliza inglés; simular también la configuración
+        // regional colombiana permite detectar pruebas dependientes del separador decimal.
+        string? requestedCulture=Environment.GetEnvironmentVariable("FRIOCALC_UI_CULTURE");
+        if(!string.IsNullOrWhiteSpace(requestedCulture))
+        {
+            var culture=CultureInfo.GetCultureInfo(requestedCulture);
+            CultureInfo.CurrentCulture=culture;
+            CultureInfo.CurrentUICulture=culture;
+        }
         int checks = 0;
         try
         {
