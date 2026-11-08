@@ -44,3 +44,5 @@ AUDITORIA #19: sesión JSON con NaN de rocío, validación de estado derivado, i
 AUDITORIA #20: editar lavador predictivo, parámetros persistidos, reemplazar salidas sin dejar puntos huérfanos.
 
 AUDITORIA #21: sincronización selección de tarjetas al editar proceso predictivo y limpieza de salida.
+
+AUDITORIA #22: etiquetas de puntos cercanos sin solape, 519+ test fisicos y 71+ UI.
