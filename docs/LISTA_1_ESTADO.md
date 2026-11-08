@@ -131,7 +131,7 @@
 
 1. **Validación física externa:** las pruebas incluyen ejemplos cuantitativos de ASHRAE 2025 a 101,325 y 84,54 kPa. Sigue pendiente la validación sistemática en todo el dominio, la región bajo cero, pares inversos degenerados y comparación con modelos de gas real.
 2. **Modelos de equipos:** desecantes y regeneración, geometrías reales de serpentín, cargas completas de auditorio y redes multietapa; solicitar las variables faltantes en lugar de inferirlas.
-3. **Aceptación visual:** el flujo de Windows genera seis capturas (tres zonas a 1150×788 y 1540×900) y verifica apertura WPF. Faltan pruebas humanas de clics, scroll, recorte de textos, FCS, cambio SI/IP, exportación y ciclos.
+3. **Aceptación visual:** el flujo de Windows genera tres capturas reales a 1150×788 (tres zonas). La inspección de 1540×900 queda para Visual Studio en el computador del usuario; el runner restringe el tamaño de su ventana. Faltan pruebas humanas de clics, scroll, recorte de textos, FCS, cambio SI/IP, exportación y ciclos.
 4. **Edición avanzada de procesos:** se conserva el identificador del proceso al editar; aún debe auditarse el tratamiento de puntos de salida generados, estados compartidos y operaciones de deshacer.
 5. **Bibliografía:** el registro incluye fuentes y capítulos, pero no inventa páginas no verificadas del manual ASHRAE. La denominación «Hendrickson» permanece pendiente de corroboración externa.
 6. **Integración local:** sincronización con la carpeta de Visual Studio y ejecución de la app en el computador del usuario todavía por confirmar.

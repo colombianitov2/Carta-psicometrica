@@ -27,7 +27,7 @@ La carta y el motor de puntos/procesos están integrados para una auditoría con
 
 - Compilación `net10.0-windows` con advertencias como errores: **0 errores y 0 advertencias**.
 - **65 pruebas numéricas**: estados inversos, conservación, modelos, unidades, contraste ASHRAE 2025 y condiciones imposibles.
-- **25 pruebas de inicialización WPF y sincronización de puntos**, más capturas de las tres zonas de la interfaz. La auditoría siguiente recopila dos resoluciones (1150×788 y 1540×900).
+- **25 pruebas de inicialización WPF y sincronización de puntos**, más capturas de las tres zonas de la interfaz. La captura automática de GitHub está limitada al escritorio virtual de 1150×788. La comprobación a 1540×900 se realiza en Visual Studio local.
 - La validación se realizó sobre la rama aislada; no hubo fusión.
 - Consultar [evidencias de la compilación y PNG](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42425602980).
 
