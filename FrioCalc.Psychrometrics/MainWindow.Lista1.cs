@@ -79,7 +79,9 @@ public partial class MainWindow
         ProcessChart.SetSensibleHeatFactorVisible(false);
         _processChartReady=true;
         ChartMetricsPanel.SetBasicView();
-        PressureSelector.SetStandardChartEnabled(true);
+        // Iniciar con la carta móvil: rueda=zoom y arrastre=panning.
+        // El usuario puede activar «Carta estándar» para fijar el encuadre.
+        PressureSelector.SetStandardChartEnabled(false);
         PressureSelector.SetPointSelectionEnabled(true);
         RefreshSelectionList();
     }
