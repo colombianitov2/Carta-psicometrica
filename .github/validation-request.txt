@@ -24,3 +24,5 @@ SOLICITUD #9: verificar render offscreen real a 1122×728 y 1512×840, validar 8
 SOLICITUD #10 — auditoría estable: 89 pruebas físicas, 25 WPF y tres capturas reales sin recorte.
 
 AUDITORIA ENTROPIA #11: verificar iso-s*, normalización, recorte bajo saturación, 89+ pruebas y capturas.
+
+AUDITORIA #12: fix sintaxis bibliografía, carta estándar inmóvil, test entropía y capturas de ambas curvas.
