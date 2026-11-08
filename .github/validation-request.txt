@@ -32,3 +32,5 @@ AUDITORIA #13: compilar recorte físico de entalpía propagando presión; compro
 AUDITORIA #14: matriz 48 estados multi-presión, A03 siete ejercicios, UI selección SI/IP, títulos Δh claros.
 
 AUDITORIA #15: geometría entalpía no sobresaturada dos presiones, desviación Δh=0 saturación, etiqueta s* SI/IP.
+
+AUDITORIA #16: test exportación PNG, presión 84,54/101,325, reporte markdown, bibliografía y geometría sobre saturación.
