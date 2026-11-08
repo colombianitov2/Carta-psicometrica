@@ -54,3 +54,5 @@ ZONA2 #24: corrección de nulabilidad y expresiones C#; pruebas del tutorial int
 ZONA2 #25: A03 6,7,14,15,22,23,24 conectados a laboratorio; mezcla segunda corriente editable; pruebas WPF.
 
 ZONA2 #26: nullability etapa intermedia corregida, pruebas integrales lecciones y diapositivas.
+
+ZONA2 #27: ejes dinámicos del laboratorio para puntos Tbs >60°C y W alta, prueba gráfica de puntos visibles.
