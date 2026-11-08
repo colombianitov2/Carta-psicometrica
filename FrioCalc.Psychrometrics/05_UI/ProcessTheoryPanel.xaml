@@ -86,6 +86,7 @@
             <TextBlock x:Name="TheoryExplanation" TextWrapping="Wrap" FontSize="13"
                        Margin="0,0,0,9"/>
             <TextBlock Text="ECUACIÓN DEL PROCESO" FontWeight="SemiBold" Margin="0,4,0,4"/>
+            <ContentControl x:Name="TheoryEquationVisual" HorizontalAlignment="Left" Margin="0,0,0,7"/>
             <TextBlock x:Name="TheoryFormulaText" TextWrapping="Wrap" FontFamily="Consolas"
                        FontSize="12.5" Margin="0,0,0,9"/>
             <TextBlock Text="DESARROLLO CON SUS DATOS" FontWeight="SemiBold" Margin="0,0,0,4"/>

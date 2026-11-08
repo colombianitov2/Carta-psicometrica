@@ -205,6 +205,7 @@ public partial class MainWindow
         ProcessChart.SetSensibleHeatFactorGuide(null,null);
         ProcessChart.SetPressure(pressureKPa);
         ProcessTheoryPanel.SetPressure(pressureKPa);
+        AshraeStudyPanel.SetPressure(pressureKPa);
         _savedProcesses.Clear();
         _selectedPointIds.Clear();
         _nextProcessId = 1;

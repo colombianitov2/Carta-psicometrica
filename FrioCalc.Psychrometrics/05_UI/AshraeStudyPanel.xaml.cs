@@ -157,7 +157,7 @@ public partial class AshraeStudyPanel : UserControl
         RefreshConstruction();
     }
 
-    private static UIElement RenderMathematicalFraction(AshraeEquation formula)
+    public static UIElement RenderMathematicalFraction(AshraeEquation formula)
     {
         var horizontal=new StackPanel{Orientation=Orientation.Horizontal,
             VerticalAlignment=VerticalAlignment.Center};

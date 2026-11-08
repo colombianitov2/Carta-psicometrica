@@ -233,6 +233,16 @@ public partial class ProcessTheoryPanel : UserControl
         TheoryChangeText.Text=change;
         TheoryExplanation.Text=lesson.Title+" — "+lesson.Explanation;
         TheoryFormulaText.Text=lesson.Equations;
+        string equationKey=kind switch
+        {
+            "Heating" or "Cooling" or "Dehumidification" or "HeatingHumidification" => "h",
+            "Mixing" => "MixW",
+            "SHR" => "SHR",
+            "Bypass" => "BF",
+            _ => "W"
+        };
+        var equation=AshraeStudyCatalog.FindEquation(equationKey);
+        TheoryEquationVisual.Content=equation is null ? null : AshraeStudyPanel.RenderMathematicalFraction(equation);
         TheoryStepsText.Text=lesson.Steps;
         TheoryWarningText.Text="LÍMITES DEL MODELO: "+lesson.Warning;
         TheorySourceText.Text=lesson.References;
@@ -282,6 +292,7 @@ public partial class ProcessTheoryPanel : UserControl
     {
         TheoryChangeText.Text="Condición de estudio no resoluble con el modelo seleccionado.";
         TheoryExplanation.Text=message;
+        TheoryEquationVisual.Content=null;
         TheoryFormulaText.Text="No se muestran ecuaciones con estados inválidos.";
         TheoryStepsText.Text="";
         TheoryWarningText.Text="Revise la presión, el punto de rocío y el dominio físico.";

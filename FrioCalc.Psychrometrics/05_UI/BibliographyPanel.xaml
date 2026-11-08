@@ -11,16 +11,16 @@
                        Foreground="#555" TextWrapping="Wrap" Margin="0,0,0,10"/>
             <DataGrid x:Name="EntriesGrid" IsReadOnly="True" AutoGenerateColumns="False"
                       HeadersVisibility="Column" SelectionMode="Single"
-                      MaxHeight="290" MinWidth="650"
+                      MaxHeight="235" HorizontalAlignment="Stretch"
                       SelectionChanged="EntriesGrid_SelectionChanged"
                       CanUserAddRows="False">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="46"/>
-                    <DataGridTextColumn Header="Variable" Binding="{Binding Variable}" Width="220"/>
-                    <DataGridTextColumn Header="Símbolo" Binding="{Binding Symbol}" Width="75"/>
-                    <DataGridTextColumn Header="SI" Binding="{Binding UnitsSI}" Width="130"/>
-                    <DataGridTextColumn Header="IP" Binding="{Binding UnitsIP}" Width="130"/>
-                    <DataGridTextColumn Header="Fuente" Binding="{Binding Source}" Width="230"/>
+                    <DataGridTextColumn Header="Variable" Binding="{Binding Variable}" Width="2*"/>
+                    <DataGridTextColumn Header="Símbolo" Binding="{Binding Symbol}" Width="*"/>
+                    <DataGridTextColumn Header="SI" Binding="{Binding UnitsSI}" Width="*"/>
+                    <DataGridTextColumn Header="IP" Binding="{Binding UnitsIP}" Width="*"/>
+                    <DataGridTextColumn Header="Fuente" Binding="{Binding Source}" Width="2*"/>
                 </DataGrid.Columns>
             </DataGrid>
             <TextBlock x:Name="EntryDetailsText" Text="Seleccione una propiedad."

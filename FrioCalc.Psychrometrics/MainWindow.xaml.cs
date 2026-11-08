@@ -60,6 +60,9 @@ public partial class MainWindow : Window
         PsychrometricChart.SetPressure(
             AtmosphericPressure.StandardSeaLevelKPa);
         InitializeLista1();
+        ProcessTheoryPanel.LessonChanged += AshraeStudyPanel.SetLiveLesson;
+        AshraeStudyPanel.SetPressure(PressureSelector.CurrentPressureKPa);
+        AshraeStudyPanel.SetLiveLesson(ProcessTheoryPanel.CurrentLesson);
         ProcessTheoryPanel.LessonChanged += TheoryCoursePanel.SetContext;
         TheoryCoursePanel.SetContext(ProcessTheoryPanel.CurrentLesson);
         TheoryCoursePanel.LessonRequested += kind =>
