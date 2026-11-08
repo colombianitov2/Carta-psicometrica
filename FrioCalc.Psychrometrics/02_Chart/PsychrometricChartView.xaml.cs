@@ -56,6 +56,8 @@ public partial class PsychrometricChartView : UserControl
 
     public event Action<IReadOnlyList<ChartPoint>>? PointsChanged;
     public event Action? PointsAboutToChange;
+    // Confirmar antes de quitar con clic derecho un punto usado por procesos.
+    public event Func<int,bool>? PointDeletionRequested;
 
     private double _pressureKPa =
         101.325;
@@ -688,6 +690,12 @@ public partial class PsychrometricChartView : UserControl
 
         if (existingPointIndex >= 0)
         {
+            int idToDelete=_chartPoints[existingPointIndex].Id;
+            if(PointDeletionRequested is not null && !PointDeletionRequested.Invoke(idToDelete))
+            {
+                e.Handled=true;
+                return;
+            }
             PointsAboutToChange?.Invoke();
             _chartPoints.RemoveAt(
                 existingPointIndex);

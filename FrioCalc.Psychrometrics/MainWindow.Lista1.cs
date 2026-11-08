@@ -31,6 +31,7 @@ public partial class MainWindow
     {
         PointPropertiesPanel.AddPointRequested += AddStatePoint;
         PsychrometricChart.PointsAboutToChange += RememberHistory;
+        PsychrometricChart.PointDeletionRequested += ConfirmPointDeletion;
         PointPropertiesPanel.OpenProcessesRequested += () => WorkspaceTabs.SelectedIndex = 1;
         PointPropertiesPanel.DeletePointRequested += DeleteStatePoint;
         PointPropertiesPanel.EditPointRequested += BeginPointEdit;
@@ -135,6 +136,18 @@ public partial class MainWindow
             MessageBox.Show(error,"Duplicar punto",MessageBoxButton.OK,MessageBoxImage.Warning);
     }
 
+    // [5.1C.10.2] El clic derecho ya no borra silenciosamente
+    // procesos asociados; comparte la misma regla de confirmación que el panel.
+    private bool ConfirmPointDeletion(int id)
+    {
+        if(!_savedProcesses.Any(p=>p.PointIds.Contains(id))) return true;
+        return MessageBox.Show(
+            "El punto seleccionado participa en un proceso guardado. " +
+            "Eliminarlo también eliminará los procesos relacionados. ¿Continuar?",
+            "Confirmar borrado",MessageBoxButton.YesNo,MessageBoxImage.Warning)
+            ==MessageBoxResult.Yes;
+    }
+
     private void DeleteStatePoint(int id)
     {
         bool used = _savedProcesses.Any(p => p.PointIds.Contains(id));
@@ -157,7 +170,10 @@ public partial class MainWindow
         // [5.1C.10.1] Un estado modificado invalida los balances guardados que lo referencian.
         // Eliminar procesos afectados, en lugar de publicar un informe antiguo como válido.
         var changed = new HashSet<int>(points
-            .Where(p => _lastKnownPoints.TryGetValue(p.Id,out var oldPoint) && oldPoint != p)
+            .Where(p => _lastKnownPoints.TryGetValue(p.Id,out var oldPoint) &&
+                (Math.Abs(oldPoint.DryBulbC-p.DryBulbC)>1e-8 ||
+                 Math.Abs(oldPoint.HumidityRatioKgPerKg-p.HumidityRatioKgPerKg)>1e-10 ||
+                 Math.Abs(oldPoint.PressureKPa-p.PressureKPa)>1e-8))
             .Select(p=>p.Id));
         int invalidated = 0;
         if (!_restoringHistory && changed.Count>0)
