@@ -115,6 +115,74 @@ public static class SlideExamples
                 $"Tbs3=(h3−2501·W3)/(1,006+1,86·W3)={mix.DryBulbC:0.###} °C.\n" +
                 "No se promedian caudales volumétricos porque los volúmenes específicos son diferentes.";
         }
+        if(slide==32)
+        {
+            return "DIAPOSITIVA 32 — Reiteración del problema de auditorio (FCSi y BF).\n" +
+                EvaluateCore(24,p);
+        }
+        if(slide==36)
+        {
+            // [4.7.36] Balance de sistema completo con hipótesis declaradas.
+            // La diapositiva aporta cargas local, estados y temperaturas de agua.
+            // El 20% exterior se interpreta SUPUESTAMENTE por masa de aire seco;
+            // no hay un caudal de diseño ni rendimiento del serpentín garantizado.
+            ChartPoint room=FromTRh(1,24,50,p);
+            ChartPoint outdoor=FromTRh(2,34,70,p);
+            ChartPoint coilOut=FromTRh(3,11,95,p);
+            ChartPoint supply=FromTW(4,12.5,coilOut.HumidityRatioKgPerKg,p);
+            if(!ProcessCalculator.TryMix(new List<(ChartPoint State,double DryAirMassFlowKgS)>
+            { (room,.8),(outdoor,.2) },5,"#147D74",out var mixed,out var mixError)
+                ||mixed is null)
+                return "DIAPOSITIVA 36 — No se puede formar la mezcla a la presión indicada: "+mixError;
+            const double rshKW=150,rlhKW=50,cpWater=4.186;
+            const double waterIn=6,waterOut=12;
+            double deltaT=room.DryBulbC-supply.DryBulbC;
+            double cpMix=1.006+1.86*supply.HumidityRatioKgPerKg;
+            if(deltaT<=0 || cpMix<=0)return "DIAPOSITIVA 36 — La impulsión no permite extraer calor sensible del recinto.";
+            double massDryAir=rshKW/(cpMix*deltaT);
+            double latentEstimated=massDryAir*(room.HumidityRatioKgPerKg-
+                supply.HumidityRatioKgPerKg)*2501.0;
+            double totalFromRoomStates=massDryAir*(room.EnthalpyKJPerKgDryAir-
+                supply.EnthalpyKJPerKgDryAir);
+            double latentDeviation=latentEstimated-rlhKW;
+            double waterRemoved=Math.Max(0,massDryAir*(mixed.HumidityRatioKgPerKg-
+                coilOut.HumidityRatioKgPerKg));
+            // La salida de condensado se idealiza como líquido a T del serpentín.
+            double condensateSpecificEnthalpy=cpWater*coilOut.DryBulbC;
+            double coilLoad=massDryAir*(mixed.EnthalpyKJPerKgDryAir-
+                coilOut.EnthalpyKJPerKgDryAir)-
+                waterRemoved*condensateSpecificEnthalpy;
+            double chilledWaterFlow=coilLoad/(cpWater*(waterOut-waterIn));
+            double fanLoad=massDryAir*(supply.EnthalpyKJPerKgDryAir-
+                coilOut.EnthalpyKJPerKgDryAir);
+            if(!double.IsFinite(coilLoad)||coilLoad<=0||!double.IsFinite(chilledWaterFlow))
+                return "DIAPOSITIVA 36 — El conjunto de estados y cargas no permite un balance de enfriamiento positivo.";
+            string consistency=Math.Abs(latentDeviation)<=.1*rlhKW
+                ?"Las cargas sensibles y latentes son aproximadamente compatibles bajo las hipótesis."
+                :"ADVERTENCIA: la carga latente suministrada por los estados NO coincide dentro de ±10% con RLH=50 kW; revise caudal, suministro o condiciones.";
+            return $"DIAPOSITIVA 36 — Auditorio con serpentín, ventilador draw-through y agua fría.\n"+
+                $"P={p:0.###} kPa abs. RSH=150 kW, RLH=50 kW; aire exterior=20 % de m_da (SUPUESTO; la diapositiva no define base de 20 %).\n"+
+                $"Recinto R: 24 °C / 50% HR; exterior E: 34 °C / 70% HR.\n"+
+                $"Serpentín C: 11 °C / 95% HR; ventilador después del serpentín ΔT=+1,5 °C → impulsión S: {supply.DryBulbC:0.###} °C y W_S=W_C.\n"+
+                $"1. R: W={room.HumidityRatioKgPerKg*1000:0.###} g/kgda, h={room.EnthalpyKJPerKgDryAir:0.###} kJ/kgda.\n"+
+                $"2. E: W={outdoor.HumidityRatioKgPerKg*1000:0.###} g/kgda, h={outdoor.EnthalpyKJPerKgDryAir:0.###} kJ/kgda.\n"+
+                $"3. M: W=0,8·W_R+0,2·W_E={mixed.HumidityRatioKgPerKg*1000:0.###} g/kgda; h={mixed.EnthalpyKJPerKgDryAir:0.###} kJ/kgda; Tbs={mixed.DryBulbC:0.###} °C.\n"+
+                $"4. C: W={coilOut.HumidityRatioKgPerKg*1000:0.###} g/kgda; h_C={coilOut.EnthalpyKJPerKgDryAir:0.###} kJ/kgda.\n"+
+                $"5. S: Tbs=11+1,5={supply.DryBulbC:0.###} °C; h_S={supply.EnthalpyKJPerKgDryAir:0.###} kJ/kgda.\n"+
+                $"6. cp_s≈1,006+1,86·W_S={cpMix:0.######} kJ/(kgda·K); ΔT_local={deltaT:0.###} °C.\n"+
+                $"7. ṁ_da=RSH/[cp_s·(T_R−T_S)]={rshKW:0.###}/({cpMix:0.######}·{deltaT:0.###})={massDryAir:0.###} kgda/s.\n"+
+                $"8. RLH estimada≈ṁ_da·(W_R−W_S)·2501={latentEstimated:0.###} kW (dato del enunciado: 50 kW; diferencia={latentDeviation:+0.###;-0.###;0} kW).\n"+
+                $"   Transferencia total de recinto a partir de h≈{totalFromRoomStates:0.###} kW (RSH+RLH del enunciado=200 kW).\n"+
+                $"9. Agua condensada=ṁ_da·(W_M−W_C)={waterRemoved:0.######} kg/s; condensado líquido a 11 °C SUPUESTO.\n"+
+                $"10. Q̇_serpentín=ṁ_da·(h_M−h_C)−ṁ_cond·[4,186·11]={coilLoad:0.###} kW.\n"+
+                $"11. Q̇_ventilador≈ṁ_da·(h_S−h_C)={fanLoad:0.###} kW; no sumar esta potencia al lado incorrecto del balance.\n"+
+                $"12. ṁ_agua fría=Q̇_serpentín/[4,186·(12−6)]={chilledWaterFlow:0.###} kg/s.\n"+
+                consistency+"\n"+
+                "Conclusión condicionada: un sistema UTA con mezcla, serpentín de enfriamiento/deshumidificación y ventilador después del serpentín es conceptualmente compatible. "+
+                "NO es posible seleccionar fabricante/modelo ni verificar capacidad real sin curvas, pérdidas de presión, ventilador, condensado, controles y datos de proyecto. "+
+                "Si el 20% es volumétrico en vez de másico, recalcular la mezcla con los volúmenes específicos individuales.";
+        }
+
         if (slide == 24)
         {
             return "DIAPOSITIVA 24 — FCS interior=0,75; factor bypass BF=0,20.\n" +
