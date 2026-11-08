@@ -68,3 +68,5 @@ VALIDACION LOCAL #31: reproducir configuración es-CO, 694 numéricas, UI en ing
 AUDITORIA UI #32: rango estándar 60g, ocultar scrollbars, botones unidades, puntos y diálogo etiquetas; compilar.
 
 VALIDACION #33: curso ASHRAE 18 unidades, fracciones matematicas, pasos carta, adaptación 60g, y procesos sin segunda carta.
+
+VALIDACION #34: Δh marching squares, clic corto/arrastre, curso ASHRAE fracciones, familias sin numeros; Windows es-CO.
