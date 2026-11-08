@@ -261,7 +261,7 @@ public static class TheoryLessonService
                     route.Add(aux!);
                     description="Transformación de invierno en dos etapas: calefacción sensible con W constante y después aportación de vapor y energía.";
                     formula="Etapa A: W_A=W1, h_A=h(T_A,W1). Etapa B: W2=W_A+ΔW; h2=h_A+ΔW·h_vapor.";
-                    steps=$"1. Calentar de {dryBulbC:0.##} a {aux.DryBulbC:0.##} °C; W={w*1000:0.###} g/kgda constante.\n" +
+                    steps=$"1. Calentar de {dryBulbC:0.##} a {aux!.DryBulbC:0.##} °C; W={w*1000:0.###} g/kgda constante.\n" +
                         $"2. HR intermedia={aux!.RelativeHumidityPercent:0.###} %.\n" +
                         $"3. Añadir {humidityWater*1000:0.###} g de vapor/kgda a h_vapor=2700 kJ/kg.\n" +
                         $"4. T2={finish.DryBulbC:0.###} °C, W2={finish.HumidityRatioKgPerKg*1000:0.###} g/kgda, HR2={finish.RelativeHumidityPercent:0.###} %.";
