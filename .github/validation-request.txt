@@ -42,3 +42,5 @@ AUDITORIA #18: prueba WPF real de crear proceso, eliminar y deshacer, cierre sin
 AUDITORIA #19: sesión JSON con NaN de rocío, validación de estado derivado, integridad de procesos y flujo WPF crear/deshacer.
 
 AUDITORIA #20: editar lavador predictivo, parámetros persistidos, reemplazar salidas sin dejar puntos huérfanos.
+
+AUDITORIA #21: sincronización selección de tarjetas al editar proceso predictivo y limpieza de salida.
