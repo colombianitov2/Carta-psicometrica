@@ -6,9 +6,11 @@
 
 **No fusionada con `main` ni con `chatgpt/friocalc-psychrometrics`.**
 
-**Validación más reciente:** [GitHub Actions #42445234209](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42445234209), con 585 comprobaciones numéricas y 95 de WPF, compilación sin errores ni advertencias. El código adicional de integridad de sesiones y edición predictiva forma parte de esta misma rama. Consultar la [auditoría complementaria](AUDITORIA_COMPLEMENTARIA_LISTA1_2026-11-07.md).
+**Validación más reciente:** [GitHub Actions #42447079032](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42447079032), con 694 comprobaciones numéricas y 106 de WPF, compilación sin errores ni advertencias. El código adicional de integridad de sesiones y edición predictiva forma parte de esta misma rama. Consultar la [auditoría complementaria](AUDITORIA_COMPLEMENTARIA_LISTA1_2026-11-07.md).
 
-**Extensión educativa Zona 2 (versión 1.5):** [manual técnico y pedagógico](ZONA2_TEORIA_INTERACTIVA.md), diez escenarios, explicaciones al modificar controles, ecuaciones con valores sustituidos, diccionario, autoevaluación y ejemplos A03 conectados. La aceptación pedagógica y la revisión visual en el equipo local siguen pendientes.
+**Extensión educativa Zona 2 (versión 1.6):** [manual técnico y pedagógico](ZONA2_TEORIA_INTERACTIVA.md), diez escenarios, explicaciones al modificar controles, ecuaciones con valores sustituidos, diccionario, autoevaluación y ejemplos A03 conectados. La aceptación pedagógica y la revisión visual en el equipo local siguen pendientes.
+
+**Ampliación aprobada del contenido A03:** 31 temas, 12 capítulos de fundamentos de carta y **36/36 diapositivas cubiertas** en el curso navegable. Nuevos apartados 25–36 incluyen climatización, ADP/BF/RSHF/GSHF y auditorio con serpentín y agua fría. [Mapa pedagógico](ZONA2_COBERTURA_CARTA_A03_COMPLETA.md). El objetivo es comprensión interactiva, no una reproducción íntegra del manual ASHRAE.
 
 ## Estado de la construcción
 
@@ -27,13 +29,13 @@ La carta y el motor de puntos/procesos están integrados para una auditoría con
 
 ## Integración verificada al cierre
 
-**GitHub Actions #42445234209** — ejecución Windows con resultado satisfactorio.
+**GitHub Actions #42447079032** — ejecución Windows con resultado satisfactorio.
 
 - Compilación `net10.0-windows` con advertencias como errores: **0 errores y 0 advertencias**.
-- **585 pruebas numéricas**: estados inversos, conservación, modelos, unidades, contraste ASHRAE 2025 y condiciones imposibles.
-- **95 pruebas WPF de inicialización, selección, SI/IP, geometría, exportación y presión**, y tres capturas efectivas de la interfaz a 1150×788. No se ha verificado automáticamente 1540×900 en el runner. La captura automática de GitHub está limitada al escritorio virtual de 1150×788. La comprobación a 1540×900 se realiza en Visual Studio local.
+- **694 pruebas numéricas**: estados inversos, conservación, modelos, unidades, contraste ASHRAE 2025 y condiciones imposibles.
+- **106 pruebas WPF de inicialización, selección, SI/IP, geometría, exportación y presión**, y tres capturas efectivas de la interfaz a 1150×788. No se ha verificado automáticamente 1540×900 en el runner. La captura automática de GitHub está limitada al escritorio virtual de 1150×788. La comprobación a 1540×900 se realiza en Visual Studio local.
 - La validación se realizó sobre la rama aislada; no hubo fusión.
-- Consultar [evidencias de la compilación y PNG](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42445234209).
+- Consultar [evidencias de la compilación y PNG](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42447079032).
 
 ## Verificación técnica
 

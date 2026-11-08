@@ -4,7 +4,7 @@
 
 ## Propósito
 
-Convertir las diapositivas 1–24 del material docente **A03 Procesos Psicrométricos(2).pptx** en una experiencia de aprendizaje donde cada modificación de controles calcule un estado físicamente admisible y explique **qué propiedad cambia, por qué, con qué ecuación, qué datos fueron utilizados y qué resultado no puede determinarse**.
+Convertir las diapositivas 1–36 del material docente **A03 Procesos Psicrométricos(2).pptx** en una experiencia de aprendizaje donde cada modificación de controles calcule un estado físicamente admisible y explique **qué propiedad cambia, por qué, con qué ecuación, qué datos fueron utilizados y qué resultado no puede determinarse**.
 
 Se emplea el mismo motor de estados que la Zona 1; el diagrama de la Zona 2 es **esquemático y didáctico**, no reemplaza una carta oficial ASHRAE para lectura de precisión.
 
@@ -12,6 +12,11 @@ Se emplea el mismo motor de estados que la Zona 1; el diagrama de la Zona 2 es *
 
 | NÚMERO | CLASE | SECCIÓN | ACCIÓN |
 |---|---|---|---|
+| 4.16 | `TheoryCourseCatalog` | `04_Processes` | Indizar 31 temas (12 fundamentos de carta, 19 secciones A03) y cubrir exactamente las 36 diapositivas |
+| 5.6X | `TheoryCoursePanel.xaml` | `05_UI` | Navegación de teoría de carta y diapositivas 1–36, esquemas educativos y acciones de estudio |
+| 5.6C | `TheoryCoursePanel.xaml.cs` | `05_UI` | Aplicación del estado del laboratorio al tema, curvas esquemáticas, enlaces a ejercicios y proceso |
+| 4.7.36 | `SlideExamples` | `04_Processes` | Auditorio con serpentín, ventilador, retorno/exterior y agua fría, verificando consistencia de cargas |
+| T14 / UI.12 | `Smoke` | `tests` | Cobertura exacta de 36 diapositivas, ecuaciones, diálogo de temas y ejercicios 32/36 |
 | 4.15 | `TheoryLessonService` | `04_Processes` | Calcular 10 escenarios de estudio con el motor psicrométrico, explicación, fórmulas, hipótesis, ruta y autoevaluación |
 | 5.5X.1 | `ProcessTheoryPanel.xaml` | `05_UI` | Controles de Tbs, HR, intensidad; Tbs/HR de segunda corriente; modo conceptual, universitario y técnico |
 | 5.5C.2 | `ProcessTheoryPanel.xaml.cs` | `05_UI` | Actualizar texto y diagrama al cambiar cualquier variable; no mostrar estados ficticios |
@@ -20,6 +25,10 @@ Se emplea el mismo motor de estados que la Zona 1; el diagrama de la Zona 2 es *
 | 5.1X.5 | `MainWindow.xaml` | `05_UI` | Presentar teorías, bibliografía y resultados de las diapositivas en la Zona 2 |
 | T13 | `FrioCalc.Psychrometrics.Smoke` | `tests` | Comprobar estados, textos, advertencias, preguntas y propiedades de 10 escenarios |
 | UI.10 | `FrioCalc.UI.Smoke` | `tests` | Mover controles reales, comprobar actualización de explicaciones, responder quiz y cargar casos A03 |
+
+## Curso completo complementario (A03 1–36)
+
+Se añadió [la matriz de estudio y fuentes](ZONA2_COBERTURA_CARTA_A03_COMPLETA.md), con 31 temas, mapa íntegro de las 36 diapositivas y lectura dinámica de familias de líneas de la carta. El curso explica qué significan los datos y los limites de ingeniería; los diez laboratorios siguen disponibles para experimentar sin manipular la versión principal.
 
 ## Laboratorios disponibles
 
@@ -48,7 +57,7 @@ Se emplea el mismo motor de estados que la Zona 1; el diagrama de la Zona 2 es *
 
 ## Fuentes separadas por procedencia
 
-- **Material docente original A03**, PhD Hermes Ramírez León, diapositivas 1–24: ejemplos, orden de temas y datos de ejercicios (archivo proporcionado).
+- **Material docente original A03**, PhD Hermes Ramírez León, diapositivas 1–36: ejemplos, orden de temas y datos de ejercicios (archivo proporcionado).
 - **ASHRAE Handbook—Fundamentals, edición 2025**, capítulo 1, sección 10: procesos típicos de calentamiento/enfriamiento sensible, enfriamiento-deshumidificación, mezcla adiabática e inyección de agua. https://handbook.ashrae.org/Handbooks/F25/SI/F25_Ch01/F25_Ch01_si.aspx
 - **PsychroLib**, funciones de Tbs/Tbh/HR/W/h/v e inversiones; https://psychrometrics.github.io/psychrolib/api_docs.html
 
@@ -62,6 +71,6 @@ No se reproducen textualmente capítulos enteros ni ilustraciones protegidas por
 - La validación automatizada de Windows no equivale a ensayos de rendimiento, certificación industrial ni prueba de cada dispositivo de entrada.
 - Ampliaciones posteriores: persistencia de progreso didáctico, evaluación calificada y esquemas detallados de equipos si se solicitan; no afirmar que ya están implementadas.
 
-**Validación automatizada confirmada:** [GitHub Actions #42445234209](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42445234209) — 0 errores, 0 advertencias, **585 pruebas numéricas y 95 comprobaciones WPF aprobadas**. Se probó el cálculo de los diez escenarios, la actualización al mover controles, la autoevaluación, la segunda corriente de la UTA, los enlaces a A03 y la autoescala gráfica a 65 °C.
+**Validación automatizada confirmada:** [GitHub Actions #42447079032](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42447079032) — 0 errores, 0 advertencias, **694 pruebas numéricas y 106 comprobaciones WPF aprobadas**. Se probó el cálculo de los diez escenarios, la actualización al mover controles, la autoevaluación, la segunda corriente de la UTA, los enlaces a A03 y la autoescala gráfica a 65 °C.
 
 **Estado:** implementación funcional de aprendizaje interactivo en rama experimental, pendiente de aceptación humana y de validación física externa ampliada. La sección ASHRAE abarca los procesos psicrométricos pertinentes al alcance A03, no la totalidad del Handbook.
