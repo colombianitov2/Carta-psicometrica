@@ -114,6 +114,32 @@ internal static class Program
                     using(var stream=System.IO.File.Create(file)) encoder.Save(stream);
                     writer.WriteLine($"CAPTURA_WPF: {file} ({width}×{height})");
                 }
+
+                // [UI.4] Capturas aisladas de las dos magnitudes que el usuario confundía.
+                tabs.SelectedIndex=0;
+                window.UpdateLayout();
+                foreach(var overlay in new[] {
+                    (Toggle:"Entropia_s_relativa", CheckBox:entropyToggle),
+                    (Toggle:"Desviacion_entalpia", CheckBox:(CheckBox)chartMetrics.FindName("EnthalpyDeviationCheckBox"))
+                })
+                {
+                    overlay.CheckBox.IsChecked=true;
+                    mainChart.RefreshChart();
+                    window.UpdateLayout();
+                    var chartOnly=(Canvas)mainChart.FindName("ChartCanvas");
+                    Check(chartOnly.ActualWidth>220 && chartOnly.ActualHeight>170,
+                        $"Overlay {overlay.Toggle} con superficie gráfica real");
+                    var snapshot=new System.Windows.Media.Imaging.RenderTargetBitmap(
+                        (int)Math.Ceiling(chartOnly.ActualWidth),(int)Math.Ceiling(chartOnly.ActualHeight),
+                        96,96,System.Windows.Media.PixelFormats.Pbgra32);
+                    snapshot.Render(chartOnly);
+                    var enc=new System.Windows.Media.Imaging.PngBitmapEncoder();
+                    enc.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(snapshot));
+                    string file=System.IO.Path.Combine(folder,$"{overlay.Toggle}.png");
+                    using(var stream=System.IO.File.Create(file))enc.Save(stream);
+                    writer.WriteLine("CAPTURA_WPF: "+file);
+                    overlay.CheckBox.IsChecked=false;
+                }
             }
             catch(Exception visualError)
             {
