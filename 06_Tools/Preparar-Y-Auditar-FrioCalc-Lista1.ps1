@@ -13,19 +13,22 @@ $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $branch = 'chatgpt/friocalc-lista1-2026-11-07'
 $dest = Join-Path (Split-Path $root -Parent) 'FrioCalc_Lista1_Auditoria'
-$git = Get-Command git -ErrorAction Stop
+Get-Command git -ErrorAction Stop | Out-Null
 
 function Assert-GitExit([string]$Action) {
     if ($LASTEXITCODE -ne 0) { throw "$Action falló (código $LASTEXITCODE). Ningún archivo local se ha eliminado." }
 }
 
 Write-Host "FrioCalc Lista 1: copia aislada para auditoría." -ForegroundColor Cyan
-Write-Host "Proyecto original (no se modifica): $root"
+Write-Host "Repositorio de inicio (sin cambios destructivos): $root"
 Write-Host "Copia a preparar: $dest"
 
 & git -C $root rev-parse --show-toplevel | Out-Null
 Assert-GitExit 'Identificación del repositorio'
-& git -C $root fetch origin "+refs/heads/$branch:refs/remotes/origin/$branch"
+# PowerShell interpreta $branch:refs como variable con ámbito; formar el refspec
+# con -f evita el fallo refs/heads//remotes/... registrado en PowerShell 5.1.
+$refspec = '+refs/heads/{0}:refs/remotes/origin/{0}' -f $branch
+& git -C $root fetch origin $refspec
 Assert-GitExit 'Descarga de rama candidata'
 
 $remoteRef = "refs/remotes/origin/$branch"
@@ -46,8 +49,10 @@ if (Test-Path -LiteralPath $dest) {
     if ($dirty) {
         throw "Hay cambios sin registrar en la copia de auditoría. Revise con 'git status' antes de actualizarla; no se descartará nada."
     }
-    & git -C $dest pull --ff-only origin $branch
-    Assert-GitExit 'Actualización segura de la copia de auditoría'
+    # El worktree fue creado intencionalmente con --no-track; por eso no se
+    # debe depender de upstream ni de la configuración fetch estándar.
+    & git -C $dest merge --ff-only $remoteRef
+    Assert-GitExit 'Actualización de avance rápido de la copia de auditoría'
 }
 else {
     & git -C $root show-ref --verify --quiet "refs/heads/$branch"
@@ -56,7 +61,7 @@ else {
         & git -C $root worktree add $dest $branch
     }
     else {
-        & git -C $root worktree add --track -b $branch $dest "origin/$branch"
+        & git -C $root worktree add --no-track -b $branch $dest $remoteRef
     }
     Assert-GitExit 'Creación de worktree aislado'
 }
