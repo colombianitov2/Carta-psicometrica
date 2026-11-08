@@ -18,6 +18,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        SizeChanged+=(sender,args)=>ApplyResponsiveWorkspaceLayout();
 
         PressureSelector.PressureApplied +=
             OnPressureApplied;
@@ -60,6 +61,7 @@ public partial class MainWindow : Window
         PsychrometricChart.SetPressure(
             AtmosphericPressure.StandardSeaLevelKPa);
         InitializeLista1();
+        ApplyResponsiveWorkspaceLayout();
         ProcessTheoryPanel.LessonChanged += AshraeStudyPanel.SetLiveLesson;
         AshraeStudyPanel.SetPressure(PressureSelector.CurrentPressureKPa);
         AshraeStudyPanel.SetLiveLesson(ProcessTheoryPanel.CurrentLesson);
@@ -79,6 +81,25 @@ public partial class MainWindow : Window
 
     // ------------------------------ Fin de sección 5.1C.2 ------------------------------
 
+
+    // [5.1C.2.1] No desperdiciar un tercio de la pantalla en
+    // Procesos y Teoría: el panel lateral solo es necesario en Carta.
+    private void WorkspaceTabs_SelectionChanged(object sender,
+        System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if(!ReferenceEquals(e.Source,WorkspaceTabs))return;
+        ApplyResponsiveWorkspaceLayout();
+    }
+
+    private void ApplyResponsiveWorkspaceLayout()
+    {
+        if(WorkspaceTabs is null||SettingsScrollViewer is null)return;
+        bool carta=WorkspaceTabs.SelectedIndex==0;
+        SettingsScrollViewer.Visibility=carta?Visibility.Visible:Visibility.Collapsed;
+        double windowWidth=ActualWidth>0?ActualWidth:Width;
+        SettingsColumn.Width=new GridLength(carta?Math.Clamp(windowWidth*.29,285,355):0);
+        SettingsGapColumn.Width=new GridLength(carta?8:0);
+    }
 
     // ------------------------------ Sección 5.1C.3 - Aplicación de presión ------------------------------
 

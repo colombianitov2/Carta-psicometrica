@@ -207,6 +207,8 @@ public partial class MainWindow
         ProcessChart.SetSensibleHeatFactorGuide(null,null);
         ProcessChart.SetPressure(pressureKPa);
         ProcessTheoryPanel.SetPressure(pressureKPa);
+        ProcessPressureIndicator.Text=
+            "Presión de trabajo: "+pressureKPa.ToString("0.###",CultureInfo.CurrentCulture)+" kPa absolutos";
         AshraeStudyPanel.SetPressure(pressureKPa);
         _savedProcesses.Clear();
         _selectedPointIds.Clear();

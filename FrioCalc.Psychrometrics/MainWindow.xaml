@@ -8,19 +8,19 @@
     <!-- [5.1X.1] Dos zonas: carta y procesos (Zona 1), teoría (Zona 2). -->
     <Grid Margin="8">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="335" MinWidth="290" MaxWidth="365"/>
-            <ColumnDefinition Width="9"/>
+            <ColumnDefinition x:Name="SettingsColumn" Width="335" MaxWidth="365"/>
+            <ColumnDefinition x:Name="SettingsGapColumn" Width="9"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <!-- [5.1X.2] Controles de presión, unidades y propiedades -->
-        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto"
+        <ScrollViewer x:Name="SettingsScrollViewer" Grid.Column="0" VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
             <StackPanel>
                 <ui:PressureSelector x:Name="PressureSelector" Margin="0,0,0,12"/>
                 <ui:ChartMetricsPanel x:Name="ChartMetricsPanel"/>
             </StackPanel>
         </ScrollViewer>
-        <TabControl Grid.Column="2" x:Name="WorkspaceTabs">
+        <TabControl Grid.Column="2" x:Name="WorkspaceTabs" SelectionChanged="WorkspaceTabs_SelectionChanged">
             <!-- [5.1X.3] Carta original conservada + panel de puntos -->
             <TabItem Header="Carta psicrométrica">
                 <Grid Margin="5">
@@ -67,6 +67,7 @@
                                   HorizontalScrollBarVisibility="Disabled"
                                   VerticalScrollBarVisibility="Auto">
                         <StackPanel>
+                            <TextBlock x:Name="ProcessPressureIndicator" Text="Presión: 101,325 kPa absolutos" TextWrapping="Wrap" Foreground="#53677B" Margin="0,0,0,8"/>
                             <TextBlock Text="CONSTRUIR PROCESO" FontSize="16" FontWeight="SemiBold"
                                        Margin="0,0,0,8"/>
                             <TextBlock Text="La carta principal muestra estados y trayectorias. Aquí se editan parámetros, tablas y balances."
