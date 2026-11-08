@@ -385,6 +385,67 @@ internal static class Program
                 Check(!invalid,$"No dibujar entalpía sobre curva de saturación P={pressure}");
             }
 
+            // [UI.13] Rango, continuidad y dominio físico de contornos Δh.
+            foreach(double testPressure in new[]{84.54,101.325})
+            {
+                var geom=new ChartGeometry();
+                geom.SetStandardChartMode(true);
+                var cv=new Canvas{Width=860,Height=560};
+                cv.Measure(new Size(860,560));
+                cv.Arrange(new Rect(0,0,860,560));
+                EnthalpyDeviationLayer.Draw(cv,geom,testPressure);
+                var deviations=cv.Children.OfType<Polyline>().ToArray();
+                Check(deviations.Length>=2,"Se ven contornos Δh físicos a P="+testPressure);
+                Check(deviations.Sum(x=>x.Points.Count)>25,
+                    "Δh no está oculta ni son solo fragmentos aislados P="+testPressure);
+                var clipRect=geom.GetPlotRect(860,560);
+                bool aboveSat=false;
+                foreach(var curve in deviations)
+                foreach(var vertex in curve.Points)
+                {
+                    double t=geom.DryBulbCFromX(vertex.X,clipRect);
+                    double w=geom.HumidityRatioKgPerKgFromY(vertex.Y,clipRect);
+                    double pSat=SaturationVaporPressure.GetPressureKPa(t);
+                    if(pSat<testPressure)
+                    {
+                        double ws=SaturationHumidityRatio.FromPressuresKPa(testPressure,pSat);
+                        if(w>ws+2e-5) aboveSat=true;
+                    }
+                }
+                Check(!aboveSat,"Δh respeta saturación a P="+testPressure);
+            }
+
+            // [UI.14] Enseñanza basada en ASHRAE y fracciones WPF.
+            var ashrae=(AshraeStudyPanel)window.FindName("AshraeStudyPanel");
+            var studySelector=(ComboBox)ashrae.FindName("StudySelector");
+            var eqSelector=(ComboBox)ashrae.FindName("FormulaSelector");
+            var stepSelector=(ComboBox)ashrae.FindName("ConstructionStepSelector");
+            var formulaVisual=(ContentControl)ashrae.FindName("FormulaVisual");
+            Check(studySelector.Items.Count==18 &&
+                eqSelector.Items.Count==12 && stepSelector.Items.Count==12,
+                "Panel ASHRAE expone 18 temas, 12 ecuaciones y 12 pasos");
+            Check(formulaVisual.Content is StackPanel,
+                "Fracción matemática representada por elementos, no texto plano");
+            var fraction=(StackPanel)formulaVisual.Content;
+            Check(fraction.Children.Count==2 &&
+                fraction.Children[1] is StackPanel fractionStack &&
+                fractionStack.Children.Count==3 && fractionStack.Children[1] is Border,
+                "Numerador, línea horizontal y denominador visibles");
+            ashrae.SelectConstructionStep(12);
+            Check(stepSelector.SelectedIndex==11 &&
+                ((TextBlock)ashrae.FindName("ConstructionStepTitle")).Text.Contains("12"),
+                "Construcción de carta describe cada etapa hasta la doce");
+            ashrae.SelectUnit("A4");
+            Check(((TextBlock)ashrae.FindName("UnitHeading")).Text.Contains("Presión de saturación"),
+                "Temario navega en orden físico independiente del PowerPoint");
+            var workUnits=(ComboBox)pressurePanel.FindName("WorkUnitsComboBox");
+            Check(workUnits!=null&&workUnits.SelectedIndex==0,
+                "Unidad SI está en panel de presión al inicio");
+            Check(pressurePanel.FindName("SelectPointsToggle") is
+                System.Windows.Controls.Primitives.ToggleButton selectPoint &&
+                selectPoint.IsChecked==true,
+                "Selección de puntos habilitada al iniciar");
+
             Check(window.FindName("StateMethodComboBox") == null, "Namescope aislado de control de métodos");
             // [UI.2] Capturas automáticas de referencia (no equivalen a aceptación visual).
             try
@@ -479,6 +540,39 @@ internal static class Program
             pressurePanel.ApplyExternalPressure(101.325);
             Check(Math.Abs(pressurePanel.CurrentPressureKPa-101.325)<.0001,
                 "Presión estándar restaurada");
+
+            // [UI.15] Sin barras gráficas intrusivas y clic agrega/quita puntos.
+            tabs.SelectedIndex=0;
+            window.UpdateLayout();
+            var horizontalScroll=(System.Windows.Controls.Primitives.ScrollBar)
+                mainChart.FindName("HorizontalChartScrollBar");
+            var verticalScroll=(System.Windows.Controls.Primitives.ScrollBar)
+                mainChart.FindName("VerticalChartScrollBar");
+            Check(horizontalScroll.Visibility==Visibility.Collapsed &&
+                verticalScroll.Visibility==Visibility.Collapsed,
+                "Desplazamiento de carta sin barras laterales");
+            var chartCanvas=(Canvas)mainChart.FindName("ChartCanvas");
+            var clickMethod=typeof(PsychrometricChartView).GetMethod("AddOrRemovePointAt",
+                System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance);
+            Check(clickMethod!=null,"El clic del ratón dispone de un controlador propio");
+            // El punto debe quedar dentro del dominio a 101,325 kPa.
+            var loc=new Point(chartCanvas.ActualWidth*.55,chartCanvas.ActualHeight*.90);
+            clickMethod!.Invoke(mainChart,new object[]{loc});
+            Check(mainChart.ActivePoints.Count==1,"Clic crea punto en carta");
+            clickMethod.Invoke(mainChart,new object[]{loc});
+            Check(mainChart.ActivePoints.Count==0,"Segundo clic elimina el punto creado");
+            // [UI.16] Ocultar números de HR sin borrar la curva visible.
+            chartMetrics.SetNumberVisibility("RelativeHumidity",false);
+            var currentCanvas=(Canvas)mainChart.FindName("ChartCanvas");
+            Check(currentCanvas.Children.OfType<Polyline>().Any(),
+                "Desactivar etiquetas de HR conserva las curvas");
+            Check(!currentCanvas.Children.OfType<TextBlock>()
+                    .Any(t=>t.Text.Contains("%") && t.Visibility==Visibility.Visible),
+                "La opción quita números de HR sin ocultar curvas");
+            chartMetrics.SetNumberVisibility("RelativeHumidity",true);
+            Check(currentCanvas.Children.OfType<TextBlock>()
+                .Any(t=>t.Text.Contains("%") && t.Visibility==Visibility.Visible),
+                "Se pueden restaurar números de humedad relativa");
 
             writer.WriteLine($"PRUEBAS UI SUPERADAS: {checks}");
             window.Close();

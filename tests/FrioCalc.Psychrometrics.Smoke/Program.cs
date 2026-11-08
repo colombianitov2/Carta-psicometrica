@@ -522,6 +522,29 @@ static class Program
             Check(!SlideExamples.Evaluate(36,101.325).Contains("No se pudo resolver"),
                 "A03/36 estados válidos a presión normal");
 
+            // [T15] Orden pedagógico ASHRAE y geometría solicitada 0–60 g/kgda.
+            Check(AshraeStudyCatalog.Units.Count==18,"Temario ASHRAE tiene 18 capítulos originales");
+            Check(AshraeStudyCatalog.Equations.Count==12,"Doce ecuaciones matemáticas documentadas");
+            Check(AshraeStudyCatalog.ConstructionSteps.Count==12,"Doce pasos de construcción");
+            Check(AshraeStudyCatalog.Units[0].Title.Contains("Aire seco") &&
+                AshraeStudyCatalog.Units[8].Title.Contains("Convención de ejes"),
+                "Temario empieza por composición antes de las cartas");
+            foreach(var eq in AshraeStudyCatalog.Equations)
+                Check(eq.Numerator.Length>0&&eq.Denominator.Length>0 &&
+                    eq.Origin.Length>20 && eq.Derivation.Length>20,
+                    "Ecuación derivada y fracción legible "+eq.Key);
+            foreach(var step in AshraeStudyCatalog.ConstructionSteps)
+                Check(step.WhyThisMatters.Length>20 && step.Basis.Length>20,
+                    "Paso con origen y explicación "+step.Number);
+            Check(Math.Abs(ChartGeometry.StandardMaxHumidityRatioKgPerKg-.060)<1e-12,
+                "Carta estándar con rango 0–60 g/kgda");
+            var graphicalRange=new ChartGeometry();
+            graphicalRange.SetStandardChartMode(true);
+            Check(Math.Abs(graphicalRange.MaxHumidityRatioKgPerKg-.06)<1e-12,
+                "Activar Carta estándar mantiene escala de humedad solicitada");
+            Check(graphicalRange.BottomMargin<=65,
+                "Margen inferior compacto sin barras de desplazamiento");
+
             Console.WriteLine($"PRUEBAS SUPERADAS: {_checks}");
             return 0;
         }
