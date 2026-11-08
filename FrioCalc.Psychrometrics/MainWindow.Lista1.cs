@@ -281,6 +281,16 @@ public partial class MainWindow
         var selected = _selectedPointIds
             .Select(id => points.FirstOrDefault(p => p.Id == id)).ToArray();
         if (selected.Any(p => p == null)) return;
+        // [5.1C.12.0] Validar el cierre ANTES de generar puntos predictivos.
+        // Rechazar luego de crear la salida deja puntos huérfanos sin proceso.
+        bool closeCycle=CloseCycleCheckBox.IsChecked==true;
+        if(closeCycle && (type!=ProcessType.Automatic || selected.Length<3))
+        {
+            MessageBox.Show("Para cerrar un ciclo seleccione método Automático " +
+                "y al menos tres puntos diferentes antes de generar la gráfica.",
+                "Ciclo psicrométrico",MessageBoxButton.OK,MessageBoxImage.Warning);
+            return;
+        }
         // [5.1C.12.1] No confundir una comparación de estados con predicción de equipo.
         if (selected.Length > 1 && predictive)
         {
@@ -363,21 +373,8 @@ public partial class MainWindow
             _selectedPointIds.Add(PsychrometricChart.ActivePoints.Last().Id);
             selected = new ChartPoint?[]{inlet,PsychrometricChart.ActivePoints.Last()};
         }
-        bool closeCycle=CloseCycleCheckBox.IsChecked==true;
         if(closeCycle)
-        {
-            if(type!=ProcessType.Automatic)
-            {
-                MessageBox.Show("Para un ciclo cerrado utilice método Automático: cada tramo puede representar una transformación distinta.",
-                    "Ciclo psicrométrico",MessageBoxButton.OK,MessageBoxImage.Warning);return;
-            }
-            if(selected.Length < 3)
-            {
-                MessageBox.Show("Para cerrar un ciclo se necesitan al menos tres puntos distintos.",
-                    "Ciclo psicrométrico",MessageBoxButton.OK,MessageBoxImage.Warning);return;
-            }
             selected=selected.Concat(new[]{selected[0]}).ToArray();
-        }
         var ids = new List<int>(_selectedPointIds);
         if (closeCycle) ids.Add(ids[0]);
         string description;

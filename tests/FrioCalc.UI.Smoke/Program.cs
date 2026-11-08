@@ -99,6 +99,51 @@ internal static class Program
 
 
 
+            // [UI.6.1] Flujo real: crear proceso con dos puntos seleccionados,
+            // eliminarlo, deshacer y verificar recuperación coherente.
+            Check(mainChart.TryAddPointFromConditions(new Dictionary<StateProperty,double>
+                { [StateProperty.DryBulb]=30,[StateProperty.RelativeHumidity]=55 },
+                out var secondError),"Segundo punto de proceso: "+secondError);
+            Check(properties.SelectedPointIds.Count==0,
+                "Sin selección residual tras añadir segundo estado");
+            var updatedCards=(WrapPanel)properties.FindName("PointsWrapPanel");
+            Check(updatedCards.Children.Count==2,"Dos tarjetas para proceso");
+            foreach(Border card in updatedCards.Children.OfType<Border>())
+            {
+                var panel=(StackPanel)card.Child;
+                var selector=panel.Children.OfType<CheckBox>()
+                    .FirstOrDefault(x=>x.Content?.ToString()=="Incluir en proceso");
+                Check(selector!=null,"Selector de proceso disponible en cada punto");
+                selector!.IsChecked=true;
+            }
+            Check(properties.SelectedPointIds.Count==2,"Dos puntos elegidos en orden");
+            var typeSelector=(ComboBox)window.FindName("ProcessTypeComboBox");
+            typeSelector.SelectedIndex=0;
+            ((TextBox)window.FindName("NewProcessNameTextBox")).Text="Auditoria P1-P2";
+            var plotMethod=typeof(MainWindow).GetMethod("PlotProcess_Click",
+                System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance);
+            Check(plotMethod!=null,"Método de graficación existente");
+            plotMethod!.Invoke(window,new object[]{window,new RoutedEventArgs(Button.ClickEvent)});
+            var processesList=(ListBox)window.FindName("SavedProcessesList");
+            Check(processesList.Items.Count==1,"Proceso calculado y guardado en la interfaz");
+            Check(processChart.ActivePoints.Count==2,"Dos estados coherentes en la segunda carta");
+            Check(((TextBlock)window.FindName("ProcessResultText")).Text.Contains("ΔT="),
+                "Resultado numérico de proceso disponible");
+            processesList.SelectedIndex=0;
+            var remove=typeof(MainWindow).GetMethod("DeleteProcess_Click",
+                System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance);
+            Check(remove!=null,"Acción de eliminar proceso existente");
+            remove!.Invoke(window,new object[]{window,new RoutedEventArgs(Button.ClickEvent)});
+            Check(processesList.Items.Count==0 &&
+                mainChart.ActivePoints.Count==2,"Eliminar proceso no borra sus puntos");
+            var undo=typeof(MainWindow).GetMethod("UndoLastAction_Click",
+                System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance);
+            Check(undo!=null,"Deshacer implementado");
+            undo!.Invoke(window,new object[]{window,new RoutedEventArgs(Button.ClickEvent)});
+            Check(processesList.Items.Count==1,"Deshacer recupera proceso eliminado");
+            Check(mainChart.ActivePoints.Count==2&&processChart.ActivePoints.Count==2,
+                "Deshacer mantiene ambas cartas sincronizadas");
+
             // [UI.7] Auditoría geométrica de entalpías: nunca mostrar estados supersaturados.
             foreach(double pressure in new[]{84.54,101.325})
             {
