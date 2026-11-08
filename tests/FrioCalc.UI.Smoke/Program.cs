@@ -120,6 +120,19 @@ internal static class Program
                 "A03/24 no inventa impulsión a partir de FCS/BF");
             Check(teaching.LoadSlideExample(22).Contains("no incluyen envolvente"),
                 "A03/22 advierte sobre carga total no resoluble");
+            // [UI.11] Extender ejes si el alumno supera el máximo de la
+            // carta didáctica inicial, manteniendo todos los puntos visibles.
+            processTopics.SelectedIndex=0; // Calefacción.
+            drySlider.Value=45;
+            intensitySlider.Value=100; // 45 + 20 = 65 °C.
+            var educationalCanvas=(Canvas)teaching.FindName("DiagramCanvas");
+            var dots=educationalCanvas.Children.OfType<Ellipse>().ToArray();
+            Check(dots.Length>=2,"Dos estados del ejemplo de calefacción a 65°C");
+            Check(dots.All(dot=>
+                Canvas.GetLeft(dot)>=0 && Canvas.GetLeft(dot)+dot.Width<=educationalCanvas.Width &&
+                Canvas.GetTop(dot)>=0 && Canvas.GetTop(dot)+dot.Height<=educationalCanvas.Height),
+                "Autoescala del esquema conserva los puntos fuera de 60°C");
+
             // Restore the tutorial to its reference state for the visual captures.
             var resetLesson=typeof(ProcessTheoryPanel).GetMethod("ResetTheoryExample_Click",
                 System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance);

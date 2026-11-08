@@ -309,16 +309,27 @@ public partial class ProcessTheoryPanel : UserControl
         if(width<250||height<200)return;
         const double left=52,right=20,top=14,bottom=39;
         double plotW=width-left-right,plotH=height-top-bottom;
-        const double minT=-5,maxT=60,minW=0,maxW=.045;
+        // [5.5C.3.1] Ajustar los ejes al estado realmente calculado.
+        // A 45°C y 100% HR, o tras calefacción hasta 65°C, los límites
+        // fijos anteriores ocultaban P2 aunque fuera físicamente correcto.
+        var states=new List<ChartPoint>(lesson.Route);
+        if(lesson.Auxiliary is ChartPoint auxiliaryState &&
+           !states.Any(p=>p.Id==auxiliaryState.Id))
+            states.Add(auxiliaryState);
+        double minT=Math.Min(-5,states.Min(p=>p.DryBulbC)-5);
+        double maxT=Math.Max(60,states.Max(p=>p.DryBulbC)+5);
+        const double minW=0;
+        double maxW=Math.Max(.045,states.Max(p=>p.HumidityRatioKgPerKg)*1.12+.001);
+        int upperGrams=(int)Math.Ceiling(maxW*1000/10)*10;
         double X(double t)=>left+(t-minT)/(maxT-minT)*plotW;
         double Y(double w)=>top+(maxW-w)/(maxW-minW)*plotH;
-        for(double tc=0;tc<=60;tc+=10)
+        for(double tc=Math.Ceiling(minT/10)*10;tc<=maxT;tc+=10)
         {
             AddLine(X(tc),top,X(tc),top+plotH,Brushes.Gainsboro,1);
             AddText(tc.ToString("0",CultureInfo.InvariantCulture),
                 X(tc)-8,top+plotH+4,Brushes.DimGray,10);
         }
-        for(int g=0;g<=40;g+=10)
+        for(int g=0;g<=upperGrams;g+=10)
         {
             AddLine(left,Y(g/1000.0),left+plotW,Y(g/1000.0),Brushes.Gainsboro,1);
             AddText(g.ToString(CultureInfo.InvariantCulture),
@@ -327,7 +338,7 @@ public partial class ProcessTheoryPanel : UserControl
         AddText("Tbs (°C)",left+plotW/2-20,height-17,Brushes.Black,11);
         AddText("W (g/kgda)",4,1,Brushes.Black,11);
         var sat=new Polyline{Stroke=Brushes.SlateGray,StrokeThickness=1.5};
-        for(double tc=-5;tc<=60;tc+=.25)
+        for(double tc=minT;tc<=maxT;tc+=.25)
         {
             double pws=SaturationVaporPressure.GetPressureKPa(tc);
             if(pws>=_pressureKPa)break;
