@@ -304,6 +304,22 @@ static class Program
                 sampleId++;
             }
 
+            // [T8] Cobertura de los ejercicios aprobados A03, diapositivas 1–24.
+            foreach(int slide in new[]{6,7,14,15,22,23,24})
+            {
+                string output=SlideExamples.Evaluate(slide,101.325);
+                Check(output.StartsWith($"DIAPOSITIVA {slide}",StringComparison.Ordinal),
+                    $"A03 diapositiva {slide}, salida informativa reproducible");
+                Check(!output.Contains("No se pudo resolver",StringComparison.OrdinalIgnoreCase),
+                    $"A03 diapositiva {slide}, sin estado imposible oculto");
+            }
+            Check(SlideExamples.Evaluate(22,101.325).Contains("NO es la carga total",
+                StringComparison.OrdinalIgnoreCase),
+                "A03 diapositiva 22, advertencia de carga total indeterminada");
+            Check(SlideExamples.Evaluate(24,101.325).Contains("no fijan de modo único",
+                StringComparison.OrdinalIgnoreCase),
+                "A03 diapositiva 24, BF y FCS no inventan impulsión");
+
             // [T5] Unidades sin cambio de estado
             double original=101.325;
             Check(Math.Abs(PsychrometricUnits.PressureToSI(
