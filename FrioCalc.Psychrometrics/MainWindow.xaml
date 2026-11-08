@@ -208,7 +208,7 @@
                     <StackPanel Margin="24" MaxWidth="850" HorizontalAlignment="Left">
                         <TextBlock Text="PSICROMETRÍA Y PROCESOS PSICROMÉTRICOS"
                                    FontSize="23" FontWeight="Bold" Margin="0,0,0,15"/>
-                        <TextBlock Text="Base docente: A03 Procesos Psicrométricos, PhD. Hermes Ramírez León, diapositivas 1–24. Ecuaciones contrastables en ASHRAE Handbook—Fundamentals, capítulo de psicrometría."
+                        <TextBlock Text="Base docente: A03 Procesos Psicrométricos, PhD. Hermes Ramírez León, diapositivas 1–36. Ecuaciones contrastables en ASHRAE Handbook—Fundamentals, capítulo de psicrometría."
                                    TextWrapping="Wrap" Margin="0,0,0,15"/>
                         <TextBlock Text="Propiedades del aire húmedo" FontSize="17" FontWeight="SemiBold"/>
                         <TextBlock Text="Tbs: temperatura de bulbo seco. Tbh: temperatura de bulbo húmedo termodinámico. Trocío: temperatura de condensación. HR: humedad relativa (%). W: masa de vapor de agua por masa de aire seco. h: entalpía por masa de aire seco. v: volumen por masa de aire seco. P: presión absoluta."
@@ -237,6 +237,10 @@
                         <TextBlock Text="4. Ejercicios de las diapositivas 22–24 y 32–36" FontSize="16" FontWeight="SemiBold"/>
                         <TextBlock Text="Auditorio: 300 personas y 8 L/s por persona; para la carga total se necesitan estados y un modelo de flujos/cargas. UTA: 3000 m³/h de retorno y 500 m³/h de aire exterior, convertir cada volumen por su propio volumen específico. FCS interior 0,75 y BF 0,2 no determinan por sí solos un estado único de impulsión sin datos suficientes del serpentín y cargas."
                                    TextWrapping="Wrap" Margin="0,4,0,16"/>
+                        <TextBlock Text="5. Climatización, serpentín, ADP, bypass y RSHF/GSHF (diapositivas 25–36)"
+                                   FontSize="16" FontWeight="SemiBold" Margin="0,0,0,5" TextWrapping="Wrap"/>
+                        <TextBlock Text="La segunda parte de A03 incorpora climatización en climas cálidos/fríos, diferencias entre cargas del local y del sistema, punto de rocío de aparato (ADP), factor de bypass (BF), aire exterior/retorno, ventilador después del serpentín y un ejercicio completo con agua fría. Consulte cada diapositiva en el curso navegable. Las condiciones climáticas son ilustraciones docentes, no datos de diseño certificados."
+                                   TextWrapping="Wrap" Margin="0,4,0,17"/>
                         <TextBlock Text="EJERCICIOS RESUELTOS DESDE EL MOTOR (A03)"
                                    FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
                         <WrapPanel Margin="0,0,0,10">
