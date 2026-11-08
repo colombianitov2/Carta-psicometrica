@@ -50,3 +50,5 @@ AUDITORIA #22: etiquetas de puntos cercanos sin solape, 519+ test fisicos y 71+ 
 ZONA2 EDUCATIVA #23: validar diez modelos docentes con explicaciones en tiempo real, inspector de variables, autoevaluación, fuentes y casos físicos.
 
 ZONA2 #24: corrección de nulabilidad y expresiones C#; pruebas del tutorial interactivo.
+
+ZONA2 #25: A03 6,7,14,15,22,23,24 conectados a laboratorio; mezcla segunda corriente editable; pruebas WPF.
