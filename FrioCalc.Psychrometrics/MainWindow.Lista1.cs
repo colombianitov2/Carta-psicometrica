@@ -585,7 +585,7 @@ public partial class MainWindow
         NewProcessNameTextBox.Text=process.Name;
         CloseCycleCheckBox.IsChecked=process.PointIds.Count>=4 && process.PointIds[0]==process.PointIds[^1];
         if(CloseCycleCheckBox.IsChecked==true && _selectedPointIds.Count>0) _selectedPointIds.RemoveAt(_selectedPointIds.Count-1);
-        RefreshSelectionList();
+        PointPropertiesPanel.SetSelection(_selectedPointIds.ToArray());
         CondensateTemperatureTextBox.Text=process.CondensateTemperatureC?.ToString("0.###",CultureInfo.CurrentCulture) ?? "";
         BranchFractionTextBox.Text=process.BranchFractionA?.ToString("0.###",CultureInfo.CurrentCulture) ?? "";
         DryFlowTextBox.Text=process.DryAirMassFlowKgS?.ToString("0.######",CultureInfo.CurrentCulture) ?? "";

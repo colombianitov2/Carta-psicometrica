@@ -401,6 +401,19 @@ public partial class PointPropertiesPanel : UserControl
         OpenProcessesRequested?.Invoke();
     }
 
+    // [5.4C.7.1] Sincronización bidireccional cuando el usuario abre
+    // un proceso guardado para editarlo. Preserva el orden de la secuencia.
+    public void SetSelection(IReadOnlyList<int> orderedIds)
+    {
+        _selection.Clear();
+        foreach(int id in orderedIds)
+            if(!_selection.Contains(id) &&
+               System.Linq.Enumerable.Any(_latestPoints,p=>p.Id==id))
+                _selection.Add(id);
+        SetPoints(_latestPoints);
+        SelectionChanged?.Invoke(SelectedPointIds);
+    }
+
     public void ClearSelection()
     {
         _selection.Clear();
