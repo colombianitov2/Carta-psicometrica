@@ -58,3 +58,5 @@ ZONA2 #26: nullability etapa intermedia corregida, pruebas integrales lecciones 
 ZONA2 #27: ejes dinámicos del laboratorio para puntos Tbs >60°C y W alta, prueba gráfica de puntos visibles.
 
 ZONA2 A03 COMPLETA #28: 36 diapositivas, 31 temas de curso/guía, lectura y diagramas de carta, ejercicio 36 y pruebas WPF.
+
+ZONA2 A03 COMPLETA #29: UI test imports y nulabilidad corregidos. Reejecutar 694 numéricas y navegación WPF.
