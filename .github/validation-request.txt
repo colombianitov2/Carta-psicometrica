@@ -40,3 +40,5 @@ AUDITORIA #17 2026-11-07: redondeos y redundancia de tres propiedades, rango y t
 AUDITORIA #18: prueba WPF real de crear proceso, eliminar y deshacer, cierre sin puntos huérfanos.
 
 AUDITORIA #19: sesión JSON con NaN de rocío, validación de estado derivado, integridad de procesos y flujo WPF crear/deshacer.
+
+AUDITORIA #20: editar lavador predictivo, parámetros persistidos, reemplazar salidas sin dejar puntos huérfanos.
