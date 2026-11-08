@@ -1,0 +1,127 @@
+<UserControl x:Class="FrioCalc.Psychrometrics.UI.AshraeStudyPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border BorderBrush="#BBCBDD" BorderThickness="1" CornerRadius="7"
+            Padding="12" Background="#F8FAFD" Margin="0,0,0,12">
+        <StackPanel>
+            <TextBlock Text="FUNDAMENTOS Y APLICACIONES DE PSICROMETRÍA"
+                       FontWeight="Bold" FontSize="18" TextWrapping="Wrap" Margin="0,0,0,6"/>
+            <TextBlock Text="Temario original siguiendo los fundamentos del capítulo 1 de ASHRAE. Seleccione un concepto; lea su fundamento, cómo se obtuvo, para qué sirve y su ejemplo calculado. El laboratorio permite experimentar con el estado."
+                       TextWrapping="Wrap" Foreground="#48566A" Margin="0,0,0,13"/>
+            <TextBlock Text="Sección de estudio" FontWeight="SemiBold" Margin="0,0,0,5"/>
+            <ComboBox x:Name="StudySelector" Height="34" Margin="0,0,0,9"
+                      SelectionChanged="StudySelector_Changed" DisplayMemberPath="DisplayTitle"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,13">
+                <Button Content="Tema anterior" Click="PreviousUnit_Click"
+                        Padding="9,6" Margin="0,0,7,0"/>
+                <Button Content="Tema siguiente" Click="NextUnit_Click" Padding="9,6"/>
+            </StackPanel>
+
+            <TextBlock x:Name="UnitHeading" FontSize="17" FontWeight="SemiBold"
+                       TextWrapping="Wrap" Margin="0,0,0,7"/>
+            <TextBlock Text="QUÉ SIGNIFICA" FontWeight="Bold" Margin="0,0,0,3"/>
+            <TextBlock x:Name="UnitDefinition" TextWrapping="Wrap" FontSize="13"
+                       Margin="0,0,0,11"/>
+            <TextBlock Text="FUNDAMENTO Y DEDUCCIÓN" FontWeight="Bold" Margin="0,0,0,3"/>
+            <TextBlock x:Name="UnitDerivation" TextWrapping="Wrap" Margin="0,0,0,11"/>
+            <TextBlock Text="ORIGEN DE LAS RELACIONES Y DATOS" FontWeight="Bold" Margin="0,0,0,3"/>
+            <TextBlock x:Name="UnitOrigin" TextWrapping="Wrap" Margin="0,0,0,11"/>
+            <TextBlock Text="QUÉ PERMITE CALCULAR O LEER EN LA CARTA" FontWeight="Bold"
+                       Margin="0,0,0,3"/>
+            <TextBlock x:Name="UnitInterpretation" TextWrapping="Wrap" Margin="0,0,0,11"/>
+            <Border Background="#FFF4E6" CornerRadius="4" Padding="9" Margin="0,0,0,12">
+                <TextBlock x:Name="UnitLimitation" TextWrapping="Wrap" FontSize="12.5"/>
+            </Border>
+            <TextBlock Text="EJEMPLO RELACIONADO" FontWeight="Bold" Margin="0,0,0,3"/>
+            <TextBlock x:Name="UnitExample" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+            <Border BorderThickness="1" BorderBrush="#B5CADF" Background="White"
+                    CornerRadius="5" Padding="11" Margin="0,0,0,13">
+                <StackPanel>
+                    <TextBlock Text="ECUACIONES — NOTACIÓN MATEMÁTICA" FontSize="15"
+                               FontWeight="Bold" Margin="0,0,0,7"/>
+                    <TextBlock Text="Seleccione la ecuación para mostrar numerador sobre denominador, deducción y sustitución de valores."
+                               TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    <ComboBox x:Name="FormulaSelector" Height="32" Margin="0,0,0,10"
+                              DisplayMemberPath="Title" SelectionChanged="FormulaSelector_Changed"/>
+                    <ContentControl x:Name="FormulaVisual" HorizontalAlignment="Left"
+                                    Margin="0,3,0,11"/>
+                    <TextBlock x:Name="FormulaUnits" FontWeight="SemiBold"
+                               TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    <TextBlock Text="¿DE DÓNDE SALE?" FontWeight="Bold" Margin="0,0,0,3"/>
+                    <TextBlock x:Name="FormulaOrigin" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    <TextBlock x:Name="FormulaDerivation" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    <TextBlock Text="CÁLCULO CON EL ESTADO ACTUAL" FontWeight="Bold"
+                               Margin="0,0,0,3"/>
+                    <TextBlock x:Name="FormulaSubstitution" TextWrapping="Wrap"
+                               FontSize="13" Margin="0,0,0,10"/>
+                    <TextBlock x:Name="FormulaLimitations" Foreground="#9A3C20"
+                               TextWrapping="Wrap" FontSize="12"/>
+                </StackPanel>
+            </Border>
+
+            <Border Background="#EAF3FE" CornerRadius="5" Padding="10" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="EXPERIMENTE CON EL ESTADO DE AIRE HÚMEDO"
+                               FontWeight="Bold" Margin="0,0,0,8"/>
+                    <Grid Margin="0,0,0,7">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/><ColumnDefinition Width="15"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock x:Name="TemperatureValue" Text="Tbs: 25 °C"/>
+                            <Slider x:Name="TemperatureSlider" Minimum="-10" Maximum="55" Value="25"
+                                    ValueChanged="ExampleChanged" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock x:Name="HumidityValue" Text="HR: 50 %"/>
+                            <Slider x:Name="HumiditySlider" Minimum="1" Maximum="100" Value="50"
+                                    ValueChanged="ExampleChanged" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock x:Name="PressureValue" Margin="0,0,0,4"/>
+                    <TextBlock x:Name="LiveValues" TextWrapping="Wrap" FontSize="13"/>
+                </StackPanel>
+            </Border>
+
+            <Expander x:Name="ConstructionExpander" Header="CONSTRUIR UNA CARTA PSICROMÉTRICA — 12 PASOS EXPLICADOS"
+                      IsExpanded="True" Margin="0,0,0,13">
+                <StackPanel Margin="6,10,6,6">
+                    <TextBlock Text="Cada etapa explica qué se calcula, de dónde procede la ecuación, por qué se necesita y cómo se verifica. El diagrama se construye progresivamente a medida que avanza."
+                               TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <ComboBox x:Name="ConstructionStepSelector" Height="31"
+                              DisplayMemberPath="DisplayTitle"
+                              SelectionChanged="ConstructionStepSelector_Changed"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,10">
+                        <Button Content="Paso anterior" Click="PreviousStep_Click"
+                                Padding="9,5" Margin="0,0,7,0"/>
+                        <Button Content="Siguiente paso" Click="NextStep_Click" Padding="9,5"/>
+                    </StackPanel>
+                    <TextBlock x:Name="ConstructionStepTitle" FontWeight="Bold"
+                               FontSize="15" TextWrapping="Wrap" Margin="0,0,0,7"/>
+                    <TextBlock Text="QUÉ HACER" FontWeight="Bold" Margin="0,0,0,3"/>
+                    <TextBlock x:Name="ConstructionWhat" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    <TextBlock Text="POR QUÉ ES NECESARIO" FontWeight="Bold" Margin="0,0,0,3"/>
+                    <TextBlock x:Name="ConstructionWhy" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    <TextBlock Text="EJEMPLO NUMÉRICO" FontWeight="Bold" Margin="0,0,0,3"/>
+                    <TextBlock x:Name="ConstructionExample" TextWrapping="Wrap"
+                               Margin="0,0,0,8"/>
+                    <TextBlock Text="FUNDAMENTO DE LA ECUACIÓN" FontWeight="Bold" Margin="0,0,0,3"/>
+                    <TextBlock x:Name="ConstructionBasis" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Border BorderThickness="1" BorderBrush="#D7E3ED" Background="White"
+                            Padding="6" CornerRadius="4">
+                        <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                            <Canvas x:Name="ConstructionCanvas" Width="735" Height="265"/>
+                        </Viewbox>
+                    </Border>
+                    <TextBlock Text="Esquema Tbs–W original de FrioCalc, no reproducción exacta del plano oblicuo h–W de ASHRAE."
+                               Foreground="#59697B" TextWrapping="Wrap" FontSize="11"
+                               Margin="0,6,0,0"/>
+                </StackPanel>
+            </Expander>
+            <TextBlock x:Name="BibliographyReference" TextWrapping="Wrap"
+                       Foreground="#4F647B" FontSize="11.5"/>
+        </StackPanel>
+    </Border>
+</UserControl>
