@@ -102,7 +102,7 @@ public partial class ProcessTheoryPanel : UserControl
             change="Modifique cualquier control para explorar el efecto del proceso. ";
         if(lesson.Final is ChartPoint final)
         {
-            string direction=final.HumidityRatioKgPerKg-lesson.Initial.HumidityRatioKgPerKg switch
+            string direction=(final.HumidityRatioKgPerKg-lesson.Initial.HumidityRatioKgPerKg) switch
             {
                 > 0.000001=>"W aumenta",
                 < -0.000001=>"W disminuye",

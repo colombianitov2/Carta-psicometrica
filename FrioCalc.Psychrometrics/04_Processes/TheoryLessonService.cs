@@ -209,7 +209,7 @@ public static class TheoryLessonService
                     formula="W2=W_sat(T2,P); m_agua/m_da=W1−W2; q_aire=h2−h1.";
                     steps=$"1. Trocío1={start.DewPointC:0.###} °C, W1={start.HumidityRatioKgPerKg*1000:0.###} g/kgda.\n" +
                         $"2. Enfriar hasta rocío: T={aux!.DryBulbC:0.###} °C sin retirar agua.\n" +
-                        $"3. Enfriamiento adicional = 12·{intensity:0.##} = {12*intensity:0.###} °C → T2={finish.DryBulbC:0.###} °C saturado.\n" +
+                        $"3. Enfriamiento adicional = 12·{intensity:0.##} = {12*intensity:0.###} °C → T2={finish!.DryBulbC:0.###} °C saturado.\n" +
                         $"4. Agua condensada={(start.HumidityRatioKgPerKg-finish.HumidityRatioKgPerKg)*1000:0.###} g/kgda.\n" +
                         $"5. Diferencia de entalpía del aire={finish.EnthalpyKJPerKgDryAir-start.EnthalpyKJPerKgDryAir:0.###} kJ/kgda.";
                     warning="Esta demostración toma una salida saturada ideal. La carga real del serpentín requiere flujo másico, temperatura/entalpía del condensado y datos del equipo.";
@@ -217,7 +217,7 @@ public static class TheoryLessonService
                         ("¿En qué momento comienza la deshumidificación por enfriamiento?",
                          new[]{"Desde cualquier temperatura superior al rocío","Solo después de superar el punto de rocío hacia abajo","Al aumentar Tbs"},1,
                          "Al bajar por debajo del punto de rocío se retira vapor como líquido para mantener saturación.");
-                    route.Add(aux);
+                    route.Add(aux!);
                     break;
 
                 case "Mixing":
@@ -225,7 +225,7 @@ public static class TheoryLessonService
                     double otherW=RelativeHumidity.HumidityRatioFromDryBulbAndRelativeHumidity(35,.60,pressureKPa);
                     if(!Make(3,"Exterior",pressureKPa,35,otherW,out aux))
                     {error="La corriente exterior del ejemplo no es válida a esta presión.";return false;}
-                    if(intensity==0) finish=start with {Id=2,Name="Mezcla"};
+                    if(intensity==0) finish=start! with {Id=2,Name="Mezcla"};
                     else if(intensity==1) finish=aux! with {Id=2,Name="Mezcla"};
                     else if(!ProcessCalculator.TryMix(new List<(ChartPoint State,double DryAirMassFlowKgS)>
                     {(start!,1-intensity),(aux!,intensity)},2,"#2563EB",out finish,out error)||finish is null) return false;
@@ -251,7 +251,7 @@ public static class TheoryLessonService
                     humidityWater=.0015*intensity;
                     if(!ProcessCalculator.TrySteamOutlet(aux!,humidityWater,2700,2,"#2563EB",
                         out finish,out error)||finish is null)return false;
-                    route.Add(aux);
+                    route.Add(aux!);
                     description="Transformación de invierno en dos etapas: calefacción sensible con W constante y después aportación de vapor y energía.";
                     formula="Etapa A: W_A=W1, h_A=h(T_A,W1). Etapa B: W2=W_A+ΔW; h2=h_A+ΔW·h_vapor.";
                     steps=$"1. Calentar de {dryBulbC:0.##} a {aux.DryBulbC:0.##} °C; W={w*1000:0.###} g/kgda constante.\n" +
