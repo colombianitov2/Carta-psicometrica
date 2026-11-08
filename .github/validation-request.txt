@@ -70,3 +70,5 @@ AUDITORIA UI #32: rango estándar 60g, ocultar scrollbars, botones unidades, pun
 VALIDACION #33: curso ASHRAE 18 unidades, fracciones matematicas, pasos carta, adaptación 60g, y procesos sin segunda carta.
 
 VALIDACION #34: Δh marching squares, clic corto/arrastre, curso ASHRAE fracciones, familias sin numeros; Windows es-CO.
+
+VALIDACION #35: import de geometría arreglado; Δh marching squares y clic de ratón WPF.
