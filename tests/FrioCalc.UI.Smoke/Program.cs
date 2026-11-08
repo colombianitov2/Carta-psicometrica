@@ -79,6 +79,9 @@ internal static class Program
                 // window.ActualWidth, sino el contenido con ancho explícito.
                 if (window.Content is not FrameworkElement root)
                     throw new InvalidOperationException("No hay raíz visual WPF para las capturas.");
+                // Desacoplar del HWND limitado por el tamaño de pantalla del runner.
+                // El árbol WPF se renderiza fuera de pantalla y se restituye al final.
+                window.Content = null;
                 foreach (var resolution in new[] { (W:1150.0,H:788.0), (W:1540.0,H:900.0) })
                 {
                     double desiredWidth=resolution.W-28;
@@ -106,6 +109,7 @@ internal static class Program
                         writer.WriteLine($"CAPTURA_WPF: {file} ({width}x{height} contenido)");
                     }
                 }
+                window.Content = root;
             }
             catch(Exception visualError)
             {
