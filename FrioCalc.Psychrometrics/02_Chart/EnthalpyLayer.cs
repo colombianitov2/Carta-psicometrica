@@ -86,6 +86,7 @@ public static class EnthalpyLayer
                 canvas,
                 geometry,
                 plotRect,
+                totalPressureKPa,
                 enthalpy,
                 isMajor);
         }
@@ -100,6 +101,7 @@ public static class EnthalpyLayer
         Canvas canvas,
         ChartGeometry geometry,
         Rect plotRect,
+        double totalPressureKPa,
         double enthalpyKJPerKg,
         bool isMajor)
     {
