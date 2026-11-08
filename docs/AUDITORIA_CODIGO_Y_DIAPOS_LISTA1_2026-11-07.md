@@ -59,6 +59,12 @@ La denominación docente «Rendimiento de Hendrickson» figura en la diapositiva
 
 ## 4. Evidencia de pruebas
 
+**Última validación completa comprobada: GitHub Actions [#42431421445](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42431421445)**. Resultado: **compilación correcta con 0 errores y 0 advertencias; 504 pruebas numéricas y 48 pruebas WPF aprobadas**. La ejecución cargó artefacto con las tres zonas, capas de s* y Δh, y una exportación PNG de la segunda carta.
+
+El test WPF inspecciona directamente los vértices dibujados por la capa de entalpía a **84,54 y 101,325 kPa** para verificar que ninguno está por encima de la humedad de saturación. La prueba confirma además que un cambio real de presión elimina puntos antiguos en ambas cartas y que se exporta un PNG no vacío.
+
+
+
 - CI y registros oficiales: [GitHub Actions](https://github.com/colombianitov2/Carta-psicometrica/actions).
 - Las pruebas se ejecutan en **Windows, .NET 10, WPF**, con advertencias tratadas como errores.
 - Se evalúan propiedades, inversores, unidades, presión, diferencias de entalpía, entropía relativa, mezcla, vapor, evaporación, serpentina con condensado, estados inválidos, referencias ASHRAE y ejercicios del material A03.

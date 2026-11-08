@@ -13,11 +13,11 @@
 ### Evidencia de integración
 
 - Auditoría WPF con tres capturas reales a 1150×788 (carta, procesos y teoría). Los otros tamaños deben inspeccionarse en el computador local; el runner no permite simular válidamente 1540×900. Se corrigieron la distribución y la carta estándar antes de la ejecución final.
-- [Artefacto con tres capturas en Actions #42427980132](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42427980132): descargar desde los artefactos de la ejecución.
+- [Artefacto con tres capturas en Actions #42431421445](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42431421445): descargar desde los artefactos de la ejecución.
 
 
-- Validación Windows GitHub Actions **#42427980132**: 0 errores, 0 advertencias, **89 pruebas numéricas** y **25 pruebas de inicialización UI** correctas.
-- Enlace: https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42427980132
+- Validación Windows GitHub Actions **#42431421445**: 0 errores, 0 advertencias, **504 pruebas numéricas** y **48 comprobaciones WPF** correctas.
+- Enlace: https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42431421445
 - Flujo controlado: solo se ejecuta mediante solicitud manual o al modificar `.github/validation-request.txt`; los commits ordinarios no desencadenan compilación.
 - Carpeta de auditoría local: `06_Tools/Auditar-FrioCalc-Lista1.ps1` con evidencias fuera del repositorio.
 - **Limitación:** el éxito de pruebas no sustituye pruebas humanas de interacción, inspección de carta ni verificación con documentación paginada.
@@ -111,6 +111,12 @@
 | L1.56 | Sesiones JSON con propiedades | Código presente; falta auditoría visual de aceptación |
 | L1.57 | Informes CSV, Markdown, PNG | Código presente; falta auditoría visual de aceptación |
 | L1.58 | GitHub, VS y auditoría integral | Parcial; faltan modelos, casos o referencias |
+
+## Auditoría de entropía y saturación
+
+Revisar [AUDITORIA_CODIGO_Y_DIAPOS_LISTA1_2026-11-07.md](AUDITORIA_CODIGO_Y_DIAPOS_LISTA1_2026-11-07.md). La capa previa de «desviación de entalpía» no era entropía: se conservaron Δh y se añadió una nueva familia opcional de entropía **relativa del gas ideal** s*, con referencia declarada y conversión SI/IP. También se reparó el trazado de entalpías por encima de saturación, se bloqueó el zoom en Carta estándar y se separaron temperaturas con signo de masas no negativas.
+
+**La lista no cambia artificialmente de estado por haber pasado más pruebas:** persisten componentes y modelos industriales que requieren información de fabricante y auditoría local.
 
 ## Cambios incorporados después de la validación inicial
 
