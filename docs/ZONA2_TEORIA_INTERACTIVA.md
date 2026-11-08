@@ -71,6 +71,6 @@ No se reproducen textualmente capítulos enteros ni ilustraciones protegidas por
 - La validación automatizada de Windows no equivale a ensayos de rendimiento, certificación industrial ni prueba de cada dispositivo de entrada.
 - Ampliaciones posteriores: persistencia de progreso didáctico, evaluación calificada y esquemas detallados de equipos si se solicitan; no afirmar que ya están implementadas.
 
-**Validación automatizada confirmada:** [GitHub Actions #42447079032](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42447079032) — 0 errores, 0 advertencias, **694 pruebas numéricas y 106 comprobaciones WPF aprobadas**. Se probó el cálculo de los diez escenarios, la actualización al mover controles, la autoevaluación, la segunda corriente de la UTA, los enlaces a A03 y la autoescala gráfica a 65 °C.
+**Validación automatizada confirmada:** [GitHub Actions #42447357886](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42447357886) — 0 errores, 0 advertencias, **694 pruebas numéricas y 106 comprobaciones WPF aprobadas**. Se probó el cálculo de los diez escenarios, la actualización al mover controles, la autoevaluación, la segunda corriente de la UTA, los enlaces a A03 y la autoescala gráfica a 65 °C.
 
 **Estado:** implementación funcional de aprendizaje interactivo en rama experimental, pendiente de aceptación humana y de validación física externa ampliada. La sección ASHRAE abarca los procesos psicrométricos pertinentes al alcance A03, no la totalidad del Handbook.

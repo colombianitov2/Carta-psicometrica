@@ -13,11 +13,11 @@
 ### Evidencia de integración
 
 - Auditoría WPF con tres capturas reales a 1150×788 (carta, procesos y teoría). Los otros tamaños deben inspeccionarse en el computador local; el runner no permite simular válidamente 1540×900. Se corrigieron la distribución y la carta estándar antes de la ejecución final.
-- [Artefacto con tres capturas en Actions #42447079032](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42447079032): descargar desde los artefactos de la ejecución.
+- [Artefacto con tres capturas en Actions #42447357886](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42447357886): descargar desde los artefactos de la ejecución.
 
 
-- Validación Windows GitHub Actions **#42447079032**: 0 errores, 0 advertencias, **694 pruebas numéricas** y **106 comprobaciones WPF** correctas.
-- Enlace: https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42447079032
+- Validación Windows GitHub Actions **#42447357886**: 0 errores, 0 advertencias, **694 pruebas numéricas** y **106 comprobaciones WPF** correctas.
+- Enlace: https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42447357886
 - Flujo controlado: solo se ejecuta mediante solicitud manual o al modificar `.github/validation-request.txt`; los commits ordinarios no desencadenan compilación.
 - Carpeta de auditoría local: `06_Tools/Auditar-FrioCalc-Lista1.ps1` con evidencias fuera del repositorio.
 - **Limitación:** el éxito de pruebas no sustituye pruebas humanas de interacción, inspección de carta ni verificación con documentación paginada.
@@ -31,7 +31,7 @@
 - **Nuevos contenidos A03 25–36:** climatización para climas cálidos y fríos; ADP, BF, RSHF y GSHF; escenarios regionales ilustrativos; ejercicio de auditorio con RSH 150 kW, RLH 50 kW, ventilador draw-through +1,5 °C, mezcla exterior 20 %, serpentín y agua 6→12 °C.
 - **Control de hipótesis:** el ejercicio 36 usa de forma identificada 20 % en masa seca y condensado líquido a T del serpentín; revisa compatibilidad sensible/latente y no selecciona un modelo de equipo sin curvas.
 - **Documentación:** [ZONA2_COBERTURA_CARTA_A03_COMPLETA.md](ZONA2_COBERTURA_CARTA_A03_COMPLETA.md). La documentación técnica ASHRAE complementa los fundamentos, sin pretender copiar el Handbook completo.
-- **Control automatizado:** [Actions #42447079032](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42447079032) aprobó compilación con 0 errores y 0 advertencias, 694 pruebas numéricas y 106 pruebas WPF.
+- **Control automatizado:** [Actions #42447357886](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42447357886) aprobó compilación con 0 errores y 0 advertencias, 694 pruebas numéricas y 106 pruebas WPF.
 
 **Pendiente:** auditoría humana de pedagogía, figuras originales y resoluciones de pantalla, además de calibración de ingeniería para equipos reales.
 
@@ -39,7 +39,7 @@
 
 La Zona 2 incorpora **10 escenarios paramétricos**, explicaciones que se regeneran al mover temperatura, HR, intensidad y la segunda corriente; ecuaciones desarrolladas con estados reales; advertencias físicas; tres niveles de detalle; diccionario contextual de 12 propiedades; y preguntas con corrección razonada. Los ejercicios A03 de diapositivas 6, 7, 14, 15, 23 y 24 cargan condiciones didácticas; la 22 mantiene explícita la advertencia de falta de información para la carga total. El esquema didáctico se autoajusta a estados superiores a 60°C o con humedad elevada.
 
-**Manual verificable:** [ZONA2_TEORIA_INTERACTIVA.md](ZONA2_TEORIA_INTERACTIVA.md). **Última validación de Windows:** [#42447079032](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42447079032), compilación sin advertencias, 694 pruebas numéricas y 106 verificaciones WPF. La aceptación visual y pedagógica en el PC local sigue pendiente.
+**Manual verificable:** [ZONA2_TEORIA_INTERACTIVA.md](ZONA2_TEORIA_INTERACTIVA.md). **Última validación de Windows:** [#42447357886](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42447357886), compilación sin advertencias, 694 pruebas numéricas y 106 verificaciones WPF. La aceptación visual y pedagógica en el PC local sigue pendiente.
 
 ## Estado por identificador
 
@@ -133,7 +133,7 @@ La Zona 2 incorpora **10 escenarios paramétricos**, explicaciones que se regene
 
 ## Auditoría complementaria de puntos, procesos y sesiones
 
-La validación integral [#42447079032](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42447079032) pasó con **0 errores, 0 advertencias, 694 pruebas numéricas y 106 verificaciones WPF**. Los 76 controles de UI incluyen crear, eliminar, deshacer, editar y recalcular procesos predictivos sin dejar salidas generadas huérfanas, además de verificar etiquetas de tres puntos muy cercanos.
+La validación integral [#42447357886](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42447357886) pasó con **0 errores, 0 advertencias, 694 pruebas numéricas y 106 verificaciones WPF**. Los 76 controles de UI incluyen crear, eliminar, deshacer, editar y recalcular procesos predictivos sin dejar salidas generadas huérfanas, además de verificar etiquetas de tres puntos muy cercanos.
 
 Se corrigieron raíces redundantes con entradas redondeadas, dominio de temperatura, control de bypass que no debe aumentar W, confirmación de eliminación por clic derecho, serialización de estados de aire seco con punto de rocío indefinido, integridad de archivos JSON, reemplazo de salidas generadas y sincronización bidireccional de la selección entre paneles.
 
