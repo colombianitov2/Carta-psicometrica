@@ -270,6 +270,40 @@ static class Program
             Check(BibliographyCatalog.Entries.Any(e=>e.MethodId.Contains("MoistAirSpecificEntropy")),
                 "Bibliografía de modelo entropía relativa");
 
+            // [T7] Matriz de estados desde ASHRAE: cuatro presiones y temperaturas
+            // por encima/debajo de cero, HR secas/húmedas, consistencia inversa.
+            // Son verificaciones de dominio, NO sustituyen datos independientes RP-1485.
+            int sampleId=100;
+            foreach(double pressure in new[]{77.058,84.54,92.634,101.325})
+            foreach(double tbs in new[]{-10.0,5.0,25.0,45.0})
+            foreach(double relative in new[]{.20,.50,.80})
+            {
+                double ratio=RelativeHumidity.HumidityRatioFromDryBulbAndRelativeHumidity(
+                    tbs,relative,pressure);
+                Check(double.IsFinite(ratio)&&ratio>=0,
+                    $"Matriz W({tbs},{relative},{pressure})");
+                Check(PointPropertyCalculator.TryCreatePoint(sampleId,
+                    $"M{sampleId}","#4673AB",pressure,tbs,ratio,out var state)
+                    && state!=null,$"Matriz estado {sampleId}");
+                Check(Math.Abs(state!.RelativeHumidityPercent-relative*100)<.015,
+                    $"Matriz HR {sampleId}");
+                Check(double.IsFinite(state.WetBulbC)&&state.WetBulbC<=tbs+.02,
+                    $"Matriz Tbh física {sampleId}");
+                Check(double.IsFinite(state.DewPointC)&&state.DewPointC<=tbs+.02,
+                    $"Matriz Trocío físico {sampleId}");
+                Check(Math.Abs(MoistAirEnthalpy.HumidityRatioFromEnthalpyAndDryBulb(
+                    state.EnthalpyKJPerKgDryAir,tbs)-ratio)<1e-9,
+                    $"Matriz inversión h/W {sampleId}");
+                Check(double.IsFinite(MoistAirSpecificEntropy.FromDryBulbAndHumidityRatio(
+                    tbs,ratio,pressure)),$"Matriz entropía relativa {sampleId}");
+                double pws=SaturationVaporPressure.GetPressureKPa(tbs);
+                double satW=SaturationHumidityRatio.FromPressuresKPa(pressure,pws);
+                Check(!PointPropertyCalculator.TryCreatePoint(sampleId+1000,
+                    "Sobresaturado","#4673AB",pressure,tbs,satW*1.02,out _),
+                    $"Matriz rechazo de saturación {sampleId}");
+                sampleId++;
+            }
+
             // [T5] Unidades sin cambio de estado
             double original=101.325;
             Check(Math.Abs(PsychrometricUnits.PressureToSI(
