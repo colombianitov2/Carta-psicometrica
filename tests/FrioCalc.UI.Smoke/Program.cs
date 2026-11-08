@@ -9,7 +9,7 @@ using FrioCalc.Psychrometrics.Points;
 using System.Collections.Generic;
 using System.Linq;
 using FrioCalc.Psychrometrics.Core;
-using System.Linq;
+using System.Globalization;
 using System.Windows.Shapes;
 
 namespace FrioCalc.UISmoke;
@@ -142,8 +142,9 @@ internal static class Program
                 "Restablecer escenario docente");
 
             // [UI.12] Navegación real: 31 temas y 36 láminas, curso reactivo.
-            var curriculum=(TheoryCoursePanel)window.FindName("TheoryCoursePanel")!;
-            Check(curriculum is not null,"Zona 2 integra curso completo");
+            var curriculum=window.FindName("TheoryCoursePanel") as TheoryCoursePanel;
+            if(curriculum is null)
+                throw new InvalidOperationException("UI FAIL: Zona 2 no integra curso completo");
             var chapterSelector=(ComboBox)curriculum.FindName("TopicSelector");
             var slideSelector=(ComboBox)curriculum.FindName("SlideSelector");
             var chapterSummary=(TextBlock)curriculum.FindName("TopicSummary");
@@ -301,8 +302,12 @@ internal static class Program
             edit!.Invoke(window,new object[]{window,new RoutedEventArgs(Button.ClickEvent)});
             Check(properties.SelectedPointIds.Count==1,
                 "Edición de proceso recupera entradas y excluye salida calculada");
-            Check(((TextBox)window.FindName("EffectivenessTextBox")).Text.StartsWith("0.5"),
-                "Edición recupera efectividad de saturación");
+            string recoveredEffectiveness=((TextBox)window.FindName("EffectivenessTextBox")).Text;
+            Check(double.TryParse(recoveredEffectiveness,NumberStyles.Float,
+                CultureInfo.CurrentCulture,out double parsedEffectiveness) &&
+                Math.Abs(parsedEffectiveness-.5)<1e-9,
+                "Edición recupera efectividad 0,5 en configuración regional "+
+                CultureInfo.CurrentCulture.Name+"; leído: '"+recoveredEffectiveness+"'");
             ((TextBox)window.FindName("EffectivenessTextBox")).Text="0.65";
             plotMethod.Invoke(window,new object[]{window,new RoutedEventArgs(Button.ClickEvent)});
             Check(processesList.Items.Count==2 && mainChart.ActivePoints.Count==3,
