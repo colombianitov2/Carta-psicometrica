@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using FrioCalc.Psychrometrics;
 using FrioCalc.Psychrometrics.UI;
+using FrioCalc.Psychrometrics.Processes;
 using FrioCalc.Psychrometrics.Chart;
 using FrioCalc.Psychrometrics.Points;
 using System.Collections.Generic;
@@ -141,7 +142,7 @@ internal static class Program
                 "Restablecer escenario docente");
 
             // [UI.12] Navegación real: 31 temas y 36 láminas, curso reactivo.
-            var curriculum=(TheoryCoursePanel)window.FindName("TheoryCoursePanel");
+            var curriculum=(TheoryCoursePanel)window.FindName("TheoryCoursePanel")!;
             Check(curriculum is not null,"Zona 2 integra curso completo");
             var chapterSelector=(ComboBox)curriculum.FindName("TopicSelector");
             var slideSelector=(ComboBox)curriculum.FindName("SlideSelector");
