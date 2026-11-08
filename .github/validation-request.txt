@@ -64,3 +64,5 @@ ZONA2 A03 COMPLETA #29: UI test imports y nulabilidad corregidos. Reejecutar 694
 ZONA2 #30: regresión final de encabezados 1–36 y documentación v1.6; confirmar 694 numéricas, 106 WPF.
 
 VALIDACION LOCAL #31: reproducir configuración es-CO, 694 numéricas, UI en inglés y español tras corregir comparación decimal y CS8602.
+
+AUDITORIA UI #32: rango estándar 60g, ocultar scrollbars, botones unidades, puntos y diálogo etiquetas; compilar.
