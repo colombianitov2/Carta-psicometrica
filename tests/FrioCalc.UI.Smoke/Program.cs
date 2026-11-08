@@ -99,6 +99,37 @@ internal static class Program
 
 
 
+            // [UI.7] Auditoría geométrica de entalpías: nunca mostrar estados supersaturados.
+            foreach(double pressure in new[]{84.54,101.325})
+            {
+                var geometry=new ChartGeometry();
+                geometry.SetStandardChartMode(true);
+                var validationCanvas=new Canvas {Width=850,Height=620};
+                validationCanvas.Measure(new Size(850,620));
+                validationCanvas.Arrange(new Rect(0,0,850,620));
+                EnthalpyLayer.Draw(validationCanvas,geometry,pressure);
+                var lines=validationCanvas.Children.OfType<Polyline>().ToList();
+                Check(lines.Count>4,$"Familia de entalpía representada a P={pressure}");
+                var rectangle=geometry.GetPlotRect(850,620);
+                bool invalid=false;
+                int sampled=0;
+                foreach(var line in lines)
+                foreach(var vertex in line.Points)
+                {
+                    double t=geometry.DryBulbCFromX(vertex.X,rectangle);
+                    double w=geometry.HumidityRatioKgPerKgFromY(vertex.Y,rectangle);
+                    double ps=SaturationVaporPressure.GetPressureKPa(t);
+                    if(ps<pressure)
+                    {
+                        double ws=SaturationHumidityRatio.FromPressuresKPa(pressure,ps);
+                        if(w>ws+1e-8) invalid=true;
+                    }
+                    sampled++;
+                }
+                Check(sampled>100,$"Puntos geométricos comprobados a P={pressure}");
+                Check(!invalid,$"No dibujar entalpía sobre curva de saturación P={pressure}");
+            }
+
             Check(window.FindName("StateMethodComboBox") == null, "Namescope aislado de control de métodos");
             // [UI.2] Capturas automáticas de referencia (no equivalen a aceptación visual).
             try

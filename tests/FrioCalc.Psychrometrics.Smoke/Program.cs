@@ -270,6 +270,16 @@ static class Program
             Check(BibliographyCatalog.Entries.Any(e=>e.MethodId.Contains("MoistAirSpecificEntropy")),
                 "Bibliografía de modelo entropía relativa");
 
+            // [T6.1] Desviación de entalpía: referencia saturada debe ser cero.
+            double satW25=SaturationHumidityRatio.FromPressuresKPa(
+                101.325,SaturationVaporPressure.GetPressureKPa(25));
+            double devSat=EnthalpyDeviation.FromDryBulbAndHumidityRatio(25,satW25,101.325);
+            Check(double.IsFinite(devSat)&&Math.Abs(devSat)<.015,
+                "Desviación de entalpía cero en saturación");
+            double devDry=EnthalpyDeviation.FromDryBulbAndHumidityRatio(25,satW25*.5,101.325);
+            Check(double.IsFinite(devDry)&&Math.Abs(devDry)>1e-5,
+                "Desviación de entalpía no nula fuera de saturación");
+
             // [T7] Matriz de estados desde ASHRAE: cuatro presiones y temperaturas
             // por encima/debajo de cero, HR secas/húmedas, consistencia inversa.
             // Son verificaciones de dominio, NO sustituyen datos independientes RP-1485.
