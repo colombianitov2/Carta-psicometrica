@@ -319,6 +319,11 @@ public partial class MainWindow
             condensateTemperature = condensateInput;
         }
         double? branchFraction = null;
+        int? generatedPointId = null;
+        double? saturationEffectiveness = null, bypassFactorUsed = null;
+        double? steamGramsUsed = null, steamEnthalpyUsed = null, adpUsed = null;
+        double? desiccantGramsUsed = null, desiccantTUsed = null;
+        List<double>? mixFlowsUsed = null;
         string predictionNote = "";
         if (selected.Length == 1 && predictive)
         {
@@ -329,6 +334,7 @@ public partial class MainWindow
             {
                 if (!TryReadUnitInterval(EffectivenessTextBox.Text,out double efficiency))
                 { MessageBox.Show("Indique efectividad ε entre 0 y 1.","Humidificación",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
+                saturationEffectiveness=efficiency;
                 success = ProcessCalculator.TryEvaporativeOutlet(inlet,efficiency,0,inlet.ColorHex,
                     out predicted,out predictionNote);
             }
@@ -337,6 +343,7 @@ public partial class MainWindow
                 if (!TryReadFinite(ApparatusDewPointTextBox.Text,out double adp) ||
                     !TryReadUnitInterval(BypassFactorTextBox.Text,out double bf))
                 { MessageBox.Show("Indique ADP numérico (°C) y BF de 0 a 1.","Bypass",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
+                bypassFactorUsed=bf; adpUsed=adp;
                 success = ProcessCalculator.TryBypassOutlet(inlet,adp,bf,0,inlet.ColorHex,
                     out predicted,out predictionNote);
             }
@@ -349,6 +356,7 @@ public partial class MainWindow
                         "derivada de especificación o medición. No se inventa rendimiento del material.",
                         "Desecante",MessageBoxButton.OK,MessageBoxImage.Warning);return;
                 }
+                desiccantGramsUsed=removed; desiccantTUsed=outputT;
                 success=ProcessCalculator.TryDesiccantOutlet(inlet,removed/1000.0,outputT,
                     0,inlet.ColorHex,out predicted,out predictionNote);
             }
@@ -358,6 +366,7 @@ public partial class MainWindow
                     !TryReadPositive(SteamEnthalpyTextBox.Text,out double steamEnthalpy))
                 { MessageBox.Show("Indique vapor añadido ≥ 0 g/kg y entalpía positiva (kJ/kg).",
                     "Humidificación por vapor",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
+                steamGramsUsed=waterGrams; steamEnthalpyUsed=steamEnthalpy;
                 success = ProcessCalculator.TrySteamOutlet(inlet,waterGrams/1000.0,steamEnthalpy,
                     0,inlet.ColorHex,out predicted,out predictionNote);
             }
@@ -370,7 +379,8 @@ public partial class MainWindow
             };
             if (!PsychrometricChart.TryAddPointFromConditions(target,out error))
             { MessageBox.Show(error,"Salida fuera de la carta",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
-            _selectedPointIds.Add(PsychrometricChart.ActivePoints.Last().Id);
+            generatedPointId=PsychrometricChart.ActivePoints.Last().Id;
+            _selectedPointIds.Add(generatedPointId.Value);
             selected = new ChartPoint?[]{inlet,PsychrometricChart.ActivePoints.Last()};
         }
         if(closeCycle)
@@ -448,6 +458,8 @@ public partial class MainWindow
                 MessageBox.Show(error,"Mezcla fuera de la carta",MessageBoxButton.OK,MessageBoxImage.Warning); return;
             }
             ChartPoint added = PsychrometricChart.ActivePoints.Last();
+            generatedPointId=added.Id;
+            mixFlowsUsed=flows.ToList();
             ids.Add(added.Id);
             double m = inputs.Sum(input => input.DryAirMassFlowKgS);
             description = $"Mezcla de {selected.Length} corrientes: ṁda total={m:0.####} kg/s; T={added.DryBulbC:0.##} °C; " +
@@ -496,15 +508,35 @@ public partial class MainWindow
         ChartPoint initial = selected[0]!;
         int editingIndex=_editingProcessId is int oldId
             ? _savedProcesses.FindIndex(p=>p.Id==oldId) : -1;
+        int? oldGeneratedId=editingIndex>=0
+            ? _savedProcesses[editingIndex].GeneratedPointId : null;
+        // Candidatos anteriores sin metadatos de procedencia (compatibilidad).
+        if(editingIndex>=0 && oldGeneratedId is null &&
+           _savedProcesses[editingIndex].PointIds.Count>=2 &&
+           _savedProcesses[editingIndex].Type is
+               (ProcessType.EvaporativeHumidification or ProcessType.SteamHumidification
+               or ProcessType.Bypass or ProcessType.AdiabaticMixing))
+            oldGeneratedId=_savedProcesses[editingIndex].PointIds[^1];
         int processId=editingIndex>=0 ? _savedProcesses[editingIndex].Id : _nextProcessId++;
         string name=string.IsNullOrWhiteSpace(NewProcessNameTextBox.Text)
             ? $"PR{processId}" : NewProcessNameTextBox.Text.Trim();
         RememberHistory();
         var saved = new PsychrometricProcess(
             processId,name,initial.ColorHex,type,ids,massFlow,Report:description,
-            CondensateTemperatureC:condensateTemperature,BranchFractionA:branchFraction);
+            CondensateTemperatureC:condensateTemperature,BranchFractionA:branchFraction,
+            GeneratedPointId:generatedPointId,SaturationEffectiveness:saturationEffectiveness,
+            BypassFactor:bypassFactorUsed,SteamAddedGramsPerKg:steamGramsUsed,
+            SteamEnthalpyKJPerKg:steamEnthalpyUsed,ApparatusDewPointC:adpUsed,
+            DesiccantRemovedGramsPerKg:desiccantGramsUsed,
+            DesiccantOutletTemperatureC:desiccantTUsed,
+            MixingInletFlowsM3H:mixFlowsUsed);
         if(editingIndex>=0) _savedProcesses[editingIndex]=saved;
         else _savedProcesses.Add(saved);
+        // [5.1C.12.3] Retirar únicamente la salida generada anterior si
+        // ningún otro proceso la utiliza; nunca borrar estados compartidos.
+        if(oldGeneratedId is int oldOutput && oldOutput!=generatedPointId &&
+           !_savedProcesses.Any(p=>p.PointIds.Contains(oldOutput)))
+            PsychrometricChart.DeletePoint(oldOutput);
         _editingProcessId=null;
         UpdateProcessesInCharts();
         ProcessResultText.Text = description;
@@ -541,8 +573,13 @@ public partial class MainWindow
         _editingProcessId=process.Id;
         _selectedPointIds.Clear();
         _selectedPointIds.AddRange(process.PointIds);
-        // Si la mezcla incluye salida calculada, solo cargar entradas.
-        if(process.Type==ProcessType.AdiabaticMixing && _selectedPointIds.Count>2)
+        // Una salida generada NO es entrada del modelo predictivo.
+        bool predictiveProcess=process.Type is ProcessType.EvaporativeHumidification
+            or ProcessType.SteamHumidification or ProcessType.Bypass
+            or ProcessType.AdiabaticMixing;
+        if(_selectedPointIds.Count>=2 &&
+           (process.GeneratedPointId==_selectedPointIds[^1] ||
+            (process.GeneratedPointId is null && predictiveProcess)))
             _selectedPointIds.RemoveAt(_selectedPointIds.Count-1);
         RefreshSelectionList();
         NewProcessNameTextBox.Text=process.Name;
@@ -551,6 +588,17 @@ public partial class MainWindow
         RefreshSelectionList();
         CondensateTemperatureTextBox.Text=process.CondensateTemperatureC?.ToString("0.###",CultureInfo.CurrentCulture) ?? "";
         BranchFractionTextBox.Text=process.BranchFractionA?.ToString("0.###",CultureInfo.CurrentCulture) ?? "";
+        DryFlowTextBox.Text=process.DryAirMassFlowKgS?.ToString("0.######",CultureInfo.CurrentCulture) ?? "";
+        EffectivenessTextBox.Text=process.SaturationEffectiveness?.ToString("0.######",CultureInfo.CurrentCulture) ?? "";
+        BypassFactorTextBox.Text=process.BypassFactor?.ToString("0.######",CultureInfo.CurrentCulture) ?? "";
+        ApparatusDewPointTextBox.Text=process.ApparatusDewPointC?.ToString("0.######",CultureInfo.CurrentCulture) ?? "";
+        SteamAddedTextBox.Text=process.SteamAddedGramsPerKg?.ToString("0.######",CultureInfo.CurrentCulture) ?? "";
+        SteamEnthalpyTextBox.Text=process.SteamEnthalpyKJPerKg?.ToString("0.######",CultureInfo.CurrentCulture) ?? "";
+        DesiccantRemovedTextBox.Text=process.DesiccantRemovedGramsPerKg?.ToString("0.######",CultureInfo.CurrentCulture) ?? "";
+        DesiccantTemperatureTextBox.Text=process.DesiccantOutletTemperatureC?.ToString("0.######",CultureInfo.CurrentCulture) ?? "";
+        MixFlowsListTextBox.Text=process.MixingInletFlowsM3H is {Count:>0}
+            ? string.Join(";",process.MixingInletFlowsM3H.Select(flow=>flow.ToString("0.######",CultureInfo.CurrentCulture)))
+            : "";
         foreach(ComboBoxItem item in ProcessTypeComboBox.Items)
             if(item.Tag?.ToString()==process.Type.ToString())
                 {ProcessTypeComboBox.SelectedItem=item;break;}

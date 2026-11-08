@@ -23,4 +23,12 @@ public sealed record PsychrometricProcess(
     bool Visible = true,
     string Report = "",
     double? CondensateTemperatureC = null,
-    double? BranchFractionA = null);
+    double? BranchFractionA = null,
+    // Solo para puntos calculados por el proceso; permite editar sin dejar huérfanos.
+    int? GeneratedPointId = null,
+    double? SteamAddedGramsPerKg = null,
+    double? SteamEnthalpyKJPerKg = null,
+    double? ApparatusDewPointC = null,
+    double? DesiccantRemovedGramsPerKg = null,
+    double? DesiccantOutletTemperatureC = null,
+    IReadOnlyList<double>? MixingInletFlowsM3H = null);

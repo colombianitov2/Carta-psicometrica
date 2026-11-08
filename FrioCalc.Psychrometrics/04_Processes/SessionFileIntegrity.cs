@@ -64,7 +64,16 @@ public static class SessionFileIntegrity
             {diagnostic="Proceso con identidad, color, tipo o puntos incorrectos.";return false;}
             if(process.DryAirMassFlowKgS is double flow && (!double.IsFinite(flow)||flow<=0) ||
                process.CondensateTemperatureC is double temp && (!double.IsFinite(temp)||temp< -50||temp>100) ||
-               process.BranchFractionA is double frac && (!double.IsFinite(frac)||frac<=0||frac>=1))
+               process.BranchFractionA is double frac && (!double.IsFinite(frac)||frac<=0||frac>=1) ||
+               process.GeneratedPointId is int outputId && !process.PointIds.Contains(outputId) ||
+               process.SaturationEffectiveness is double eff && (!double.IsFinite(eff)||eff<0||eff>1) ||
+               process.BypassFactor is double bf && (!double.IsFinite(bf)||bf<0||bf>1) ||
+               process.SteamAddedGramsPerKg is double water && (!double.IsFinite(water)||water<0) ||
+               process.SteamEnthalpyKJPerKg is double steam && (!double.IsFinite(steam)||steam<=0) ||
+               process.ApparatusDewPointC is double adp && !double.IsFinite(adp) ||
+               process.DesiccantRemovedGramsPerKg is double ds && (!double.IsFinite(ds)||ds<0) ||
+               process.DesiccantOutletTemperatureC is double dt && !double.IsFinite(dt) ||
+               process.MixingInletFlowsM3H is { } mixFlows && mixFlows.Any(v=>!double.IsFinite(v)||v<=0))
             {diagnostic=$"Parámetros del proceso {process.Name} inválidos.";return false;}
         }
         return true;
