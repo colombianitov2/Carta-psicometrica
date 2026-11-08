@@ -111,7 +111,7 @@
                                 </StackPanel>
                             </Border>
                             <TextBlock Text="Método / tipo de proceso" FontWeight="SemiBold" Margin="0,0,0,3"/>
-                            <ComboBox x:Name="ProcessTypeComboBox" SelectedIndex="0" Margin="0,0,0,10">
+                            <ComboBox x:Name="ProcessTypeComboBox" SelectedIndex="0" Width="385" HorizontalAlignment="Left" SelectionChanged="ProcessType_Changed" Margin="0,0,0,10">
                                 <ComboBoxItem Content="Automático · diferencias entre estados" Tag="Automatic"/>
                                 <ComboBoxItem Content="Calefacción o enfriamiento sensible" Tag="Sensible"/>
                                 <ComboBoxItem Content="Calentamiento y humidificación" Tag="HeatingHumidification"/>
@@ -126,10 +126,13 @@
                             <TextBlock Text="Caudal másico de aire seco, kg/s (opcional salvo donde se requiera)"
                                        TextWrapping="Wrap" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="DryFlowTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"/>
-                            <TextBlock Text="Temperatura del condensado para balance del serpentín (°C, opcional)"
+                            <StackPanel x:Name="CondensateGroup" Visibility="Collapsed">
+                             <TextBlock Text="Temperatura del condensado para balance del serpentín (°C, opcional)"
                                        TextWrapping="Wrap" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="CondensateTemperatureTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"/>
-                            <TextBlock Text="Mezcla de N entradas: caudales m³/h separados por punto y coma (opcional)"
+                            </StackPanel>
+                             <StackPanel x:Name="MixingGroup" Visibility="Collapsed">
+                             <TextBlock Text="Mezcla de N entradas: caudales m³/h separados por punto y coma (opcional)"
                                        TextWrapping="Wrap" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="MixFlowsListTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"/>
                             <TextBlock Text="Alternativa para mezcla de solo dos entradas:" FontWeight="SemiBold"
@@ -138,26 +141,37 @@
                             <TextBox x:Name="MixFlowFirstTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,6"/>
                             <TextBlock Text="Solo para mezcla: caudal de entrada 2, m³/h" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="MixFlowSecondTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,10"/>
-                            <TextBlock Text="División en 2 ramas: fracción de flujo hacia rama 1 (0–1)" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,3"/>
+                            </StackPanel>
+                             <StackPanel x:Name="BranchingGroup" Visibility="Collapsed">
+                             <TextBlock Text="División en 2 ramas: fracción de flujo hacia rama 1 (0–1)" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,3"/>
                             <TextBox x:Name="BranchFractionTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"
                                      ToolTip="Seleccione primero entrada, luego salidas de rama 1 y rama 2. Requiere flujo másico total."/>
-                            <TextBlock Text="Para salida predictiva con un punto de entrada"
+                            </StackPanel>
+                             <TextBlock x:Name="PredictiveNotice" Visibility="Collapsed" Text="Para salida predictiva con un punto de entrada"
                                        FontWeight="SemiBold" FontSize="12" Margin="0,0,0,4"/>
-                            <TextBlock Text="Efectividad evaporativa ε (0–1)" FontSize="12" Margin="0,0,0,3"/>
+                            <StackPanel x:Name="EffectivenessGroup" Visibility="Collapsed">
+                             <TextBlock Text="Efectividad evaporativa ε (0–1)" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="EffectivenessTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,6"/>
-                            <TextBlock Text="ADP o punto de rocío del aparato (°C)" FontSize="12" Margin="0,0,0,3"/>
+                            </StackPanel>
+                             <StackPanel x:Name="BypassGroup" Visibility="Collapsed">
+                             <TextBlock Text="ADP o punto de rocío del aparato (°C)" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="ApparatusDewPointTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,6"/>
                             <TextBlock Text="Factor de bypass BF (0–1)" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="BypassFactorTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,6"/>
-                            <TextBlock Text="Vapor añadido (g/kg aire seco)" FontSize="12" Margin="0,0,0,3"/>
+                            </StackPanel>
+                             <StackPanel x:Name="SteamGroup" Visibility="Collapsed">
+                             <TextBlock Text="Vapor añadido (g/kg aire seco)" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="SteamAddedTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,6"/>
                             <TextBlock Text="Entalpía del vapor inyectado (kJ/kg de vapor)" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="SteamEnthalpyTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,10"/>
-                            <TextBlock Text="Desecante: humedad retirada (g/kg aire seco)" FontSize="12" Margin="0,0,0,3"/>
+                            </StackPanel>
+                             <StackPanel x:Name="DesiccantGroup" Visibility="Collapsed">
+                             <TextBlock Text="Desecante: humedad retirada (g/kg aire seco)" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="DesiccantRemovedTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,6"/>
                             <TextBlock Text="Desecante: bulbo seco medido o especificado a la salida (°C)" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,3"/>
                             <TextBox x:Name="DesiccantTemperatureTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"/>
-                            <TextBlock Text="Estos métodos generan un estado de salida usando exactamente los datos del equipo indicados. No hay parámetros predeterminados ocultos."
+                            </StackPanel>
+                             <TextBlock x:Name="PredictiveExplanation" Visibility="Collapsed" Text="Estos métodos generan un estado de salida usando exactamente los datos del equipo indicados. No hay parámetros predeterminados ocultos."
                                        TextWrapping="Wrap" FontSize="11" Foreground="#666" Margin="0,0,0,9"/>
                             <CheckBox x:Name="CloseCycleCheckBox" Content="Cerrar recorrido regresando al punto inicial (método automático)"
                                       ToolTip="Se conserva el orden de los estados; cierra el polígono y verifica el balance del recorrido."

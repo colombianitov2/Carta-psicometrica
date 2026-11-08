@@ -86,6 +86,30 @@ public partial class MainWindow
         RefreshSelectionList();
     }
 
+    // [5.1C.8.2] Mostrar únicamente parámetros del método seleccionado.
+    // Los controles se conservan en el árbol para mantener sesiones y edición.
+    private void ProcessType_Changed(object sender,SelectionChangedEventArgs e)
+    {
+        if(ProcessTypeComboBox is null || MixingGroup is null)return;
+        string type=(ProcessTypeComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString()??"Automatic";
+        bool predictive=type is "EvaporativeHumidification" or "SteamHumidification"
+            or "Bypass" or "Desiccant";
+        CondensateGroup.Visibility=type is "Automatic" or "CoolingDehumidification"
+            ?Visibility.Visible:Visibility.Collapsed;
+        MixingGroup.Visibility=type=="AdiabaticMixing"?Visibility.Visible:Visibility.Collapsed;
+        BranchingGroup.Visibility=type=="Branching"?Visibility.Visible:Visibility.Collapsed;
+        EffectivenessGroup.Visibility=type=="EvaporativeHumidification"
+            ?Visibility.Visible:Visibility.Collapsed;
+        BypassGroup.Visibility=type=="Bypass"?Visibility.Visible:Visibility.Collapsed;
+        SteamGroup.Visibility=type=="SteamHumidification"?Visibility.Visible:Visibility.Collapsed;
+        DesiccantGroup.Visibility=type=="Desiccant"?Visibility.Visible:Visibility.Collapsed;
+        PredictiveNotice.Visibility=predictive?Visibility.Visible:Visibility.Collapsed;
+        PredictiveExplanation.Visibility=predictive?Visibility.Visible:Visibility.Collapsed;
+        CloseCycleCheckBox.Visibility=type=="Automatic"?Visibility.Visible:Visibility.Collapsed;
+        if(type!="Automatic" && CloseCycleCheckBox.IsChecked==true)
+            CloseCycleCheckBox.IsChecked=false;
+    }
+
     // [5.1C.9.1] Familias de líneas independientes en la segunda carta.
     private void ProcessFamilyVisibility_Changed(object sender,RoutedEventArgs e)
     {
