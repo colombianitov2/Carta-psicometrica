@@ -1,6 +1,6 @@
 # Lista 1 — Estado de construcción de FrioCalc
 
-**Versión de seguimiento:** 1.4 — candidata de auditoría · **Fecha:** 7 de noviembre de 2026 · **Rama:** `chatgpt/friocalc-lista1-2026-11-07`.
+**Versión de seguimiento:** 1.5 — candidata de auditoría · **Fecha:** 7 de noviembre de 2026 · **Rama:** `chatgpt/friocalc-lista1-2026-11-07`.
 
 **No se ha fusionado con `main` ni con la rama psicrométrica anterior.** Este registro diferencia compilación correcta, implementación funcional parcial y auditoría visual pendiente. No debe interpretarse como aprobación final del software.
 
@@ -13,14 +13,20 @@
 ### Evidencia de integración
 
 - Auditoría WPF con tres capturas reales a 1150×788 (carta, procesos y teoría). Los otros tamaños deben inspeccionarse en el computador local; el runner no permite simular válidamente 1540×900. Se corrigieron la distribución y la carta estándar antes de la ejecución final.
-- [Artefacto con tres capturas en Actions #42436851686](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42436851686): descargar desde los artefactos de la ejecución.
+- [Artefacto con tres capturas en Actions #42445234209](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42445234209): descargar desde los artefactos de la ejecución.
 
 
-- Validación Windows GitHub Actions **#42436851686**: 0 errores, 0 advertencias, **519 pruebas numéricas** y **76 comprobaciones WPF** correctas.
-- Enlace: https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42436851686
+- Validación Windows GitHub Actions **#42445234209**: 0 errores, 0 advertencias, **585 pruebas numéricas** y **95 comprobaciones WPF** correctas.
+- Enlace: https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42445234209
 - Flujo controlado: solo se ejecuta mediante solicitud manual o al modificar `.github/validation-request.txt`; los commits ordinarios no desencadenan compilación.
 - Carpeta de auditoría local: `06_Tools/Auditar-FrioCalc-Lista1.ps1` con evidencias fuera del repositorio.
 - **Limitación:** el éxito de pruebas no sustituye pruebas humanas de interacción, inspección de carta ni verificación con documentación paginada.
+
+## Zona 2 — ampliación pedagógica interactiva
+
+La Zona 2 incorpora **10 escenarios paramétricos**, explicaciones que se regeneran al mover temperatura, HR, intensidad y la segunda corriente; ecuaciones desarrolladas con estados reales; advertencias físicas; tres niveles de detalle; diccionario contextual de 12 propiedades; y preguntas con corrección razonada. Los ejercicios A03 de diapositivas 6, 7, 14, 15, 23 y 24 cargan condiciones didácticas; la 22 mantiene explícita la advertencia de falta de información para la carga total. El esquema didáctico se autoajusta a estados superiores a 60°C o con humedad elevada.
+
+**Manual verificable:** [ZONA2_TEORIA_INTERACTIVA.md](ZONA2_TEORIA_INTERACTIVA.md). **Última validación de Windows:** [#42445234209](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42445234209), compilación sin advertencias, 585 pruebas numéricas y 95 verificaciones WPF. La aceptación visual y pedagógica en el PC local sigue pendiente.
 
 ## Estado por identificador
 
@@ -114,7 +120,7 @@
 
 ## Auditoría complementaria de puntos, procesos y sesiones
 
-La validación integral [#42436851686](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42436851686) pasó con **0 errores, 0 advertencias, 519 pruebas numéricas y 76 verificaciones WPF**. Los 76 controles de UI incluyen crear, eliminar, deshacer, editar y recalcular procesos predictivos sin dejar salidas generadas huérfanas, además de verificar etiquetas de tres puntos muy cercanos.
+La validación integral [#42445234209](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42445234209) pasó con **0 errores, 0 advertencias, 585 pruebas numéricas y 95 verificaciones WPF**. Los 76 controles de UI incluyen crear, eliminar, deshacer, editar y recalcular procesos predictivos sin dejar salidas generadas huérfanas, además de verificar etiquetas de tres puntos muy cercanos.
 
 Se corrigieron raíces redundantes con entradas redondeadas, dominio de temperatura, control de bypass que no debe aumentar W, confirmación de eliminación por clic derecho, serialización de estados de aire seco con punto de rocío indefinido, integridad de archivos JSON, reemplazo de salidas generadas y sincronización bidireccional de la selección entre paneles.
 

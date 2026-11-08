@@ -6,7 +6,9 @@
 
 **No fusionada con `main` ni con `chatgpt/friocalc-psychrometrics`.**
 
-**Validación más reciente:** [GitHub Actions #42436851686](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42436851686), con 519 comprobaciones numéricas y 76 de WPF, compilación sin errores ni advertencias. El código adicional de integridad de sesiones y edición predictiva forma parte de esta misma rama. Consultar la [auditoría complementaria](AUDITORIA_COMPLEMENTARIA_LISTA1_2026-11-07.md).
+**Validación más reciente:** [GitHub Actions #42445234209](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42445234209), con 585 comprobaciones numéricas y 95 de WPF, compilación sin errores ni advertencias. El código adicional de integridad de sesiones y edición predictiva forma parte de esta misma rama. Consultar la [auditoría complementaria](AUDITORIA_COMPLEMENTARIA_LISTA1_2026-11-07.md).
+
+**Extensión educativa Zona 2 (versión 1.5):** [manual técnico y pedagógico](ZONA2_TEORIA_INTERACTIVA.md), diez escenarios, explicaciones al modificar controles, ecuaciones con valores sustituidos, diccionario, autoevaluación y ejemplos A03 conectados. La aceptación pedagógica y la revisión visual en el equipo local siguen pendientes.
 
 ## Estado de la construcción
 
@@ -25,13 +27,13 @@ La carta y el motor de puntos/procesos están integrados para una auditoría con
 
 ## Integración verificada al cierre
 
-**GitHub Actions #42436851686** — ejecución Windows con resultado satisfactorio.
+**GitHub Actions #42445234209** — ejecución Windows con resultado satisfactorio.
 
 - Compilación `net10.0-windows` con advertencias como errores: **0 errores y 0 advertencias**.
-- **519 pruebas numéricas**: estados inversos, conservación, modelos, unidades, contraste ASHRAE 2025 y condiciones imposibles.
-- **76 pruebas WPF de inicialización, selección, SI/IP, geometría, exportación y presión**, y tres capturas efectivas de la interfaz a 1150×788. No se ha verificado automáticamente 1540×900 en el runner. La captura automática de GitHub está limitada al escritorio virtual de 1150×788. La comprobación a 1540×900 se realiza en Visual Studio local.
+- **585 pruebas numéricas**: estados inversos, conservación, modelos, unidades, contraste ASHRAE 2025 y condiciones imposibles.
+- **95 pruebas WPF de inicialización, selección, SI/IP, geometría, exportación y presión**, y tres capturas efectivas de la interfaz a 1150×788. No se ha verificado automáticamente 1540×900 en el runner. La captura automática de GitHub está limitada al escritorio virtual de 1150×788. La comprobación a 1540×900 se realiza en Visual Studio local.
 - La validación se realizó sobre la rama aislada; no hubo fusión.
-- Consultar [evidencias de la compilación y PNG](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42436851686).
+- Consultar [evidencias de la compilación y PNG](https://github.com/colombianitov2/Carta-psicometrica/actions/runs/42445234209).
 
 ## Verificación técnica
 
