@@ -89,13 +89,21 @@ internal static class Program
                 change.Text.Contains("Tbs inicial") && VisibleText(steps).Contains($"{former+3:0.##}"),
                 $"Mover temperatura actualiza estado, explicación y sustitución numérica: {change.Text} | {VisibleText(steps)}");
             intensitySlider.Value=75;
-            Check(change.Text.Contains("Intensidad") && VisibleText(steps).Contains("0,75") || 
-                change.Text.Contains("Intensidad") && steps.Text.Contains("0.75"),
+            Check(change.Text.Contains("Intensidad") &&
+                (VisibleText(steps).Contains("0,75") || VisibleText(steps).Contains("0.75")),
                 "Mover intensidad modifica pasos en tiempo real");
             processTopics.SelectedIndex=6; // Calentamiento + humidificación.
-            Check(explanation.Text.Contains("Calentamiento seguido") &&
-                steps.Text.Contains("HR intermedia"),
-                "Lección combinada muestra estados intermedios");
+            var combined=teaching.CurrentLesson;
+            var stateTable=(StackPanel)teaching.FindName("TheoryStateTable");
+            Check(combined is {Kind:"HeatingHumidification",Auxiliary:not null,Final:not null} &&
+                combined.Route.Count==3 && combined.Route[1].Id==combined.Auxiliary.Id &&
+                Math.Abs(combined.Initial.HumidityRatioKgPerKg-combined.Auxiliary.HumidityRatioKgPerKg)<1e-10 &&
+                combined.Final.HumidityRatioKgPerKg>combined.Auxiliary.HumidityRatioKgPerKg &&
+                explanation.Text.Contains("Calentamiento seguido") &&
+                VisibleText(steps).Contains("HR intermedia") &&
+                VisibleText(steps).Contains($"{combined.Auxiliary.RelativeHumidityPercent:0.###}") &&
+                stateTable.Children.OfType<Grid>().FirstOrDefault()?.ColumnDefinitions.Count==4,
+                $"Lección combinada muestra estados intermedios: {explanation.Text} | {VisibleText(steps)}");
             processTopics.SelectedIndex=9; // FCS con salida indeterminada.
             var values=(TextBlock)teaching.FindName("TheoryValues");
             Check(values.Text.Contains("INDETERMINADO") &&
@@ -110,7 +118,7 @@ internal static class Program
             quiz!.Invoke(teaching,new object[]{teaching,new RoutedEventArgs(Button.ClickEvent)});
             Check(feedback.Text.Contains("CORRECTO"),"Cuestionario responde a elección del estudiante");
             variableSelector.SelectedIndex=4; // W.
-            Check(variableInfo.Text.Contains("Humedad")&&((StackPanel)teaching.FindName("VariableEquationsPanel")).Children.Count>0 && !variableInfo.Text.Contains("Referencia:"),
+            Check(VisibleText(variableInfo).Contains("Humedad")&&((StackPanel)teaching.FindName("VariableEquationsPanel")).Children.Count>0 && !VisibleText(variableInfo).Contains("Referencia:"),
                 "Inspector de propiedades representa la ecuación sin referencias intercaladas");
             // [UI.10] Ejercicio real A03/23 enlaza ambas corrientes y
             // muestra las condiciones de la UTA en el laboratorio.
@@ -126,7 +134,7 @@ internal static class Program
                 Math.Abs(secondDry.Value-32)<.01&&Math.Abs(secondHum.Value-70)<.01,
                 "A03/23 configura 32°C y HR70% en segunda corriente");
             secondDry.Value=34;
-            Check(change.Text.Contains("Tbs exterior")&&steps.Text.Contains("34"),
+            Check(change.Text.Contains("Tbs exterior")&&VisibleText(steps).Contains("34"),
                 "Cambiar Tbs exterior actualiza la explicación dinámica");
             Check(teaching.LoadSlideExample(24).Contains("FCSi=0,75") &&
                 ((TextBlock)teaching.FindName("TheoryValues")).Text.Contains("INDETERMINADO"),
