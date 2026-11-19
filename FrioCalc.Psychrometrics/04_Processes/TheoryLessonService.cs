@@ -48,7 +48,7 @@ public static class TheoryLessonService
             "p_v = P·W/(0,621945+W); p_ws(Tdp) = p_v.",
             "Medición de rocío o inversión de la curva de presión de saturación.",
             "Con W=0, el punto de rocío no está definido.",AshraeSource),
-        new TheoryVariable("RH","Humedad relativa","%",
+        new TheoryVariable("RH","Humedad relativa (HR)","%",
             "Relación entre la presión parcial del vapor y la presión de saturación a la misma Tbs.",
             "HR = 100·p_v/p_ws(Tbs).",
             "Higrómetro calibrado o cálculo a partir de Tbs, W y P.",

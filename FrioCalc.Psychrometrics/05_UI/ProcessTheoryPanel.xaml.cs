@@ -20,6 +20,7 @@ public partial class ProcessTheoryPanel : UserControl
     public TheoryLesson? CurrentLesson=>_currentLesson;
     private bool _ready;
     private bool _updatingControls;
+    private bool _recomputing;
     private double _pressureKPa = AtmosphericPressure.StandardSeaLevelKPa;
     private TheoryLesson? _currentLesson;
     private TheoryLesson? _previousLesson;
@@ -169,9 +170,12 @@ public partial class ProcessTheoryPanel : UserControl
     // calculado del motor central; las explicaciones se regeneran al arrastrar.
     private void Recompute()
     {
-        if (!_ready || _updatingControls || DiagramCanvas is null ||
+        if (!_ready || _updatingControls || _recomputing || DiagramCanvas is null ||
             ProcessSelector.SelectedItem is not ComboBoxItem item)return;
 
+        _recomputing=true;
+        try
+        {
         double t=DryBulbSlider.Value,rh=HumiditySlider.Value,intensity=ParameterSlider.Value/100.0;
         string kind=item.Tag?.ToString()??"Heating";
         double tSecond=SecondDryBulbSlider.Value,rhSecond=SecondHumiditySlider.Value;
@@ -200,6 +204,10 @@ public partial class ProcessTheoryPanel : UserControl
         }
         _currentLesson=lesson;
         string change="";
+        bool unchanged=_previousLesson is not null && _previousKind==kind &&
+            Math.Abs(t-_previousTemperature)<=1e-8 && Math.Abs(rh-_previousRH)<=1e-8 &&
+            Math.Abs(intensity-_previousFraction)<=1e-8 && Math.Abs(_pressureKPa-_previousPressure)<=1e-7 &&
+            (kind!="Mixing" || (Math.Abs(tSecond-_previousSecondT)<=1e-8 && Math.Abs(rhSecond-_previousSecondRH)<=1e-8));
         if(_previousLesson is not null && _previousKind==kind)
         {
             if(Math.Abs(t-_previousTemperature)>1e-8)
@@ -230,7 +238,7 @@ public partial class ProcessTheoryPanel : UserControl
                 $"La entalpía cambia {final.EnthalpyKJPerKgDryAir-lesson.Initial.EnthalpyKJPerKgDryAir:+0.###;-0.###;0} kJ/kgda.";
         }
         else change+="No puede determinarse un estado de impulsión sin información adicional.";
-        TheoryChangeText.Text=change;
+        if(!unchanged || string.IsNullOrWhiteSpace(TheoryChangeText.Text))TheoryChangeText.Text=change;
         TheoryExplanation.Text=lesson.Title+" — "+lesson.Explanation;
         TheoryFormulaText.Text=lesson.Equations;
         string equationKeys=kind switch
@@ -280,9 +288,11 @@ public partial class ProcessTheoryPanel : UserControl
         _previousRH=rh;
         _previousFraction=intensity;
         _previousPressure=_pressureKPa;
-        LessonChanged?.Invoke(lesson);
         _previousSecondT=tSecond;
         _previousSecondRH=rhSecond;
+        LessonChanged?.Invoke(lesson);
+        }
+        finally { _recomputing=false; }
     }
 
     private void RenderStateResults(TheoryLesson lesson)

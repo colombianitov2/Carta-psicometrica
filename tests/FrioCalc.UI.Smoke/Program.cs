@@ -11,6 +11,7 @@ using System.Linq;
 using FrioCalc.Psychrometrics.Core;
 using System.Globalization;
 using System.Windows.Shapes;
+using System.Windows.Documents;
 
 namespace FrioCalc.UISmoke;
 
@@ -42,6 +43,7 @@ internal static class Program
                 checks++;
                 if (!valid) throw new InvalidOperationException("UI FAIL: " + description);
             }
+            string VisibleText(TextBlock block)=>new TextRange(block.ContentStart,block.ContentEnd).Text;
             Check(window.Title.Contains("Psicrometría"), "Ventana psicrométrica");
             Check(window.FindName("WorkspaceTabs") is TabControl, "Tres zonas de trabajo");
             var tabs = (TabControl)window.FindName("WorkspaceTabs");
@@ -83,10 +85,11 @@ internal static class Program
                 "Zona 2 explica el proceso inicial con fórmula");
             double former=drySlider.Value;
             drySlider.Value=former+3;
-            Check(change.Text.Contains("Tbs inicial") && steps.Text.Contains("28"),
-                "Mover temperatura actualiza explicación y sustitución numérica");
+            Check(teaching.CurrentLesson is { } warmer && Math.Abs(warmer.Initial.DryBulbC-(former+3))<1e-9 &&
+                change.Text.Contains("Tbs inicial") && VisibleText(steps).Contains($"{former+3:0.##}"),
+                $"Mover temperatura actualiza estado, explicación y sustitución numérica: {change.Text} | {VisibleText(steps)}");
             intensitySlider.Value=75;
-            Check(change.Text.Contains("Intensidad") && steps.Text.Contains("0,75") || 
+            Check(change.Text.Contains("Intensidad") && VisibleText(steps).Contains("0,75") || 
                 change.Text.Contains("Intensidad") && steps.Text.Contains("0.75"),
                 "Mover intensidad modifica pasos en tiempo real");
             processTopics.SelectedIndex=6; // Calentamiento + humidificación.
@@ -556,10 +559,14 @@ internal static class Program
                 .First(entry=>entry.Id=="B06");
             bibliographyGrid.SelectedItem=chosenEntry;
             var bibliographyFraction=(ContentControl)bibliography.FindName("EntryEquationVisual");
-            Check(bibliographyFraction.Content is StackPanel,
+            Check(bibliographyFraction.Content is WrapPanel,
                 "Bibliografía W renderiza numerador sobre denominador");
             Check(((TextBlock)bibliography.FindName("EntryEquationProvenance")).Text.Contains("Deducción"),
-                "Bibliografía explica de dónde salen las fórmulas");
+                "Catálogo técnico conserva la deducción");
+            var visibleBibliography=(ItemsControl)window.FindName("BibliographyTopics");
+            Check(visibleBibliography.Items.Count==24 && bibliography.Visibility==Visibility.Collapsed &&
+                visibleBibliography.Items.Cast<AshraeStudyUnit>().All(unit=>unit.Source==AshraeStudyCatalog.Book),
+                "Bibliografía visible contiene únicamente temas y libros");
 
             // [UI.15] Sin barras gráficas intrusivas y clic agrega/quita puntos.
             tabs.SelectedIndex=0;

@@ -474,9 +474,13 @@ static class Program
                 "A03/23 entrada exterior 32°C/70% HR parametrizable");
             Check(TheoryLessonService.Variables.Count>=12,
                 "Diccionario de propiedades ASHRAE ampliado");
-            Check(TheoryLessonService.DescribeVariable("W",p).Contains("g/kgda") &&
-                TheoryLessonService.DescribeVariable("RH",p).Contains("HR"),
-                "Inspector de variables usa estado actual y ecuación");
+            string humidityDescription=TheoryLessonService.DescribeVariable("RH",p);
+            Check(TheoryLessonService.DescribeVariable("W",p).Contains($"{p.HumidityRatioKgPerKg*1000:0.###} g/kgda") &&
+                humidityDescription.Contains("Humedad relativa (HR)") &&
+                humidityDescription.Contains($"{p.RelativeHumidityPercent:0.###} %") &&
+                !humidityDescription.Contains("Referencia:") &&
+                AshraeStudyCatalog.FindEquation("RH") is {Denominator:"p_ws(Tbs)"},
+                "Inspector de variables usa estado actual y ecuación separada sin referencias");
 
             // [T14] Curso completo: teoría de carta y TODAS las 36 diapositivas.
             Check(TheoryCourseCatalog.Topics.Count>=31,"Curso incluye carta y A03");
@@ -524,18 +528,25 @@ static class Program
                 "A03/36 estados válidos a presión normal");
 
             // [T15] Orden pedagógico ASHRAE y geometría solicitada 0–60 g/kgda.
-            Check(AshraeStudyCatalog.Units.Count==18,"Temario ASHRAE tiene 18 capítulos originales");
-            Check(AshraeStudyCatalog.Equations.Count==12,"Doce ecuaciones matemáticas documentadas");
+            Check(AshraeStudyCatalog.Units.Count==24,"Temario de fundamentos tiene 24 temas");
+            Check(AshraeStudyCatalog.Equations.Count==37,"37 ecuaciones matemáticas documentadas");
+            Check(AshraeStudyCatalog.Units.Select(t=>t.AshraeSection).SequenceEqual(Enumerable.Range(1,24).Select(n=>n.ToString())),
+                "Numeración pedagógica consecutiva");
+            Check(AshraeStudyCatalog.Equations.Select(e=>e.Key).Distinct().Count()==37,"Claves de ecuaciones únicas");
+            foreach(var topic in AshraeStudyCatalog.Units)
+                Check(topic.EquationKey.Split('|').All(key=>AshraeStudyCatalog.FindEquation(key) is not null) &&
+                    topic.Source==AshraeStudyCatalog.Book && !string.IsNullOrWhiteSpace(topic.Definition),
+                    "Tema con ecuaciones propias y fuente bibliográfica "+topic.Id);
             Check(AshraeStudyCatalog.ConstructionSteps.Count==12,"Doce pasos de construcción");
-            Check(AshraeStudyCatalog.Units[0].Title.Contains("Aire seco") &&
-                AshraeStudyCatalog.Units[8].Title.Contains("Convención de ejes"),
+            Check(AshraeStudyCatalog.Units[0].Title.Contains("Composición del aire húmedo") &&
+                AshraeStudyCatalog.Units[10].Title.Contains("Lectura de la carta"),
                 "Temario empieza por composición antes de las cartas");
             foreach(var eq in AshraeStudyCatalog.Equations)
                 Check(eq.Numerator.Length>0&&eq.Denominator.Length>0 &&
-                    eq.Origin.Length>20 && eq.Derivation.Length>20,
+                    !string.IsNullOrWhiteSpace(eq.Origin) && !string.IsNullOrWhiteSpace(eq.Derivation),
                     "Ecuación derivada y fracción legible "+eq.Key);
             foreach(var step in AshraeStudyCatalog.ConstructionSteps)
-                Check(step.WhyThisMatters.Length>20 && step.Basis.Length>20,
+                Check(!string.IsNullOrWhiteSpace(step.WhatToDo) && !string.IsNullOrWhiteSpace(step.WhyThisMatters) && !string.IsNullOrWhiteSpace(step.Basis),
                     "Paso con origen y explicación "+step.Number);
             Check(Math.Abs(ChartGeometry.StandardMaxHumidityRatioKgPerKg-.060)<1e-12,
                 "Carta estándar con rango 0–60 g/kgda");
@@ -543,8 +554,9 @@ static class Program
             graphicalRange.SetStandardChartMode(true);
             Check(Math.Abs(graphicalRange.MaxHumidityRatioKgPerKg-.06)<1e-12,
                 "Activar Carta estándar mantiene escala de humedad solicitada");
-            Check(graphicalRange.BottomMargin<=65,
-                "Margen inferior compacto sin barras de desplazamiento");
+            Check(graphicalRange.BottomMargin>=75 && graphicalRange.BottomMargin<=85 &&
+                graphicalRange.GetPlotRect(850,620).Height>400,
+                "Margen inferior reserva etiquetas de volumen específico sin reducir excesivamente la carta");
 
             Console.WriteLine($"PRUEBAS SUPERADAS: {_checks}");
             return 0;

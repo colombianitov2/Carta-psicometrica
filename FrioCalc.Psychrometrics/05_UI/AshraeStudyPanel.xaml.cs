@@ -201,9 +201,17 @@ public partial class AshraeStudyPanel : UserControl
 
     public static void FormatMath(TextBlock block,string text)
     {
+        var subscripts=Regex.Matches(text,@"_\{([^}]+)\}|_([a-zA-Z0-9]+)");
+        if(subscripts.Count==0)
+        {
+            // Plain text uses the Text dependency property, also keeping bindings and automation in sync.
+            block.Inlines.Clear();
+            block.Text=text;
+            return;
+        }
         block.Inlines.Clear();
         int pos=0;
-        foreach(Match match in Regex.Matches(text,@"_\{([^}]+)\}|_([a-zA-Z0-9]+)"))
+        foreach(Match match in subscripts)
         {
             block.Inlines.Add(new Run(text.Substring(pos,match.Index-pos)));
             block.Inlines.Add(new Run(match.Groups[1].Success?match.Groups[1].Value:match.Groups[2].Value)
