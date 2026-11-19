@@ -10,6 +10,9 @@ public enum ProcessType
     AdiabaticMixing, Bypass, Branching
 }
 
+public sealed record ProcessSegmentSetting(int FromId,int ToId, ProcessType Type,
+    double? DryAirMassFlowKgS = null, double? SensibleHeatFactor = null, double? CondensateTemperatureC = null);
+
 public sealed record PsychrometricProcess(
     int Id,
     string Name,
@@ -31,4 +34,5 @@ public sealed record PsychrometricProcess(
     double? ApparatusDewPointC = null,
     double? DesiccantRemovedGramsPerKg = null,
     double? DesiccantOutletTemperatureC = null,
-    IReadOnlyList<double>? MixingInletFlowsM3H = null);
+    IReadOnlyList<double>? MixingInletFlowsM3H = null,
+    IReadOnlyList<ProcessSegmentSetting>? SegmentSettings = null);

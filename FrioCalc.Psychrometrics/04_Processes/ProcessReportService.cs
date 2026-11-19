@@ -66,9 +66,10 @@ public static class ProcessReportService
                         sb.AppendLine("|Estado faltante|—|—|—|—|—|");
                         continue;
                     }
-                    ProcessType method=process.Type==ProcessType.Bypass ? ProcessType.Automatic : process.Type;
-                    if (!ProcessCalculator.TryCalculate(from,to,method,process.DryAirMassFlowKgS,
-                        process.CondensateTemperatureC,out ProcessResult result,out string error))
+                    var segment=process.SegmentSettings?.FirstOrDefault(x=>x.FromId==from.Id&&x.ToId==to.Id);
+                    ProcessType method=segment?.Type??(process.Type==ProcessType.Bypass ? ProcessType.Automatic : process.Type);
+                    if (!ProcessCalculator.TryCalculate(from,to,method,segment?.DryAirMassFlowKgS??process.DryAirMassFlowKgS,
+                        segment?.CondensateTemperatureC??process.CondensateTemperatureC,out ProcessResult result,out string error))
                     {
                         sb.AppendLine($"|{from.Name}→{to.Name}: {error}|—|—|—|—|—|");
                         continue;

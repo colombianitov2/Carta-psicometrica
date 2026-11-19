@@ -135,24 +135,6 @@ public partial class PointPropertiesPanel : UserControl
         content.Children.Add(
             header);
 
-        var choose = new CheckBox
-        {
-            Content = "Incluir en proceso",
-            IsChecked = _selection.Contains(point.Id),
-            Margin = new Thickness(0,0,0,5),
-            ToolTip = "Se utilizará el orden en que seleccione cada punto."
-        };
-        choose.Checked += (_, _) =>
-        {
-            if (!_selection.Contains(point.Id)) _selection.Add(point.Id);
-            SelectionChanged?.Invoke(SelectedPointIds);
-        };
-        choose.Unchecked += (_, _) =>
-        {
-            _selection.Remove(point.Id);
-            SelectionChanged?.Invoke(SelectedPointIds);
-        };
-        content.Children.Add(choose);
         var erase = new Button
         {
             Content = "Eliminar este punto",
@@ -400,13 +382,6 @@ public partial class PointPropertiesPanel : UserControl
 
     private void OpenProcesses_Click(object sender, RoutedEventArgs e)
     {
-        if (_selection.Count < 1)
-        {
-            MessageBox.Show("Seleccione al menos un punto. Los procesos que relacionan estados " +
-                "requieren dos o más; los métodos predictivos pueden partir de uno solo.",
-                "Procesos psicrométricos",MessageBoxButton.OK,MessageBoxImage.Information);
-            return;
-        }
         OpenProcessesRequested?.Invoke();
     }
 

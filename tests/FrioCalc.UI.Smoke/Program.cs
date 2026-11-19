@@ -220,17 +220,16 @@ internal static class Program
             Check(cards!=null && cards.Children.Count==1,"Tarjeta de punto creada");
             var pointCard=(Border)cards!.Children[0];
             var pointContents=(StackPanel)pointCard.Child;
-            var include=pointContents.Children.OfType<CheckBox>()
-                .FirstOrDefault(x=>x.Content?.ToString()=="Incluir en proceso");
-            Check(include!=null,"Casilla de selección de procesos");
-            include!.IsChecked=true;
-            Check(properties.SelectedPointIds.Count==1,
-                "Selección desde tarjeta compartida");
+            Check(!pointContents.Children.OfType<CheckBox>().Any(x=>x.Content?.ToString()=="Incluir en proceso"),
+                "La tarjeta ya no contiene casilla de procesos");
+            var available=(ListBox)window.FindName("AvailablePointsList");
+            Check(available.Items.Count==1,"Punto disponible en la zona de procesos");
+            properties.SetSelection(new[]{mainChart.ActivePoints[0].Id});
             Check(((ListBox)window.FindName("ProcessSelectionList")).Items.Count==1,
-                "Selección sincronizada con pestaña de procesos");
-            include.IsChecked=false;
-            Check(properties.SelectedPointIds.Count==0,
-                "Desmarcado retira selección sin borrar punto");
+                "Lista ordenada sincronizada con pestaña de procesos");
+            properties.ClearSelection();
+            Check(properties.SelectedPointIds.Count==0 && mainChart.ActivePoints.Count==1,
+                "Retirar selección conserva punto");
 
             // [UI.6] Conversión de unidades en controles, presión y puntos.
             chartMetrics.SetUnitSystem(UnitSystem.IP);
@@ -250,14 +249,7 @@ internal static class Program
                 "Sin selección residual tras añadir segundo estado");
             var updatedCards=(WrapPanel)properties.FindName("PointsWrapPanel");
             Check(updatedCards.Children.Count==2,"Dos tarjetas para proceso");
-            foreach(Border card in updatedCards.Children.OfType<Border>())
-            {
-                var panel=(StackPanel)card.Child;
-                var selector=panel.Children.OfType<CheckBox>()
-                    .FirstOrDefault(x=>x.Content?.ToString()=="Incluir en proceso");
-                Check(selector!=null,"Selector de proceso disponible en cada punto");
-                selector!.IsChecked=true;
-            }
+            properties.SetSelection(mainChart.ActivePoints.Select(p=>p.Id).ToArray());
             Check(properties.SelectedPointIds.Count==2,"Dos puntos elegidos en orden");
             var typeSelector=(ComboBox)window.FindName("ProcessTypeComboBox");
             typeSelector.SelectedIndex=0;
@@ -287,11 +279,7 @@ internal static class Program
                 "Deshacer mantiene ambas cartas sincronizadas");
 
             // [UI.6.2] Regresión de edición predictiva con salida calculada.
-            var twoPointCards=(WrapPanel)properties.FindName("PointsWrapPanel");
-            var inletCard=(StackPanel)((Border)twoPointCards.Children[0]).Child;
-            var inletCheck=inletCard.Children.OfType<CheckBox>()
-                .First(x=>x.Content?.ToString()=="Incluir en proceso");
-            inletCheck.IsChecked=true;
+            properties.SetSelection(new[]{mainChart.ActivePoints[0].Id});
             Check(properties.SelectedPointIds.Count==1,"Entrada de proceso predictivo única");
             foreach(ComboBoxItem item in typeSelector.Items)
             {
@@ -319,10 +307,10 @@ internal static class Program
                 CultureInfo.CurrentCulture.Name+"; leído: '"+recoveredEffectiveness+"'");
             ((TextBox)window.FindName("EffectivenessTextBox")).Text="0.65";
             plotMethod.Invoke(window,new object[]{window,new RoutedEventArgs(Button.ClickEvent)});
-            Check(processesList.Items.Count==2 && mainChart.ActivePoints.Count==3,
-                "Recalcular proceso reemplaza salida antigua sin crear huérfanos");
-            Check(!mainChart.ActivePoints.Any(p=>p.Id==oldCalculatedOutput),
-                "Salida generada anterior realmente retirada");
+            Check(processesList.Items.Count==2 && mainChart.ActivePoints.Count==4,
+                "Recalcular proceso conserva la salida antigua como punto independiente");
+            Check(mainChart.ActivePoints.Any(p=>p.Id==oldCalculatedOutput),
+                "Salida anterior conservada para otros grupos");
             Check(processChart.ActivePoints.Count==mainChart.ActivePoints.Count,
                 "Segunda carta sincronizada al editar predicción");
 

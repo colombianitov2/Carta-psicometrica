@@ -358,10 +358,12 @@ public partial class PsychrometricChartView : UserControl
         if (_sensibleHeatFactorGuideOrigin is ChartPoint origin && _sensibleHeatFactorGuideRatio is double fcs)
             SensibleHeatFactorGuideLayer.Draw(ChartCanvas,_geometry,origin,fcs,_pressureKPa);
 
-        PointLayer.Draw(
-            ChartCanvas,
-            _geometry,
-            _chartPoints);
+        var renderedPoints = _processMemberColorMode ? _chartPoints.Select(point =>
+        {
+            var groups = _processes.Where(p=>p.Visible && p.PointIds.Contains(point.Id)).ToArray();
+            return groups.Length == 1 ? point with { ColorHex = groups[0].ColorHex } : point;
+        }).ToArray() : _chartPoints.ToArray();
+        PointLayer.Draw(ChartCanvas, _geometry, renderedPoints);
 
         if (_processMemberColorMode)
             ProcessLayer.DrawMemberColors(ChartCanvas, _geometry, _chartPoints, _processes);

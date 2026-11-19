@@ -43,8 +43,9 @@
                                 <TextBlock Text="PROPIEDADES DEL PROCESO" FontWeight="SemiBold" FontSize="14"
                                            Margin="0,0,0,4"/>
                                 <TextBlock x:Name="SelectedProcessSummaryMainText" FontSize="12"
-                                           Text="Todavía no hay un proceso calculado."
+                                           Text="Todavía no hay un proceso calculado." Visibility="Collapsed"
                                            TextWrapping="Wrap"/>
+                                <StackPanel x:Name="MainProcessResultsPanel"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -85,15 +86,40 @@
                                           Checked="ProcessFamilyVisibility_Changed" Unchecked="ProcessFamilyVisibility_Changed"
                                           Margin="0,0,12,4"/>
                             </WrapPanel>
-                            <TextBlock Text="Seleccione puntos en Carta psicrométrica, en orden. Para mezclas seleccione dos entradas."
-                                       TextWrapping="Wrap" FontSize="12" Foreground="#666"
-                                       Margin="0,0,0,10"/>
-                            <TextBlock Text="Secuencia seleccionada" FontWeight="SemiBold" Margin="0,0,0,3"/>
-                            <ListBox x:Name="ProcessSelectionList" Height="90" Margin="0,0,0,8"/>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                <Button Content="Subir" Width="78" Click="MovePointUp_Click" Margin="0,0,8,0"/>
-                                <Button Content="Bajar" Width="78" Click="MovePointDown_Click" Margin="0,0,8,0"/>
-                            </StackPanel>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="3*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Puntos disponibles" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Arrastre los puntos a la lista del grupo. Todos los puntos de la carta se conservan." TextWrapping="Wrap" Foreground="#64748B" Margin="0,0,0,6"/>
+                                    <ListBox x:Name="AvailablePointsList" MinHeight="96" MaxHeight="200"
+                                             DisplayMemberPath="Name" AllowDrop="True"
+                                             PreviewMouseLeftButtonDown="ProcessList_MouseDown" PreviewMouseMove="ProcessList_MouseMove"
+                                             Drop="AvailablePoints_Drop" MouseDoubleClick="AvailablePoints_DoubleClick"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <DockPanel Margin="0,0,0,6">
+                                        <Button DockPanel.Dock="Right" Content="+" Width="34" Height="30" FontSize="20"
+                                                ToolTip="Crear otro grupo de procesos" Click="NewProcessGroup_Click"/>
+                                        <TextBlock Text="Lista de procesos" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </DockPanel>
+                                    <WrapPanel x:Name="ProcessCardsPanel"/>
+                                    <StackPanel x:Name="SequenceEditor" Visibility="Collapsed" Margin="0,7,0,0">
+                                        <TextBlock Text="Orden del grupo en edición" FontWeight="SemiBold"/>
+                                        <TextBlock Text="Arrastre hacia arriba o abajo para ordenar; arrastre a Puntos disponibles para retirar sin borrar." TextWrapping="Wrap" Foreground="#64748B" Margin="0,3,0,6"/>
+                                        <ListBox x:Name="ProcessSelectionList" MinHeight="94" MaxHeight="220" DisplayMemberPath="Name"
+                                                 AllowDrop="True" PreviewMouseLeftButtonDown="ProcessList_MouseDown"
+                                                 PreviewMouseMove="ProcessList_MouseMove" Drop="ProcessSequence_Drop"
+                                                 MouseDoubleClick="ProcessSequence_DoubleClick"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                            <StackPanel x:Name="ProcessEditor" Visibility="Collapsed">
+                            <DockPanel Margin="0,0,0,12">
+                                <Button DockPanel.Dock="Right" Content="Cerrar edición" Click="CloseProcessEditor_Click" Padding="8,5"/>
+                                <TextBlock Text="Editar grupo de procesos" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </DockPanel>
                             <Border BorderBrush="#DDD6FE" BorderThickness="1" CornerRadius="5"
                                     Padding="8" Margin="0,0,0,10">
                                 <StackPanel>
@@ -121,6 +147,7 @@
                                 <ComboBoxItem Content="Factor de bypass / ADP" Tag="Bypass"/>
                                 <ComboBoxItem Content="Divisor con dos ramas y estados conocidos" Tag="Branching"/>
                             </ComboBox>
+                            <StackPanel x:Name="SegmentEditorsPanel" Margin="0,0,0,10"/>
                             <TextBlock Text="Caudal másico de aire seco, kg/s (opcional salvo donde se requiera)"
                                        TextWrapping="Wrap" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="DryFlowTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"/>
@@ -178,8 +205,7 @@
                             <TextBox x:Name="NewProcessNameTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"/>
                             <Button Content="GRAFICAR PROCESO" Padding="8" FontWeight="SemiBold"
                                     Click="PlotProcess_Click" Margin="0,0,0,10"/>
-                            <TextBlock Text="Procesos guardados" FontWeight="SemiBold" Margin="0,0,0,3"/>
-                            <ListBox x:Name="SavedProcessesList" Height="95" Margin="0,0,0,7"
+                            <ListBox x:Name="SavedProcessesList" Visibility="Collapsed"
                                      SelectionChanged="SavedProcessesList_SelectionChanged"/>
                             <TextBlock Text="Nombre para renombrar el proceso seleccionado" FontSize="11"
                                        TextWrapping="Wrap" Margin="0,0,0,3"/>
@@ -189,26 +215,19 @@
                                         Padding="6" Margin="0,0,6,0"/>
                                 <Button Content="Mostrar / ocultar" Click="ToggleProcessVisibility_Click" Padding="6"/>
                             </StackPanel>
-                            <Button Content="Cargar para editar" Click="EditProcess_Click"
+                            <Button Content="Restaurar datos guardados" Click="EditProcess_Click"
                                     Padding="6" Margin="0,0,0,7"/>
                             <Button Content="Deshacer última acción" Click="UndoLastAction_Click"
                                     Padding="6" Margin="0,0,0,7"/>
                             <Button Content="Eliminar proceso seleccionado" Click="DeleteProcess_Click"
                                     Padding="6" Margin="0,0,0,9"/>
-                            <TextBlock Text="RESULTADOS Y ADVERTENCIAS" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                            <TextBlock x:Name="ProcessResultText" Text="Seleccione al menos dos puntos."
+                            <TextBlock Text="Resultados del grupo" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <TextBlock x:Name="ProcessResultText" Text="Seleccione al menos dos puntos." Visibility="Collapsed"
                                        TextWrapping="Wrap" FontSize="12" Margin="0,0,0,12"/>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,9">
-                                <Button Content="Guardar sesión JSON" Click="SaveSession_Click"
-                                        Padding="5" Margin="0,0,7,0"/>
-                                <Button Content="Abrir sesión JSON" Click="LoadSession_Click" Padding="5"/>
+                            <StackPanel x:Name="ProcessResultsPanel"/>
                             </StackPanel>
-                            <Button Content="Exportar informe Markdown (.md)" Click="ExportMarkdownReport_Click"
-                                    Padding="7" Margin="0,0,0,6"/>
-                            <Button Content="Exportar carta principal con procesos PNG" Click="ExportChartPng_Click"
-                                    Padding="7" Margin="0,0,0,6"/>
-                            <Button Content="Exportar informe CSV" Click="ExportReport_Click"
-                                    Padding="7"/>
+                            <Button Content="Exportar informe Word (.docx)" Click="ExportWordReport_Click"
+                                    HorizontalAlignment="Left" Padding="12,8" Margin="0,8,0,0"/>
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>

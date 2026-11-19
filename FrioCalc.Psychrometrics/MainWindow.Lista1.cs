@@ -84,6 +84,7 @@ public partial class MainWindow
         PressureSelector.SetStandardChartEnabled(false);
         PressureSelector.SetPointSelectionEnabled(true);
         RefreshSelectionList();
+        RefreshGroupCards();
     }
 
     // [5.1C.8.2] Mostrar únicamente parámetros del método seleccionado.
@@ -108,6 +109,7 @@ public partial class MainWindow
         CloseCycleCheckBox.Visibility=type=="Automatic"?Visibility.Visible:Visibility.Collapsed;
         if(type!="Automatic" && CloseCycleCheckBox.IsChecked==true)
             CloseCycleCheckBox.IsChecked=false;
+        if(SegmentEditorsPanel is not null) SegmentEditorsPanel.Visibility=type=="Automatic"?Visibility.Visible:Visibility.Collapsed;
     }
 
     // [5.1C.9.1] Familias de líneas independientes en la segunda carta.
@@ -249,9 +251,7 @@ public partial class MainWindow
     // [5.1C.11] Selección ordenada para la segunda carta.
     private void RefreshSelectionList()
     {
-        ProcessSelectionList.ItemsSource = _selectedPointIds
-            .Select((id, index) => $"{index + 1}. P{id}")
-            .ToArray();
+        RefreshProcessGroupLists();
     }
 
     private void MovePointUp_Click(object sender, RoutedEventArgs e)
@@ -340,6 +340,8 @@ public partial class MainWindow
             MessageBox.Show(error, "Caudal inválido", MessageBoxButton.OK, MessageBoxImage.Warning); return;
         }
 
+        if (!TryReadSegmentSettings(type, out var segmentSettings, out error))
+        { MessageBox.Show(error,"Datos del tramo",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
         double? condensateTemperature = null;
         if (!string.IsNullOrWhiteSpace(CondensateTemperatureTextBox.Text))
         {
@@ -504,9 +506,12 @@ public partial class MainWindow
             var report = new StringBuilder();
             for (int i=0;i<selected.Length-1;i++)
             {
+                var segment=segmentSettings.FirstOrDefault(x=>x.FromId==selected[i]!.Id && x.ToId==selected[i+1]!.Id);
+                var segmentType=segment?.Type ?? (type == ProcessType.Bypass ? ProcessType.Automatic : type);
+                var segmentFlow=segment?.DryAirMassFlowKgS ?? massFlow;
+                var segmentCondensate=segment?.CondensateTemperatureC ?? condensateTemperature;
                 if (!ProcessCalculator.TryCalculate(selected[i]!,selected[i+1]!,
-                    type == ProcessType.Bypass ? ProcessType.Automatic : type,
-                    massFlow,condensateTemperature,out ProcessResult result,out error))
+                    segmentType,segmentFlow,segmentCondensate,out ProcessResult result,out error))
                 {
                     MessageBox.Show($"{selected[i]!.Name} → {selected[i+1]!.Name}: {error}",
                         "Proceso no resuelto",MessageBoxButton.OK,MessageBoxImage.Warning); return;
@@ -522,6 +527,9 @@ public partial class MainWindow
                 report.AppendLine(result.SensibleHeatFactor is double fcs ?
                     $"Factor de calor sensible estimado={fcs:0.###}." :
                     "FCS no definido para estos signos/balances.");
+                if(segment?.SensibleHeatFactor is double targetFcs)
+                    report.AppendLine($"FCS especificado={targetFcs:0.###}; diferencia respecto al calculado: "+
+                        (result.SensibleHeatFactor is double actualFcs ? (actualFcs-targetFcs).ToString("0.###") : "no determinada"));
                 report.AppendLine(result.Diagnostic);
             }
             description = predictionNote + Environment.NewLine + report.ToString();
@@ -538,43 +546,30 @@ public partial class MainWindow
             }
             else description += Environment.NewLine + cycleError;
         }
-        ChartPoint initial = selected[0]!;
         int editingIndex=_editingProcessId is int oldId
             ? _savedProcesses.FindIndex(p=>p.Id==oldId) : -1;
-        int? oldGeneratedId=editingIndex>=0
-            ? _savedProcesses[editingIndex].GeneratedPointId : null;
-        // Candidatos anteriores sin metadatos de procedencia (compatibilidad).
-        if(editingIndex>=0 && oldGeneratedId is null &&
-           _savedProcesses[editingIndex].PointIds.Count>=2 &&
-           _savedProcesses[editingIndex].Type is
-               (ProcessType.EvaporativeHumidification or ProcessType.SteamHumidification
-               or ProcessType.Bypass or ProcessType.AdiabaticMixing))
-            oldGeneratedId=_savedProcesses[editingIndex].PointIds[^1];
         int processId=editingIndex>=0 ? _savedProcesses[editingIndex].Id : _nextProcessId++;
         string name=string.IsNullOrWhiteSpace(NewProcessNameTextBox.Text)
             ? $"PR{processId}" : NewProcessNameTextBox.Text.Trim();
         RememberHistory();
         var saved = new PsychrometricProcess(
-            processId,name,initial.ColorHex,type,ids,massFlow,Report:description,
+            processId,name,editingIndex>=0 ? _savedProcesses[editingIndex].ColorHex : PointColorPalette.GetColorHex(processId+31),type,ids,massFlow,Report:description,
             CondensateTemperatureC:condensateTemperature,BranchFractionA:branchFraction,
             GeneratedPointId:generatedPointId,SaturationEffectiveness:saturationEffectiveness,
             BypassFactor:bypassFactorUsed,SteamAddedGramsPerKg:steamGramsUsed,
             SteamEnthalpyKJPerKg:steamEnthalpyUsed,ApparatusDewPointC:adpUsed,
             DesiccantRemovedGramsPerKg:desiccantGramsUsed,
             DesiccantOutletTemperatureC:desiccantTUsed,
-            MixingInletFlowsM3H:mixFlowsUsed);
+            MixingInletFlowsM3H:mixFlowsUsed,SegmentSettings:segmentSettings);
         if(editingIndex>=0) _savedProcesses[editingIndex]=saved;
         else _savedProcesses.Add(saved);
-        // [5.1C.12.3] Retirar únicamente la salida generada anterior si
-        // ningún otro proceso la utiliza; nunca borrar estados compartidos.
-        if(oldGeneratedId is int oldOutput && oldOutput!=generatedPointId &&
-           !_savedProcesses.Any(p=>p.PointIds.Contains(oldOutput)))
-            PsychrometricChart.DeletePoint(oldOutput);
+        // Quitar un miembro o sustituir una salida nunca elimina el estado original de la carta.
         _editingProcessId=null;
         UpdateProcessesInCharts();
         ProcessResultText.Text = description;
         SelectedProcessSummaryMainText.Text = $"Proceso: {name}\n" + description;
         PointPropertiesPanel.ClearSelection();
+        CloseGroupEditor();
         WorkspaceTabs.SelectedIndex = 1;
     }
 
@@ -604,15 +599,12 @@ public partial class MainWindow
         if(index<0||index>=_savedProcesses.Count) return;
         var process=_savedProcesses[index];
         _editingProcessId=process.Id;
+        LoadSegmentDrafts(process);
         _selectedPointIds.Clear();
         _selectedPointIds.AddRange(process.PointIds);
         // Una salida generada NO es entrada del modelo predictivo.
-        bool predictiveProcess=process.Type is ProcessType.EvaporativeHumidification
-            or ProcessType.SteamHumidification or ProcessType.Bypass
-            or ProcessType.AdiabaticMixing;
         if(_selectedPointIds.Count>=2 &&
-           (process.GeneratedPointId==_selectedPointIds[^1] ||
-            (process.GeneratedPointId is null && predictiveProcess)))
+           (process.GeneratedPointId==_selectedPointIds[^1]))
             _selectedPointIds.RemoveAt(_selectedPointIds.Count-1);
         RefreshSelectionList();
         NewProcessNameTextBox.Text=process.Name;
@@ -635,6 +627,9 @@ public partial class MainWindow
         foreach(ComboBoxItem item in ProcessTypeComboBox.Items)
             if(item.Tag?.ToString()==process.Type.ToString())
                 {ProcessTypeComboBox.SelectedItem=item;break;}
+        OpenGroupEditor();
+        RenameProcessTextBox.Text=process.Name;
+        RenderGroupResults(process,ProcessResultsPanel);
         ProcessResultText.Text="Proceso cargado para edición. Al pulsar Graficar proceso reemplazará este proceso conservando su ID; se mantiene opción Deshacer. En predicciones puede generarse un nuevo punto de salida.";
     }
 
@@ -660,6 +655,7 @@ public partial class MainWindow
         if (_editingProcessId == _savedProcesses[index].Id) _editingProcessId=null;
         _savedProcesses.RemoveAt(index);
         UpdateProcessesInCharts();
+        CloseGroupEditor();
         ProcessResultText.Text = "Proceso eliminado. Los puntos originales se conservan.";
     }
 
@@ -669,6 +665,8 @@ public partial class MainWindow
         ProcessChart.SetProcesses(_savedProcesses);
         SavedProcessesList.ItemsSource = _savedProcesses.Select(p =>
             $"{p.Name} {(p.Visible ? "" : "[Oculto]")} · {p.Type} · {string.Join(" → ",p.PointIds.Select(id => "P"+id))}").ToArray();
+        RefreshGroupCards();
+        if(_editingProcessId is int existing) SavedProcessesList.SelectedIndex=_savedProcesses.FindIndex(p=>p.Id==existing);
     }
 
     private static bool TryReadFinite(string raw, out double value)
