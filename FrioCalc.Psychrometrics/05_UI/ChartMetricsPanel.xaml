@@ -44,10 +44,10 @@
                        Foreground="#666666" TextWrapping="Wrap" FontSize="11"
                        Margin="0,0,0,12"/>
 
-            <Grid Margin="0,2,0,7">
+            <Grid Margin="0,2,0,7" MinHeight="25">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="24"/>
                     <ColumnDefinition Width="73"/>
                 </Grid.ColumnDefinitions>
 
@@ -61,7 +61,7 @@
 
                 <CheckBox x:Name="DryBulbCheckBox"
                           Grid.Column="1"
-                          VerticalAlignment="Center"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"
                           Checked="DryBulbCheckBox_Changed"
                           Unchecked="DryBulbCheckBox_Changed"/>
 
@@ -71,10 +71,10 @@
             </Grid>
 
 
-            <Grid Margin="0,2,0,7">
+            <Grid Margin="0,2,0,7" MinHeight="25">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="24"/>
                     <ColumnDefinition Width="73"/>
                 </Grid.ColumnDefinitions>
 
@@ -88,7 +88,7 @@
 
                 <CheckBox x:Name="HumidityRatioCheckBox"
                           Grid.Column="1"
-                          VerticalAlignment="Center"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"
                           Checked="HumidityRatioCheckBox_Changed"
                           Unchecked="HumidityRatioCheckBox_Changed"/>
 
@@ -98,10 +98,11 @@
             </Grid>
 
 
-            <Grid Margin="0,2,0,7">
+            <Grid Margin="0,2,0,7" MinHeight="25">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="24"/>
+                    <ColumnDefinition Width="73"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0"
@@ -113,7 +114,7 @@
 
                 <CheckBox x:Name="SaturationCurveCheckBox"
                           Grid.Column="1"
-                          VerticalAlignment="Center"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"
                           Checked="SaturationCurveCheckBox_Changed"
                           Unchecked="SaturationCurveCheckBox_Changed"/>
             </Grid>
@@ -121,10 +122,10 @@
 
             <!-- Sección 5.3X.1 - Selector de entalpía -->
 
-            <Grid Margin="0,2,0,7">
+            <Grid Margin="0,2,0,7" MinHeight="25">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="24"/>
                     <ColumnDefinition Width="73"/>
                 </Grid.ColumnDefinitions>
 
@@ -138,7 +139,7 @@
 
                 <CheckBox x:Name="EnthalpyCheckBox"
                           Grid.Column="1"
-                          VerticalAlignment="Center"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"
                           Checked="EnthalpyCheckBox_Changed"
                           Unchecked="EnthalpyCheckBox_Changed"/>
 
@@ -152,10 +153,10 @@
 
             <!-- Sección 5.3X.2 - Selector de humedad relativa -->
 
-            <Grid Margin="0,2,0,7">
+            <Grid Margin="0,2,0,7" MinHeight="25">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="24"/>
                     <ColumnDefinition Width="73"/>
                 </Grid.ColumnDefinitions>
 
@@ -169,7 +170,7 @@
 
                 <CheckBox x:Name="RelativeHumidityCheckBox"
                           Grid.Column="1"
-                          VerticalAlignment="Center"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"
                           Checked="RelativeHumidityCheckBox_Changed"
                           Unchecked="RelativeHumidityCheckBox_Changed"/>
 
@@ -183,10 +184,10 @@
 
             <!-- Sección 5.3X.3 - Selector de temperatura de bulbo húmedo -->
 
-            <Grid Margin="0,2,0,7">
+            <Grid Margin="0,2,0,7" MinHeight="25">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="24"/>
                     <ColumnDefinition Width="73"/>
                 </Grid.ColumnDefinitions>
 
@@ -200,7 +201,7 @@
 
                 <CheckBox x:Name="WetBulbCheckBox"
                           Grid.Column="1"
-                          VerticalAlignment="Center"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"
                           Checked="WetBulbCheckBox_Changed"
                           Unchecked="WetBulbCheckBox_Changed"/>
 
@@ -214,10 +215,10 @@
 
             <!-- Sección 5.3X.4 - Selector de volumen específico -->
 
-            <Grid Margin="0,2,0,7">
+            <Grid Margin="0,2,0,7" MinHeight="25">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="24"/>
                     <ColumnDefinition Width="73"/>
                 </Grid.ColumnDefinitions>
 
@@ -231,7 +232,7 @@
 
                 <CheckBox x:Name="SpecificVolumeCheckBox"
                           Grid.Column="1"
-                          VerticalAlignment="Center"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"
                           Checked="SpecificVolumeCheckBox_Changed"
                           Unchecked="SpecificVolumeCheckBox_Changed"/>
 
@@ -245,10 +246,11 @@
 
             <!-- Sección 5.3X.5 - Selector de desviación de entalpía -->
 
-            <Grid Margin="0,2,0,7">
+            <Grid Margin="0,2,0,7" MinHeight="25">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="24"/>
+                    <ColumnDefinition Width="73"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0"
@@ -260,21 +262,22 @@
 
                 <CheckBox x:Name="EnthalpyDeviationCheckBox"
                           Grid.Column="1"
-                          VerticalAlignment="Center"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"
                           Checked="EnthalpyDeviationCheckBox_Changed"
                           Unchecked="EnthalpyDeviationCheckBox_Changed"/>
             </Grid>
 
             <!-- [5.3X.5.1] Familia independiente: entropía ideal relativa; no equivale a desviación de entalpía -->
-            <Grid Margin="0,2,0,7">
+            <Grid Margin="0,2,0,7" MinHeight="25">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="24"/>
+                    <ColumnDefinition Width="73"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock x:Name="SpecificEntropyLabel" Text="Entropía específica relativa s* (kJ/(kg aire seco·K))"
                            TextWrapping="Wrap" FontSize="12.5" Margin="0,0,10,0" VerticalAlignment="Center"
                            ToolTip="Familia opcional adicional, modelo ideal. Referencia T=0 °C, p_da=101,325 kPa y p_v=0,611657 kPa."/>
-                <CheckBox x:Name="SpecificEntropyCheckBox" Grid.Column="1" VerticalAlignment="Center"
+                <CheckBox x:Name="SpecificEntropyCheckBox" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"
                           Checked="SpecificEntropyCheckBox_Changed"
                           Unchecked="SpecificEntropyCheckBox_Changed"
                           ToolTip="No confundir con entalpía ni con la desviación de entalpía Carrier."/>
@@ -283,30 +286,31 @@
             <!-- Fin de sección 5.3X.5 -->
 
             <!-- [5.3X.6] Punto de rocío: dato de estado, no familia gráfica independiente -->
-            <Grid Margin="0,2,0,7">
+            <Grid Margin="0,2,0,7" MinHeight="25">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="24"/>
                     <ColumnDefinition Width="73"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock x:Name="DewPointLabel" Grid.Column="0" Text="Punto de rocío (°C)"
                            FontSize="12.5" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <TextBlock Grid.Column="1" Text="—" ToolTip="El punto de rocío comparte las líneas horizontales de W."
-                           VerticalAlignment="Center"/>
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 <TextBox x:Name="DewPointInput" Grid.Column="2" Height="25" Margin="8,0,0,0"
                          VerticalContentAlignment="Center" ToolTip="Condición opcional para resolver un punto."/>
             </Grid>
             <!-- [5.3X.7] Escala auxiliar del factor de calor sensible -->
-            <Grid Margin="0,2,0,7">
+            <Grid Margin="0,2,0,7" MinHeight="25">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="24"/>
+                    <ColumnDefinition Width="73"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="Factor de calor sensible (FCS)"
-                           FontSize="12.5" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                           FontSize="12.5" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <CheckBox x:Name="SensibleHeatFactorCheckBox" Grid.Column="1"
                           Checked="SensibleHeatFactorCheckBox_Changed"
-                          Unchecked="SensibleHeatFactorCheckBox_Changed" VerticalAlignment="Center"/>
+                          Unchecked="SensibleHeatFactorCheckBox_Changed" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
 
 
