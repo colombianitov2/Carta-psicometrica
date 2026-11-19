@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Xml.Linq;
+using System.Text.RegularExpressions;
 using FrioCalc.Psychrometrics.Points;
 
 namespace FrioCalc.Psychrometrics.Processes;
@@ -11,6 +12,7 @@ namespace FrioCalc.Psychrometrics.Processes;
 // [4.8.1] Documento Word Open XML editable sin requerir Office instalado.
 public static class WordProcessReport
 {
+    private static readonly XNamespace M="http://schemas.openxmlformats.org/officeDocument/2006/math";
     private static readonly XNamespace W="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
     private static readonly XNamespace CT="http://schemas.openxmlformats.org/package/2006/content-types";
     private static readonly XNamespace R="http://schemas.openxmlformats.org/package/2006/relationships";
@@ -25,6 +27,16 @@ public static class WordProcessReport
         {
             string line=lines[i].Trim();
             if(line.Length==0)continue;
+            if(line=="## Bibliografía")
+            {
+                body.Add(Paragraph("Ecuaciones",2));
+                foreach(var key in new[]{"W","RH","h","v","Mdot","Heat","Condensate","Coil","MixW","MixH","SHR","BF","BFW"})
+                    if(AshraeStudyCatalog.FindEquation(key) is AshraeEquation formula)
+                    {
+                        body.Add(Paragraph(formula.Title,3));
+                        body.Add(Equation(formula));
+                    }
+            }
             if(line.StartsWith("|",StringComparison.Ordinal))
             {
                 var rows=new List<string[]>();
@@ -49,7 +61,7 @@ public static class WordProcessReport
             new XElement(W+"pgSz",new XAttribute(W+"w","16838"),new XAttribute(W+"h","11906"),new XAttribute(W+"orient","landscape")),
             new XElement(W+"pgMar",new XAttribute(W+"top","840"),new XAttribute(W+"bottom","840"),
                 new XAttribute(W+"left","840"),new XAttribute(W+"right","840"),new XAttribute(W+"header","420"),new XAttribute(W+"footer","420"))));
-        var doc=new XDocument(new XElement(W+"document",new XAttribute(XNamespace.Xmlns+"w",W),body));
+        var doc=new XDocument(new XElement(W+"document",new XAttribute(XNamespace.Xmlns+"w",W),new XAttribute(XNamespace.Xmlns+"m",M),body));
         var types=new XDocument(new XElement(CT+"Types",
             new XElement(CT+"Default",new XAttribute("Extension","rels"),new XAttribute("ContentType","application/vnd.openxmlformats-package.relationships+xml")),
             new XElement(CT+"Default",new XAttribute("Extension","xml"),new XAttribute("ContentType","application/xml")),
@@ -62,6 +74,32 @@ public static class WordProcessReport
         using var zip=new ZipArchive(stream,ZipArchiveMode.Create);
         void Add(string path,XDocument xml) {using var target=zip.CreateEntry(path).Open();xml.Save(target);}
         Add("[Content_Types].xml",types);Add("_rels/.rels",relations);Add("word/document.xml",doc);
+    }
+
+    private static IEnumerable<XElement> MathRuns(string value)
+    {
+        XElement Run(string t)=>new XElement(M+"r",new XElement(M+"t",new XAttribute(XNamespace.Xml+"space","preserve"),t));
+        int offset=0;
+        // Keep the base and subscript in a proper OMML subscript expression.
+        foreach(Match match in Regex.Matches(value,@"([\p{L}*̇]+)_\{([^}]+)\}|([\p{L}*̇]+)_([a-zA-Z0-9]+)"))
+        {
+            if(match.Index>offset)yield return Run(value.Substring(offset,match.Index-offset));
+            bool braced=match.Groups[1].Success;
+            yield return new XElement(M+"sSub",
+                new XElement(M+"e",Run(match.Groups[braced?1:3].Value)),
+                new XElement(M+"sub",Run(match.Groups[braced?2:4].Value)));
+            offset=match.Index+match.Length;
+        }
+        if(offset<value.Length)yield return Run(value.Substring(offset));
+    }
+
+    private static XElement Equation(AshraeEquation formula)
+    {
+        var math=new XElement(M+"oMath",MathRuns(formula.Left+" = "));
+        if(formula.Denominator=="1")math.Add(MathRuns(formula.Numerator));
+        else math.Add(new XElement(M+"f",new XElement(M+"num",MathRuns(formula.Numerator)),
+            new XElement(M+"den",MathRuns(formula.Denominator))));
+        return new XElement(W+"p",math);
     }
 
     private static XElement Paragraph(string text,int heading=0,bool cell=false,bool bold=false)

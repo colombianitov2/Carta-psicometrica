@@ -27,7 +27,6 @@ public static class ProcessReportService
         foreach (ChartPoint p in points)
             sb.AppendLine($"|{p.Name}|{F(p.DryBulbC)}|{F(p.WetBulbC)}|{F(p.DewPointC)}|{F(p.RelativeHumidityPercent)}|{F(p.HumidityRatioKgPerKg*1000)}|{F(p.EnthalpyKJPerKgDryAir)}|{F(p.SpecificVolumeM3PerKgDryAir)}|{F(MoistAirSpecificEntropy.FromDryBulbAndHumidityRatio(p.DryBulbC,p.HumidityRatioKgPerKg,p.PressureKPa))}|{p.Method}|");
         sb.AppendLine();
-        sb.AppendLine("s* es entropía relativa del aire húmedo ideal por kg de aire seco, con referencia T*=273,15 K, p_da*=101,325 kPa y p_v*=0,611657 kPa. No es entropía absoluta tabulada ni desviación de entalpía.");
         sb.AppendLine();
         sb.AppendLine("### Procedencia de los estados");
         foreach(var p in points)
@@ -45,18 +44,37 @@ public static class ProcessReportService
             sb.AppendLine($"Secuencia: {string.Join(" → ",process.PointIds.Select(id=>"P"+id))}. Color {process.ColorHex}; visible: {(process.Visible?"sí":"no")}.");
             sb.AppendLine($"Flujo másico de aire seco: {(process.DryAirMassFlowKgS is double m?F(m)+" kgda/s":"no aportado")}.");
             sb.AppendLine();
-            if (!string.IsNullOrWhiteSpace(process.Report))
+            if (process.Type==ProcessType.AdiabaticMixing && process.MixingInletFlowsM3H is {Count:>0} flows)
             {
-                sb.AppendLine("Resultado registrado al crear el proceso:");
-                sb.AppendLine();
-                foreach (string line in process.Report.Split('\n'))
-                    sb.AppendLine("> " + line.TrimEnd('\r'));
-                sb.AppendLine();
+                sb.AppendLine("|Corriente|Caudal volumétrico (m³/h)|Caudal másico seco (kg/s)|");
+                sb.AppendLine("|---|---:|---:|");
+                double total=0;
+                for(int i=0;i<flows.Count && i<process.PointIds.Count;i++)
+                {
+                    var point=points.FirstOrDefault(p=>p.Id==process.PointIds[i]);
+                    if(point is null)continue;
+                    double mass=flows[i]/3600/point.SpecificVolumeM3PerKgDryAir;
+                    total+=mass;sb.AppendLine($"|{point.Name}|{F(flows[i])}|{F(mass)}|");
+                }
+                sb.AppendLine($"|Total|—|{F(total)}|");
+            }
+            if(process.Type==ProcessType.Branching && process.PointIds.Count==3 &&
+                process.DryAirMassFlowKgS is double totalFlow && process.BranchFractionA is double fraction)
+            {
+                var states=process.PointIds.Select(id=>points.FirstOrDefault(p=>p.Id==id)).ToArray();
+                if(states.All(p=>p is not null) &&
+                    ProcessCalculator.TryBranchBalance(states[0]!,states[1]!,states[2]!,totalFlow,fraction,out var b,out _) && b is not null)
+                {
+                    sb.AppendLine("|Rama|Caudal (kg/s)|Agua (kg/s)|Potencia (kW)|");
+                    sb.AppendLine("|---|---:|---:|---:|");
+                    sb.AppendLine($"|{states[1]!.Name}|{F(b.FirstMassFlowKgS)}|{F(b.AddedWaterFirstKgS)}|{F(b.ThermalFirstKW)}|");
+                    sb.AppendLine($"|{states[2]!.Name}|{F(b.SecondMassFlowKgS)}|{F(b.AddedWaterSecondKgS)}|{F(b.ThermalSecondKW)}|");
+                }
             }
             if (process.Type != ProcessType.AdiabaticMixing && process.Type != ProcessType.Branching)
             {
-                sb.AppendLine("|Tramo|ΔT °C|ΔW g/kgda|Δh kJ/kgda|Q̇ basada en h (kW)|FCS estimado|");
-                sb.AppendLine("|---|---:|---:|---:|---:|---:|");
+                sb.AppendLine("|Tramo|ΔT °C|ΔW g/kgda|Δh kJ/kgda|Potencia (kW)|FCS calculado|FCS indicado|Condensado (kg/s)|Carga serpentín (kW)|");
+                sb.AppendLine("|---|---:|---:|---:|---:|---:|---:|---:|---:|");
                 for (int i = 0; i < process.PointIds.Count - 1; i++)
                 {
                     ChartPoint? from=points.FirstOrDefault(p=>p.Id==process.PointIds[i]);
@@ -74,32 +92,16 @@ public static class ProcessReportService
                         sb.AppendLine($"|{from.Name}→{to.Name}: {error}|—|—|—|—|—|");
                         continue;
                     }
-                    sb.AppendLine($"|{from.Name}→{to.Name}|{F(result.DeltaTemperatureC)}|{F(result.DeltaHumidityRatioKgPerKg*1000)}|{F(result.DeltaEnthalpyKJPerKgDryAir)}|{(result.ThermalPowerKW.HasValue?F(result.ThermalPowerKW.Value):"sin caudal")}|{(result.SensibleHeatFactor.HasValue?F(result.SensibleHeatFactor.Value):"indefinido")}|");
-                    if (result.CondensateMassFlowKgS is double mc)
-                        sb.AppendLine($"- Condensado retirado: {F(mc)} kg/s.");
-                    if (result.CoilCoolingLoadKW is double qc)
-                        sb.AppendLine($"- Carga del serpentín con entalpía del condensado: {F(qc)} kW.");
+                    sb.AppendLine($"|{from.Name}→{to.Name}|{F(result.DeltaTemperatureC)}|{F(result.DeltaHumidityRatioKgPerKg*1000)}|{F(result.DeltaEnthalpyKJPerKgDryAir)}|{(result.ThermalPowerKW.HasValue?F(result.ThermalPowerKW.Value):"sin caudal")}|{(result.SensibleHeatFactor.HasValue?F(result.SensibleHeatFactor.Value):"indefinido")}|{(segment?.SensibleHeatFactor is double f?F(f):"—")}|{(result.CondensateMassFlowKgS is double mc?F(mc):"—")}|{(result.CoilCoolingLoadKW is double qc?F(qc):"—")}|");
+
                 }
             }
             sb.AppendLine();
-            sb.AppendLine("**Advertencia de ingeniería:** una trayectoria entre estados conocidos no demuestra que el equipo sea realizable. Deshumidificación rigurosa requiere considerar entalpía del condensado. Vapor: comprobar caudal y entalpía del agua inyectada. Desecantes: datos y regeneración del equipo.");
             sb.AppendLine();
         }
-        sb.AppendLine("## Ecuaciones y métodos");
-        sb.AppendLine("- W = 0,621945·p_v/(p−p_v).");
-        sb.AppendLine("- h = 1,006·Tbs + W·(2501 + 1,86·Tbs), en kJ/kg de aire seco.");
-        sb.AppendLine("- v = 287,042·T_K·(1+1,607858·W)/p_Pa, en m³/kg de aire seco.");
-        sb.AppendLine("- Q̇_aire = ṁ_da·(h₂−h₁); signo positivo indica aporte de calor al aire.");
-        sb.AppendLine("- Mezcla adiabática: Wmix=Σ(ṁ_da,i·Wi)/Σṁ_da,i; hmix=Σ(ṁ_da,i·hi)/Σṁ_da,i.");
-        sb.AppendLine("- BF ideal: W₂=BF·W₁+(1−BF)·W_ADP; h₂=BF·h₁+(1−BF)·h_ADP.");
-        sb.AppendLine();
-        sb.AppendLine("## Fuentes de referencia");
-        sb.AppendLine("1. ASHRAE Handbook—Fundamentals 2025, cap. 1 Psychrometrics: https://handbook.ashrae.org/Handbooks/F25/SI/F25_Ch01/F25_Ch01_si.aspx");
-        sb.AppendLine("2. PsychroLib: https://github.com/psychrometrics/psychrolib");
-        sb.AppendLine("3. CoolProp HumidAir: https://coolprop.org/fluid_properties/HumidAir.html");
-        sb.AppendLine("4. Hermes Ramírez León, A03 Procesos Psicrométricos, diapositivas 1–24 (material del usuario).");
-        sb.AppendLine();
-        sb.AppendLine("**Estado documental:** falta revisar edición, capítulo y número de ecuación o página exacta de cada método. No interpretar este informe como certificación del diseño.");
+        sb.AppendLine("## Bibliografía");
+        sb.AppendLine("ASHRAE Handbook—Fundamentals (2025)");
+        sb.AppendLine("Procesos psicrométricos — Hermes Ramírez León (material docente)");
         return sb.ToString();
     }
 

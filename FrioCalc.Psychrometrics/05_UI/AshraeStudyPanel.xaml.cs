@@ -43,6 +43,7 @@ public partial class AshraeStudyPanel : UserControl
         StudyTheoryContent.Visibility=enabled?Visibility.Collapsed:Visibility.Visible;
         LiveStatePanel.Visibility=enabled?Visibility.Visible:Visibility.Collapsed;
         ConstructionExpander.Visibility=enabled?Visibility.Visible:Visibility.Collapsed;
+        if(enabled)RefreshState();
     }
 
     public void SetPressure(double pressureKPa)
@@ -129,8 +130,8 @@ public partial class AshraeStudyPanel : UserControl
             FormulaSelector.SelectedIndex=0;
             _updating=false;
         }
-        RefreshState();
-        RefreshConstruction();
+        if(LiveStatePanel.Visibility==Visibility.Visible)RefreshState();
+        else RefreshFormula();
     }
 
     private void RefreshState()
@@ -193,6 +194,7 @@ public partial class AshraeStudyPanel : UserControl
         AddRow("Temperatura de rocío (°C)",p=>double.IsFinite(p.DewPointC)?$"{p.DewPointC:0.##}":"—");
         AddRow("Entalpía (kJ/kg aire seco)",p=>$"{p.EnthalpyKJPerKgDryAir:0.###}");
         AddRow("Volumen específico (m³/kg aire seco)",p=>$"{p.SpecificVolumeM3PerKgDryAir:0.####}");
+        AddRow("Entropía específica relativa (kJ/(kg aire seco·K))",p=>$"{MoistAirSpecificEntropy.FromDryBulbAndHumidityRatio(p.DryBulbC,p.HumidityRatioKgPerKg,p.PressureKPa):0.###}");
         AddRow("Presión absoluta (kPa)",p=>$"{p.PressureKPa:0.###}");
         return grid;
     }
@@ -287,7 +289,7 @@ public partial class AshraeStudyPanel : UserControl
 
     private void RefreshConstruction()
     {
-        if(!_ready || ConstructionStepSelector.SelectedItem is not ChartConstructionStep step)return;
+        if(!_ready || ConstructionExpander.Visibility!=Visibility.Visible || ConstructionStepSelector.SelectedItem is not ChartConstructionStep step)return;
         ConstructionStepTitle.Text=$"Paso {step.Number} de {AshraeStudyCatalog.ConstructionSteps.Count}: {step.Title}";
         ConstructionWhat.Text=step.WhatToDo;
         ConstructionWhy.Text=step.WhyThisMatters;

@@ -162,11 +162,17 @@ public partial class MainWindow
                 _segmentDrafts[key]=draft=new SegmentDraft();
             var fields=new StackPanel { Margin=new Thickness(0,5,0,5) };
             fields.Children.Add(new TextBlock { Text=$"P{key.Item1} → P{key.Item2}",FontWeight=FontWeights.SemiBold });
-            var methods=new ComboBox { ItemsSource=new[]{ProcessType.Automatic,ProcessType.Sensible,
-                ProcessType.HeatingHumidification,ProcessType.CoolingDehumidification,ProcessType.SteamHumidification,
-                ProcessType.EvaporativeHumidification,ProcessType.Desiccant}, SelectedItem=draft.Type,
-                Margin=new Thickness(0,4,0,6), MinWidth=120, MaxWidth=340,HorizontalAlignment=HorizontalAlignment.Left };
-            methods.SelectionChanged+=(_,_)=>{if(methods.SelectedItem is ProcessType kind)draft.Type=kind;};
+            var choices=new Dictionary<ProcessType,string>{
+                [ProcessType.Automatic]="Automático", [ProcessType.Sensible]="Calor sensible",
+                [ProcessType.HeatingHumidification]="Calentamiento y humidificación",
+                [ProcessType.CoolingDehumidification]="Enfriamiento y deshumidificación",
+                [ProcessType.SteamHumidification]="Humidificación con vapor",
+                [ProcessType.EvaporativeHumidification]="Humidificación evaporativa",
+                [ProcessType.Desiccant]="Deshumidificación con desecante"};
+            var methods=new ComboBox { ItemsSource=choices,DisplayMemberPath="Value",SelectedValuePath="Key",
+                SelectedValue=draft.Type,Margin=new Thickness(0,4,0,6),MinWidth=120,
+                MaxWidth=340,HorizontalAlignment=HorizontalAlignment.Left };
+            methods.SelectionChanged+=(_,_)=>{if(methods.SelectedValue is ProcessType kind)draft.Type=kind;};
             fields.Children.Add(new TextBlock {Text="Método del tramo (Automático si no se especifica)"});
             fields.Children.Add(methods);
             var row=new WrapPanel();
@@ -249,8 +255,9 @@ public partial class MainWindow
         host.Children.Add(new TextBlock{Text=process.Name,FontWeight=FontWeights.Bold,Margin=new Thickness(0,8,0,5)});
         var points=process.PointIds.Distinct().Select(id=>PsychrometricChart.ActivePoints.FirstOrDefault(p=>p.Id==id))
             .OfType<ChartPoint>().ToArray();
+        if(points.Length>0)
+            host.Children.Add(UI.AshraeStudyPanel.BuildStateTable(points,points.Select(p=>p.Name).ToArray()));
         var table=new Grid { Margin=new Thickness(0,0,0,8) };
-        foreach(double weight in new[]{1.4,1,1,1,1,1}) table.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(weight,GridUnitType.Star)});
         void Row(params string[] cells)
         {
             int index=table.RowDefinitions.Count;table.RowDefinitions.Add(new RowDefinition{Height=GridLength.Auto});
@@ -263,14 +270,10 @@ public partial class MainWindow
                 Grid.SetRow(cell,index);Grid.SetColumn(cell,j);table.Children.Add(cell);
             }
         }
-        Row("Punto","Tbs (°C)","HR (%)","W (g/kg)","h (kJ/kg)","v (m³/kg)");
-        foreach(var p in points)Row(p.Name,p.DryBulbC.ToString("0.##"),p.RelativeHumidityPercent.ToString("0.##"),
-            (p.HumidityRatioKgPerKg*1000).ToString("0.##"),p.EnthalpyKJPerKgDryAir.ToString("0.##"),p.SpecificVolumeM3PerKgDryAir.ToString("0.###"));
-        host.Children.Add(table);
         var segmentTable=new Grid{Margin=new Thickness(0,0,0,8)};
-        foreach(double weight in new[]{1.2,1,1,1,1,1})segmentTable.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(weight,GridUnitType.Star)});
+        foreach(double weight in new[]{1.2,1,1,1,1,1,1,1})segmentTable.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(weight,GridUnitType.Star)});
         table=segmentTable;
-        Row("Tramo","ΔT (°C)","ΔW (g/kg)","Δh (kJ/kg)","Potencia (kW)","FCS");
+        Row("Tramo","ΔT (°C)","ΔW (g/kg)","Δh (kJ/kg)","Potencia (kW)","FCS calculado","FCS indicado","Condensado (kg/s)");
         if(process.Type!=ProcessType.AdiabaticMixing && process.Type!=ProcessType.Branching)
         {
             for(int i=0;i<process.PointIds.Count-1;i++)
@@ -282,12 +285,40 @@ public partial class MainWindow
                 if(ProcessCalculator.TryCalculate(from,to,type,seg?.DryAirMassFlowKgS??process.DryAirMassFlowKgS,
                     seg?.CondensateTemperatureC??process.CondensateTemperatureC,out var r,out _))
                     Row(from.Name+" → "+to.Name,r.DeltaTemperatureC.ToString("0.###"),(r.DeltaHumidityRatioKgPerKg*1000).ToString("0.###"),
-                        r.DeltaEnthalpyKJPerKgDryAir.ToString("0.###"),r.ThermalPowerKW?.ToString("0.###")??"Sin caudal",r.SensibleHeatFactor?.ToString("0.###")??"—");
+                        r.DeltaEnthalpyKJPerKgDryAir.ToString("0.###"),r.ThermalPowerKW?.ToString("0.###")??"Sin caudal",r.SensibleHeatFactor?.ToString("0.###")??"—",seg?.SensibleHeatFactor?.ToString("0.###")??"—",r.CondensateMassFlowKgS?.ToString("0.######")??"—");
             }
             host.Children.Add(segmentTable);
         }
-        else if(!string.IsNullOrWhiteSpace(process.Report))
-            host.Children.Add(new TextBlock{Text=process.Report,TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,7)});
+        else
+        {
+            table=new Grid{Margin=new Thickness(0,0,0,8)};
+            table.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(2,GridUnitType.Star)});
+            table.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(1,GridUnitType.Star)});
+            Row("Magnitud","Resultado");
+            if(process.Type==ProcessType.AdiabaticMixing && process.MixingInletFlowsM3H is {Count:>0} flows && points.Length>=flows.Count)
+            {
+                double totalMixed=0;
+                for(int i=0;i<flows.Count;i++)
+                {
+                    double flow=flows[i]/3600/points[i].SpecificVolumeM3PerKgDryAir;
+                    totalMixed+=flow;Row($"Caudal másico de {points[i].Name} (kg/s)",flow.ToString("0.#####"));
+                }
+                Row("Caudal másico total (kg/s)",totalMixed.ToString("0.#####"));
+            }
+            else if(process.Type==ProcessType.Branching && points.Length==3 && process.DryAirMassFlowKgS is double total &&
+                process.BranchFractionA is double fraction &&
+                ProcessCalculator.TryBranchBalance(points[0],points[1],points[2],total,fraction,out var b,out _) && b is not null)
+            {
+                Row("Caudal de entrada (kg/s)",total.ToString("0.#####"));
+                Row("Caudal rama 1 (kg/s)",b.FirstMassFlowKgS.ToString("0.#####"));
+                Row("Caudal rama 2 (kg/s)",b.SecondMassFlowKgS.ToString("0.#####"));
+                Row("Agua rama 1 (kg/s)",b.AddedWaterFirstKgS.ToString("0.######"));
+                Row("Agua rama 2 (kg/s)",b.AddedWaterSecondKgS.ToString("0.######"));
+                Row("Potencia rama 1 (kW)",b.ThermalFirstKW.ToString("0.###"));
+                Row("Potencia rama 2 (kW)",b.ThermalSecondKW.ToString("0.###"));
+            }
+            host.Children.Add(table);
+        }
     }
 
     private void ExportWordReport_Click(object sender,RoutedEventArgs e)

@@ -107,8 +107,8 @@ internal static class Program
             quiz!.Invoke(teaching,new object[]{teaching,new RoutedEventArgs(Button.ClickEvent)});
             Check(feedback.Text.Contains("CORRECTO"),"Cuestionario responde a elección del estudiante");
             variableSelector.SelectedIndex=4; // W.
-            Check(variableInfo.Text.Contains("Humedad")&&variableInfo.Text.Contains("Ecuación"),
-                "Inspector de propiedades explica y cita ecuación");
+            Check(variableInfo.Text.Contains("Humedad")&&((StackPanel)teaching.FindName("VariableEquationsPanel")).Children.Count>0 && !variableInfo.Text.Contains("Referencia:"),
+                "Inspector de propiedades representa la ecuación sin referencias intercaladas");
             // [UI.10] Ejercicio real A03/23 enlaza ambas corrientes y
             // muestra las condiciones de la UTA en el laboratorio.
             string linked=teaching.LoadSlideExample(23);
@@ -422,6 +422,10 @@ internal static class Program
                 fractionStack.Children.Count==3 && fractionStack.Children[1] is Border,
                 "Numerador, línea horizontal y denominador visibles");
             simulator.SelectConstructionStep(12);
+            ((Slider)simulator.FindName("TemperatureSlider")).Value=45;
+            ((Slider)simulator.FindName("HumiditySlider")).Value=100;
+            var constructionCanvas=(Canvas)simulator.FindName("ConstructionCanvas");
+            Check(constructionCanvas.Children.OfType<Ellipse>().Any(e=>Canvas.GetTop(e)>=0 && Canvas.GetTop(e)+e.Height<=constructionCanvas.Height), "Carta de construcción incluye el punto a 45 °C y 100 % HR");
             Check(stepSelector.SelectedIndex==11 &&
                 ((TextBlock)simulator.FindName("ConstructionStepTitle")).Text.Contains("12"),
                 "Construcción de carta describe cada etapa hasta la doce");
