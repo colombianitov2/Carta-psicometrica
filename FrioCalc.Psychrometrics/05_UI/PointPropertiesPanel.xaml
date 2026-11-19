@@ -37,14 +37,9 @@
                         Click="OpenProcesses_Click"/>
             </StackPanel>
 
-            <ScrollViewer MaxHeight="205"
-                          VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled">
-
-                <WrapPanel x:Name="PointsWrapPanel"
-                           Orientation="Horizontal"/>
-
-            </ScrollViewer>
+            <!-- El desplazamiento vertical lo gestiona el ScrollViewer exterior de MainWindow. -->
+            <WrapPanel x:Name="PointsWrapPanel"
+                       Orientation="Horizontal"/>
 
         </StackPanel>
 

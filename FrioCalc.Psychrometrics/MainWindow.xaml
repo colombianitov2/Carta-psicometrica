@@ -42,11 +42,9 @@
                             <StackPanel>
                                 <TextBlock Text="PROPIEDADES DEL PROCESO" FontWeight="SemiBold" FontSize="14"
                                            Margin="0,0,0,4"/>
-                                <ScrollViewer MaxHeight="115" VerticalScrollBarVisibility="Auto">
-                                    <TextBlock x:Name="SelectedProcessSummaryMainText" FontSize="12"
-                                               Text="Todavía no hay un proceso calculado."
-                                               TextWrapping="Wrap"/>
-                                </ScrollViewer>
+                                <TextBlock x:Name="SelectedProcessSummaryMainText" FontSize="12"
+                                           Text="Todavía no hay un proceso calculado."
+                                           TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
