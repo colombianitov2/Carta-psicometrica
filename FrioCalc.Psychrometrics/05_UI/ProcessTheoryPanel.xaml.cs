@@ -233,29 +233,44 @@ public partial class ProcessTheoryPanel : UserControl
         TheoryChangeText.Text=change;
         TheoryExplanation.Text=lesson.Title+" — "+lesson.Explanation;
         TheoryFormulaText.Text=lesson.Equations;
-        string equationKey=kind switch
+        string equationKeys=kind switch
         {
-            "Heating" or "Cooling" or "Dehumidification" or "HeatingHumidification" => "h",
-            "Mixing" => "MixW",
-            "SHR" => "SHR",
-            "Bypass" => "BF",
+            "Heating" or "Cooling" => "h|Heat|Sensible",
+            "Dehumidification" => "Condensate|Coil",
+            "HeatingHumidification" => "Heat|SteamW|SteamH",
+            "Evaporative" => "Evap|Tbh",
+            "Steam" => "SteamW|SteamH",
+            "Desiccant" => "Condensate",
+            "Mixing" => "MixW|MixH|MixT",
+            "SHR" => "SHR|RSHF|GSHF",
+            "Bypass" => "BF|BFW",
             _ => "W"
         };
-        var equation=AshraeStudyCatalog.FindEquation(equationKey);
-        TheoryEquationVisual.Content=equation is null ? null : AshraeStudyPanel.RenderMathematicalFraction(equation);
-        TheoryStepsText.Text=lesson.Steps;
-        TheoryWarningText.Text="LÍMITES DEL MODELO: "+lesson.Warning;
+        var equations=new StackPanel();
+        foreach(string key in equationKeys.Split('|'))
+            if(AshraeStudyCatalog.FindEquation(key) is AshraeEquation equation)
+            {
+                equations.Children.Add(new TextBlock{Text=equation.Title,FontWeight=FontWeights.SemiBold,TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,6,0,4)});
+                equations.Children.Add(AshraeStudyPanel.RenderMathematicalFraction(equation));
+                var units=new TextBlock{TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,4,0,6)};
+                AshraeStudyPanel.FormatMath(units,equation.Units+". "+equation.Origin);
+                equations.Children.Add(units);
+            }
+        TheoryEquationVisual.Content=equations;
+        AshraeStudyPanel.FormatMath(TheoryStepsText,lesson.Steps);
+        TheoryWarningText.Text=lesson.Warning;
         TheorySourceText.Text=lesson.References;
         TheoryQuestionText.Text=lesson.Question;
         TheoryValues.Text=FormatStateSummary(lesson);
+        RenderStateResults(lesson);
         int oldSelected=TheoryAnswerCombo.SelectedIndex;
         TheoryAnswerCombo.ItemsSource=lesson.Answers.ToArray();
         TheoryAnswerCombo.SelectedIndex=-1;
         TheoryFeedbackText.Text="Seleccione la respuesta y compruébela.";
         int level=ExplanationLevelComboBox.SelectedIndex;
         TheoryStepsText.Visibility=level==0?Visibility.Collapsed:Visibility.Visible;
-        TheoryFormulaText.Visibility=level==0?Visibility.Collapsed:Visibility.Visible;
-        TheorySourceText.Visibility=level==2?Visibility.Visible:Visibility.Collapsed;
+        TheoryFormulaText.Visibility=Visibility.Collapsed;
+        TheorySourceText.Visibility=Visibility.Collapsed;
         VariableSelector_Changed(VariableSelector,new SelectionChangedEventArgs(
             Selector.SelectionChangedEvent,Array.Empty<object>(),Array.Empty<object>()));
         DrawDiagram(lesson);
@@ -268,6 +283,39 @@ public partial class ProcessTheoryPanel : UserControl
         LessonChanged?.Invoke(lesson);
         _previousSecondT=tSecond;
         _previousSecondRH=rhSecond;
+    }
+
+    private void RenderStateResults(TheoryLesson lesson)
+    {
+        TheoryStateTable.Children.Clear();
+        var states=new List<ChartPoint>(lesson.Route);
+        var labels=states.Select((p,i)=>i==0?"Entrada":i==states.Count-1?"Salida":$"Estado {i+1}").ToList();
+        if(lesson.Auxiliary is ChartPoint aux && !states.Any(p=>p.Id==aux.Id))
+        {
+            states.Add(aux);labels.Add(lesson.Kind=="Mixing"?"Segunda entrada":"ADP");
+        }
+        TheoryStateTable.Children.Add(AshraeStudyPanel.BuildStateTable(states,labels));
+        if(lesson.Final is ChartPoint final)
+        {
+            var initial=lesson.Initial;
+            var deltas=new Grid{Margin=new Thickness(0,0,0,8)};
+            deltas.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(2,GridUnitType.Star)});
+            deltas.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(1,GridUnitType.Star)});
+            void Row(string name,string value)
+            {
+                int i=deltas.RowDefinitions.Count;deltas.RowDefinitions.Add(new RowDefinition{Height=GridLength.Auto});
+                foreach(var cell in new[]{(name,0),(value,1)})
+                {
+                    var border=new Border{BorderBrush=Brushes.LightGray,BorderThickness=new Thickness(.5),Padding=new Thickness(6),Child=new TextBlock{Text=cell.Item1,TextWrapping=TextWrapping.Wrap}};
+                    Grid.SetRow(border,i);Grid.SetColumn(border,cell.Item2);deltas.Children.Add(border);
+                }
+            }
+            Row("Variación de temperatura (°C)",$"{final.DryBulbC-initial.DryBulbC:+0.###;-0.###;0}");
+            Row("Variación de razón de humedad (g/kg aire seco)",$"{(final.HumidityRatioKgPerKg-initial.HumidityRatioKgPerKg)*1000:+0.###;-0.###;0}");
+            Row("Variación de entalpía (kJ/kg aire seco)",$"{final.EnthalpyKJPerKgDryAir-initial.EnthalpyKJPerKgDryAir:+0.###;-0.###;0}");
+            TheoryStateTable.Children.Add(deltas);
+        }
+        else TheoryStateTable.Children.Add(new TextBlock{Text="Estado de salida pendiente de una condición adicional.",TextWrapping=TextWrapping.Wrap});
     }
 
     private static string FormatStateSummary(TheoryLesson lesson)
@@ -296,6 +344,7 @@ public partial class ProcessTheoryPanel : UserControl
         TheoryFormulaText.Text="No se muestran ecuaciones con estados inválidos.";
         TheoryStepsText.Text="";
         TheoryWarningText.Text="Revise la presión, el punto de rocío y el dominio físico.";
+        TheoryStateTable.Children.Clear();
         TheoryValues.Text="No se dibuja un punto fuera de saturación o de las hipótesis.";
         TheoryFeedbackText.Text="";
         DiagramCanvas.Children.Clear();
@@ -305,9 +354,17 @@ public partial class ProcessTheoryPanel : UserControl
     private void VariableSelector_Changed(object sender,SelectionChangedEventArgs e)
     {
         if(!_ready||VariableExplanationText is null)return;
-        VariableExplanationText.Text=TheoryLessonService.DescribeVariable(
-            (VariableSelector.SelectedItem as TheoryVariable)?.Key??"",
-            _currentLesson?.Initial);
+        string key=(VariableSelector.SelectedItem as TheoryVariable)?.Key??"";
+        AshraeStudyPanel.FormatMath(VariableExplanationText,TheoryLessonService.DescribeVariable(key,_currentLesson?.Initial));
+        VariableEquationsPanel.Children.Clear();
+        string eqs=key switch
+        {
+            "Tbs"=>"TK","Tbh"=>"Tbh","Tdp"=>"Tdp","RH"=>"RH","W"=>"W","h"=>"h","v"=>"v","P"=>"Dalton",
+            "SHR" or "FCS"=>"SHR","BF"=>"BF","Mdot"=>"Mdot","s"=>"Entropy|EntropyT|EntropyPda|EntropyPv","dh"=>"DeltaH",_=>""
+        };
+        foreach(string eq in eqs.Split('|'))
+            if(AshraeStudyCatalog.FindEquation(eq) is AshraeEquation equation)
+                VariableEquationsPanel.Children.Add(AshraeStudyPanel.RenderMathematicalFraction(equation));
     }
 
     private void CheckTheoryAnswer_Click(object sender,RoutedEventArgs e)

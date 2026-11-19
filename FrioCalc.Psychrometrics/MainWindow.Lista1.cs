@@ -235,7 +235,7 @@ public partial class MainWindow
         ProcessTheoryPanel.SetPressure(pressureKPa);
         ProcessPressureIndicator.Text=
             "Presión de trabajo: "+pressureKPa.ToString("0.###",CultureInfo.CurrentCulture)+" kPa absolutos";
-        AshraeStudyPanel.SetPressure(pressureKPa);
+        AshraeSimulatorPanel.SetPressure(pressureKPa);
         _savedProcesses.Clear();
         _selectedPointIds.Clear();
         _nextProcessId = 1;

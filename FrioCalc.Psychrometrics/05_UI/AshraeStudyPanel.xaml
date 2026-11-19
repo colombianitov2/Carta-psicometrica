@@ -4,10 +4,10 @@
     <Border BorderBrush="#BBCBDD" BorderThickness="1" CornerRadius="7"
             Padding="12" Background="#F8FAFD" Margin="0,0,0,12">
         <StackPanel>
+            <StackPanel x:Name="StudyTheoryContent">
             <TextBlock Text="FUNDAMENTOS Y APLICACIONES DE PSICROMETRÍA"
                        FontWeight="Bold" FontSize="18" TextWrapping="Wrap" Margin="0,0,0,6"/>
-            <TextBlock Text="Temario original siguiendo los fundamentos del capítulo 1 de ASHRAE. Seleccione un concepto; lea su fundamento, cómo se obtuvo, para qué sirve y su ejemplo calculado. El laboratorio permite experimentar con el estado."
-                       TextWrapping="Wrap" Foreground="#48566A" Margin="0,0,0,13"/>
+            <TextBlock Text="Estudie las propiedades del aire húmedo y los balances de los procesos en orden." TextWrapping="Wrap" Margin="0,0,0,13"/>
             <TextBlock Text="Sección de estudio" FontWeight="SemiBold" Margin="0,0,0,5"/>
             <ComboBox x:Name="StudySelector" Height="34" Margin="0,0,0,9"
                       SelectionChanged="StudySelector_Changed" DisplayMemberPath="DisplayTitle"/>
@@ -29,7 +29,7 @@
             <TextBlock Text="QUÉ PERMITE CALCULAR O LEER EN LA CARTA" FontWeight="Bold"
                        Margin="0,0,0,3"/>
             <TextBlock x:Name="UnitInterpretation" TextWrapping="Wrap" Margin="0,0,0,11"/>
-            <Border Background="#FFF4E6" CornerRadius="4" Padding="9" Margin="0,0,0,12">
+            <Border Visibility="Collapsed" Background="#FFF4E6" CornerRadius="4" Padding="9" Margin="0,0,0,12">
                 <TextBlock x:Name="UnitLimitation" TextWrapping="Wrap" FontSize="12.5"/>
             </Border>
             <TextBlock Text="EJEMPLO RELACIONADO" FontWeight="Bold" Margin="0,0,0,3"/>
@@ -40,10 +40,10 @@
                 <StackPanel>
                     <TextBlock Text="ECUACIONES — NOTACIÓN MATEMÁTICA" FontSize="15"
                                FontWeight="Bold" Margin="0,0,0,7"/>
-                    <TextBlock Text="Seleccione la ecuación para mostrar numerador sobre denominador, deducción y sustitución de valores."
-                               TextWrapping="Wrap" Margin="0,0,0,8"/>
-                    <ComboBox x:Name="FormulaSelector" Height="32" Margin="0,0,0,10"
+                    <TextBlock Text="Ecuaciones correspondientes a este tema" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    <ComboBox Visibility="Collapsed" x:Name="FormulaSelector" Height="32" Margin="0,0,0,10"
                               DisplayMemberPath="Title" SelectionChanged="FormulaSelector_Changed"/>
+                    <TextBlock x:Name="FirstEquationTitle" FontWeight="SemiBold" TextWrapping="Wrap"/>
                     <ContentControl x:Name="FormulaVisual" HorizontalAlignment="Left"
                                     Margin="0,3,0,11"/>
                     <TextBlock x:Name="FormulaUnits" FontWeight="SemiBold"
@@ -51,16 +51,18 @@
                     <TextBlock Text="¿DE DÓNDE SALE?" FontWeight="Bold" Margin="0,0,0,3"/>
                     <TextBlock x:Name="FormulaOrigin" TextWrapping="Wrap" Margin="0,0,0,8"/>
                     <TextBlock x:Name="FormulaDerivation" TextWrapping="Wrap" Margin="0,0,0,8"/>
-                    <TextBlock Text="CÁLCULO CON EL ESTADO ACTUAL" FontWeight="Bold"
+                    <TextBlock Visibility="Collapsed" Text="CÁLCULO CON EL ESTADO ACTUAL" FontWeight="Bold"
                                Margin="0,0,0,3"/>
-                    <TextBlock x:Name="FormulaSubstitution" TextWrapping="Wrap"
+                    <TextBlock Visibility="Collapsed" x:Name="FormulaSubstitution" TextWrapping="Wrap"
                                FontSize="13" Margin="0,0,0,10"/>
-                    <TextBlock x:Name="FormulaLimitations" Foreground="#9A3C20"
+                    <TextBlock Visibility="Collapsed" x:Name="FormulaLimitations" Foreground="#9A3C20"
                                TextWrapping="Wrap" FontSize="12"/>
+                    <StackPanel x:Name="ExtraEquationsPanel"/>
                 </StackPanel>
             </Border>
 
-            <Border Background="#EAF3FE" CornerRadius="5" Padding="10" Margin="0,0,0,12">
+            </StackPanel>
+            <Border x:Name="LiveStatePanel" Visibility="Collapsed" Background="#EAF3FE" CornerRadius="5" Padding="10" Margin="0,0,0,12">
                 <StackPanel>
                     <TextBlock Text="EXPERIMENTE CON EL ESTADO DE AIRE HÚMEDO"
                                FontWeight="Bold" Margin="0,0,0,8"/>
@@ -81,11 +83,12 @@
                         </StackPanel>
                     </Grid>
                     <TextBlock x:Name="PressureValue" Margin="0,0,0,4"/>
-                    <TextBlock x:Name="LiveValues" TextWrapping="Wrap" FontSize="13"/>
+                    <TextBlock x:Name="LiveValues" Visibility="Collapsed" TextWrapping="Wrap" FontSize="13"/>
+                    <StackPanel x:Name="LiveStateTable"/>
                 </StackPanel>
             </Border>
 
-            <Expander x:Name="ConstructionExpander" Header="CONSTRUIR UNA CARTA PSICROMÉTRICA — 12 PASOS EXPLICADOS"
+            <Expander Visibility="Collapsed" x:Name="ConstructionExpander" Header="CONSTRUIR UNA CARTA PSICROMÉTRICA — 12 PASOS EXPLICADOS"
                       IsExpanded="True" Margin="0,0,0,13">
                 <StackPanel Margin="6,10,6,6">
                     <TextBlock Text="Cada etapa explica qué se calcula, de dónde procede la ecuación, por qué se necesita y cómo se verifica. El diagrama se construye progresivamente a medida que avanza."
@@ -109,18 +112,17 @@
                                Margin="0,0,0,8"/>
                     <TextBlock Text="FUNDAMENTO DE LA ECUACIÓN" FontWeight="Bold" Margin="0,0,0,3"/>
                     <TextBlock x:Name="ConstructionBasis" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <StackPanel x:Name="ConstructionEquations" Margin="0,0,0,8"/>
                     <Border BorderThickness="1" BorderBrush="#D7E3ED" Background="White"
                             Padding="6" CornerRadius="4">
                         <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
                             <Canvas x:Name="ConstructionCanvas" Width="735" Height="265"/>
                         </Viewbox>
                     </Border>
-                    <TextBlock Text="Esquema Tbs–W original de FrioCalc, no reproducción exacta del plano oblicuo h–W de ASHRAE."
-                               Foreground="#59697B" TextWrapping="Wrap" FontSize="11"
-                               Margin="0,6,0,0"/>
+                    
                 </StackPanel>
             </Expander>
-            <TextBlock x:Name="BibliographyReference" TextWrapping="Wrap"
+            <TextBlock Visibility="Collapsed" x:Name="BibliographyReference" TextWrapping="Wrap"
                        Foreground="#4F647B" FontSize="11.5"/>
         </StackPanel>
     </Border>

@@ -364,9 +364,8 @@ public static class TheoryLessonService
             };
         }
         return $"{variable.Title} [{variable.Unit}]\n{variable.Definition}\n\n" +
-            $"Ecuación: {variable.Equation}\nObtención: {variable.HowObtained}\n" +
-            $"En el estado inicial: {(state is null?"No calculado":value)}\n" +
-            $"Precaución: {variable.Caution}\nReferencia: {variable.Reference}";
+            $"Obtención: {variable.HowObtained}\n" +
+            $"En el estado inicial: {(state is null?"No calculado":value)}";
     }
 
     private static bool Make(int id,string name,double p,double t,double w,out ChartPoint? point)

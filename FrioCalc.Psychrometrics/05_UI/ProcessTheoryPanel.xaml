@@ -7,8 +7,7 @@
         <StackPanel>
             <TextBlock Text="LABORATORIO INTERACTIVO DE PROCESOS" FontWeight="SemiBold"
                        FontSize="17" Margin="0,0,0,8"/>
-            <TextBlock Text="Demostración calculada, a presión fija y con hipótesis expresas. No sustituye el diseño del equipo ni la carta principal."
-                       TextWrapping="Wrap" Foreground="#475569" Margin="0,0,0,12"/>
+            
             <TextBlock Text="Tipo de transformación" FontWeight="SemiBold" Margin="0,0,0,4"/>
             <ComboBox x:Name="ProcessSelector" SelectionChanged="ControlsChanged" SelectedIndex="0"
                       Height="30" Margin="0,0,0,10">
@@ -19,9 +18,9 @@
                 <ComboBoxItem Content="Enfriamiento y deshumidificación" Tag="Dehumidification"/>
                 <ComboBoxItem Content="Mezcla de dos corrientes" Tag="Mixing"/>
                 <ComboBoxItem Content="Calentamiento y humidificación en dos etapas" Tag="HeatingHumidification"/>
-                <ComboBoxItem Content="Deshumidificación por desecante (datos supuestos)" Tag="Desiccant"/>
-                <ComboBoxItem Content="Serpentín con bypass ideal (ADP supuesto)" Tag="Bypass"/>
-                <ComboBoxItem Content="Factor de calor sensible FCS (estado indeterminado)" Tag="SHR"/>
+                <ComboBoxItem Content="Deshumidificación por desecante" Tag="Desiccant"/>
+                <ComboBoxItem Content="Serpentín con bypass ideal" Tag="Bypass"/>
+                <ComboBoxItem Content="Factor de calor sensible FCS" Tag="SHR"/>
             </ComboBox>
             <Grid Margin="0,0,0,10">
                 <Grid.ColumnDefinitions>
@@ -87,12 +86,12 @@
                        Margin="0,0,0,9"/>
             <TextBlock Text="ECUACIÓN DEL PROCESO" FontWeight="SemiBold" Margin="0,4,0,4"/>
             <ContentControl x:Name="TheoryEquationVisual" HorizontalAlignment="Left" Margin="0,0,0,7"/>
-            <TextBlock x:Name="TheoryFormulaText" TextWrapping="Wrap" FontFamily="Consolas"
+            <TextBlock Visibility="Collapsed" x:Name="TheoryFormulaText" TextWrapping="Wrap" FontFamily="Consolas"
                        FontSize="12.5" Margin="0,0,0,9"/>
             <TextBlock Text="DESARROLLO CON SUS DATOS" FontWeight="SemiBold" Margin="0,0,0,4"/>
             <TextBlock x:Name="TheoryStepsText" TextWrapping="Wrap" FontFamily="Consolas"
                        FontSize="12.5" Margin="0,0,0,10"/>
-            <Border Padding="10" Background="#FEF5E7" CornerRadius="4" Margin="0,0,0,10">
+            <Border Visibility="Collapsed" Padding="10" Background="#FEF5E7" CornerRadius="4" Margin="0,0,0,10">
                 <TextBlock x:Name="TheoryWarningText" TextWrapping="Wrap" FontSize="12.5"/>
             </Border>
             <Border BorderBrush="#CBD5E1" BorderThickness="1" Background="White"
@@ -102,15 +101,16 @@
                             SizeChanged="DiagramCanvas_SizeChanged"/>
                 </Viewbox>
             </Border>
-            <TextBlock x:Name="TheoryValues" FontFamily="Consolas" FontSize="12"
+            <TextBlock Visibility="Collapsed" x:Name="TheoryValues" FontFamily="Consolas" FontSize="12"
                        TextWrapping="Wrap" Margin="0,0,0,7"/>
+            <StackPanel x:Name="TheoryStateTable"/>
             <TextBlock Text="DICCIONARIO INTERACTIVO: SELECCIONE UNA VARIABLE"
                        FontWeight="SemiBold" Margin="6,8,0,5"/>
             <ComboBox x:Name="VariableSelector" Height="30" Margin="0,0,0,6"
                       SelectionChanged="VariableSelector_Changed" DisplayMemberPath="Title"/>
             <Border BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="5"
                     Padding="10" Margin="0,0,0,15">
-                <TextBlock x:Name="VariableExplanationText" TextWrapping="Wrap" FontSize="12"/>
+                <StackPanel><TextBlock x:Name="VariableExplanationText" TextWrapping="Wrap" FontSize="12"/><StackPanel x:Name="VariableEquationsPanel"/></StackPanel>
             </Border>
             <TextBlock Text="COMPRUEBE SU COMPRENSIÓN" FontWeight="SemiBold" Margin="0,0,0,7"/>
             <TextBlock x:Name="TheoryQuestionText" TextWrapping="Wrap" Margin="0,0,0,7"/>
@@ -123,9 +123,9 @@
             </StackPanel>
             <TextBlock x:Name="TheoryFeedbackText" FontWeight="SemiBold" TextWrapping="Wrap"
                        FontSize="12.5" Margin="0,0,0,10"/>
-            <TextBlock Text="TRAZABILIDAD DE LA EXPLICACIÓN" FontWeight="SemiBold"
+            <TextBlock Visibility="Collapsed" Text="TRAZABILIDAD DE LA EXPLICACIÓN" FontWeight="SemiBold"
                        Margin="0,0,0,5"/>
-            <TextBlock x:Name="TheorySourceText" Foreground="#64748B"
+            <TextBlock Visibility="Collapsed" x:Name="TheorySourceText" Foreground="#64748B"
                        TextWrapping="Wrap" FontSize="11"/>
         </StackPanel>
     </Border>

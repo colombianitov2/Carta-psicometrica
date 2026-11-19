@@ -45,7 +45,7 @@ internal static class Program
             Check(window.Title.Contains("Psicrometría"), "Ventana psicrométrica");
             Check(window.FindName("WorkspaceTabs") is TabControl, "Tres zonas de trabajo");
             var tabs = (TabControl)window.FindName("WorkspaceTabs");
-            Check(tabs.Items.Count == 3, "Carta, procesos, teoría");
+            Check(tabs.Items.Count == 5, "Carta, procesos, fundamentos, simulador, bibliografía");
             Check(window.FindName("PsychrometricChart") != null, "Carta principal");
             Check(window.FindName("ProcessChart") != null, "Carta de procesos");
             Check(window.FindName("PointPropertiesPanel") is PointPropertiesPanel, "Gestor puntos");
@@ -407,21 +407,23 @@ internal static class Program
             var ashrae=(AshraeStudyPanel)window.FindName("AshraeStudyPanel");
             var studySelector=(ComboBox)ashrae.FindName("StudySelector");
             var eqSelector=(ComboBox)ashrae.FindName("FormulaSelector");
-            var stepSelector=(ComboBox)ashrae.FindName("ConstructionStepSelector");
+            var simulator=(AshraeStudyPanel)window.FindName("AshraeSimulatorPanel");
+            var stepSelector=(ComboBox)simulator.FindName("ConstructionStepSelector");
             var formulaVisual=(ContentControl)ashrae.FindName("FormulaVisual");
-            Check(studySelector.Items.Count==18 &&
-                eqSelector.Items.Count==12 && stepSelector.Items.Count==12,
-                "Panel ASHRAE expone 18 temas, 12 ecuaciones y 12 pasos");
-            Check(formulaVisual.Content is StackPanel,
+            Check(studySelector.Items.Count==24 &&
+                eqSelector.Items.Count==2 && stepSelector.Items.Count==12,
+                "Fundamentos expone 24 temas y ecuaciones fijas por tema; simulador expone 12 pasos");
+            ashrae.SelectUnit("A4");
+            Check(formulaVisual.Content is WrapPanel,
                 "Fracción matemática representada por elementos, no texto plano");
-            var fraction=(StackPanel)formulaVisual.Content;
+            var fraction=(WrapPanel)formulaVisual.Content;
             Check(fraction.Children.Count==2 &&
                 fraction.Children[1] is StackPanel fractionStack &&
                 fractionStack.Children.Count==3 && fractionStack.Children[1] is Border,
                 "Numerador, línea horizontal y denominador visibles");
-            ashrae.SelectConstructionStep(12);
+            simulator.SelectConstructionStep(12);
             Check(stepSelector.SelectedIndex==11 &&
-                ((TextBlock)ashrae.FindName("ConstructionStepTitle")).Text.Contains("12"),
+                ((TextBlock)simulator.FindName("ConstructionStepTitle")).Text.Contains("12"),
                 "Construcción de carta describe cada etapa hasta la doce");
             ashrae.SelectUnit("A4");
             Check(((TextBlock)ashrae.FindName("UnitHeading")).Text.Contains("presión de saturación",StringComparison.OrdinalIgnoreCase),

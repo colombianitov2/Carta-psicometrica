@@ -62,14 +62,17 @@ public partial class MainWindow : Window
             AtmosphericPressure.StandardSeaLevelKPa);
         InitializeLista1();
         ApplyResponsiveWorkspaceLayout();
-        ProcessTheoryPanel.LessonChanged += AshraeStudyPanel.SetLiveLesson;
-        AshraeStudyPanel.SetPressure(PressureSelector.CurrentPressureKPa);
-        AshraeStudyPanel.SetLiveLesson(ProcessTheoryPanel.CurrentLesson);
+        AshraeSimulatorPanel.SetSimulatorMode(true);
+        BibliographyTopics.ItemsSource=FrioCalc.Psychrometrics.Processes.AshraeStudyCatalog.Units;
+        ProcessTheoryPanel.LessonChanged += AshraeSimulatorPanel.SetLiveLesson;
+        AshraeSimulatorPanel.SetPressure(PressureSelector.CurrentPressureKPa);
+        AshraeSimulatorPanel.SetLiveLesson(ProcessTheoryPanel.CurrentLesson);
         ProcessTheoryPanel.LessonChanged += TheoryCoursePanel.SetContext;
         TheoryCoursePanel.SetContext(ProcessTheoryPanel.CurrentLesson);
         TheoryCoursePanel.LessonRequested += kind =>
         {
             ProcessTheoryPanel.SelectKind(kind);
+            WorkspaceTabs.SelectedIndex=3;
             ProcessTheoryPanel.BringIntoView();
         };
         TheoryCoursePanel.ExerciseRequested += slide =>
