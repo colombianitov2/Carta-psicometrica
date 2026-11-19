@@ -89,6 +89,18 @@ public partial class PsychrometricChartView : UserControl
     private bool _panMoved;
 
     private bool _updatingScrollBars;
+    // [2.1C.9.1] Coalescence del cálculo de Δh durante navegación.
+    private readonly System.Windows.Threading.DispatcherTimer _deviationRefreshTimer = new() { Interval = TimeSpan.FromMilliseconds(140) };
+
+    private void RefreshDuringNavigation()
+    {
+        if (_enthalpyDeviationVisible && !_geometry.IsStandardChartMode)
+        {
+            _deviationRefreshTimer.Stop();
+            _deviationRefreshTimer.Start();
+        }
+        RefreshChart();
+    }
 
     // ------------------------------ Fin de sección 2.1C.2 ------------------------------
 
@@ -98,6 +110,8 @@ public partial class PsychrometricChartView : UserControl
     public PsychrometricChartView()
     {
         InitializeComponent();
+        _deviationRefreshTimer.Tick += (_, _) => { _deviationRefreshTimer.Stop(); RefreshChart(); };
+        Unloaded += (_, _) => _deviationRefreshTimer.Stop();
 
         Loaded +=
             PsychrometricChartView_Loaded;
@@ -330,7 +344,7 @@ public partial class PsychrometricChartView : UserControl
         if (_specificEntropyVisible)
             DrawWithLabelPreference("SpecificEntropy",()=>SpecificEntropyLayer.Draw(ChartCanvas,_geometry,_pressureKPa));
 
-        if (_enthalpyDeviationVisible)
+        if (_enthalpyDeviationVisible && !_deviationRefreshTimer.IsEnabled)
         {
             DrawWithLabelPreference("EnthalpyDeviation",()=>EnthalpyDeviationLayer.Draw(ChartCanvas,_geometry,_pressureKPa));
         }
@@ -495,7 +509,7 @@ public partial class PsychrometricChartView : UserControl
             mousePoint,
             zoomFactor);
 
-        RefreshChart();
+        RefreshDuringNavigation();
 
         e.Handled =
             true;
@@ -602,7 +616,7 @@ public partial class PsychrometricChartView : UserControl
         _lastPanPoint =
             currentPoint;
 
-        RefreshChart();
+        RefreshDuringNavigation();
 
         e.Handled =
             true;
@@ -765,12 +779,14 @@ public partial class PsychrometricChartView : UserControl
 
     private void NotifyPointsChanged()
     {
+        if (_chartPoints.Count == 0) _nextPointId = 1;
         PointsChanged?.Invoke(
             _chartPoints);
     }
 
     private void ClearPoints()
     {
+        _nextPointId = 1;
         if (_chartPoints.Count == 0)
         {
             return;

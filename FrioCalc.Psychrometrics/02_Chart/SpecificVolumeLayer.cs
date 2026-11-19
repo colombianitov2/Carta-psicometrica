@@ -388,7 +388,7 @@ public static class SpecificVolumeLayer
 
         Canvas.SetTop(
             label,
-            plotRect.Bottom + 27.0);
+            plotRect.Bottom + 44.0);
     }
 
     private static void DrawAxisTitle(
@@ -429,7 +429,7 @@ public static class SpecificVolumeLayer
 
         Canvas.SetTop(
             title,
-            plotRect.Bottom + 42.0);
+            plotRect.Bottom + 60.0);
     }
 
     private static bool IsMultipleOfStep(

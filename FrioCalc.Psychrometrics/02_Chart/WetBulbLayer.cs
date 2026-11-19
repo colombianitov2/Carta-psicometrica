@@ -169,8 +169,7 @@ public static class WetBulbLayer
 
         canvas.Children.Add(line);
 
-        const int labelIndex =
-            0;
+        int labelIndex = Math.Min(5, line.Points.Count - 2);
 
         DrawLabel(
             canvas,
@@ -235,10 +234,10 @@ public static class WetBulbLayer
         }
 
         const double normalOffset =
-            13.0;
+            3.0;
 
         const double tangentOffset =
-            8.0;
+            10.0;
 
         double tangentX =
             length > 1e-9

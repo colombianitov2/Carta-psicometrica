@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -34,6 +35,11 @@ public partial class PointPropertiesPanel : UserControl
     public PointPropertiesPanel()
     {
         InitializeComponent();
+        PointsWrapPanel.SizeChanged += (_, e) =>
+        {
+            foreach (var card in PointsWrapPanel.Children.OfType<Border>())
+                card.MaxWidth = Math.Max(120, e.NewSize.Width - 10);
+        };
 
         SetPoints(
             Array.Empty<ChartPoint>());
@@ -236,7 +242,8 @@ public partial class PointPropertiesPanel : UserControl
         return
             new Border
             {
-                Width = 285.0,
+                Width = 310.0,
+                MaxWidth = Math.Max(120.0, PointsWrapPanel.ActualWidth > 0 ? PointsWrapPanel.ActualWidth - 10 : 310),
                 Margin = new Thickness(
                     0,
                     0,
@@ -287,7 +294,7 @@ public partial class PointPropertiesPanel : UserControl
             {
                 Width =
                     new GridLength(
-                        132.0)
+                        1.0, GridUnitType.Star)
             });
 
         row.ColumnDefinitions.Add(
@@ -307,7 +314,9 @@ public partial class PointPropertiesPanel : UserControl
                 Foreground =
                     Brushes.DimGray,
                 FontSize =
-                    11.5
+                    11.5,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0,0,8,0)
             };
 
         TextBlock valueText =

@@ -293,15 +293,27 @@ public static class EnthalpyLayer
                 double.PositiveInfinity,
                 double.PositiveInfinity));
 
-        double left =
-            Math.Max(
-                plotRect.Left + 2.0,
-                point.X - label.DesiredSize.Width - 6.0);
-
-        double top =
-            Math.Max(
-                plotRect.Top,
-                point.Y - label.DesiredSize.Height - 2.0);
+        // Prolongación tangente a la isentálpica hacia la región no saturada dibujable.
+        // La prolongación es una guía gráfica, no un estado físico válido.
+        double t = geometry.DryBulbCFromX(point.X, plotRect);
+        double w = MoistAirEnthalpy.HumidityRatioFromEnthalpyAndDryBulb(enthalpyKJPerKg,t-0.25);
+        var previous = new Point(geometry.XFromDryBulbC(t-0.25,plotRect),
+            geometry.YFromHumidityRatioKgPerKg(w,plotRect));
+        Vector direction = previous - point;
+        if (direction.Length < 1e-8 || !double.IsFinite(direction.Length)) direction = new Vector(-1,-1);
+        direction.Normalize();
+        double distance = 32.0;
+        if (direction.X < 0) distance = Math.Min(distance, (point.X-2)/-direction.X);
+        if (direction.Y < 0) distance = Math.Min(distance, (point.Y-3)/-direction.Y);
+        Point anchor = point + direction * Math.Max(0,distance);
+        double left = Math.Clamp(anchor.X-label.DesiredSize.Width-2, 1,
+            Math.Max(1,canvas.ActualWidth-label.DesiredSize.Width-1));
+        double top = Math.Clamp(anchor.Y-label.DesiredSize.Height-2, 1,
+            Math.Max(1,canvas.ActualHeight-label.DesiredSize.Height-1));
+        if(distance>4)
+            canvas.Children.Add(new Line { X1=point.X, Y1=point.Y,
+                X2=anchor.X, Y2=anchor.Y, Stroke=Brushes.DimGray,
+                StrokeThickness=0.7, StrokeDashArray=new DoubleCollection{3,2}, IsHitTestVisible=false });
 
         Canvas.SetLeft(
             label,

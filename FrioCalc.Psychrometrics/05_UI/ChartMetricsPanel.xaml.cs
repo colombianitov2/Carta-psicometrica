@@ -420,9 +420,9 @@ public partial class ChartMetricsPanel : UserControl
             tb.Text = shown.ToString("0.######",CultureInfo.CurrentCulture);
         }
         bool ip = next == UnitSystem.IP;
-        DryBulbLabel.Text = "Temperatura de bulbo seco (" + (ip ? "°F" : "°C") + ")";
-        WetBulbLabel.Text = "Temperatura de bulbo húmedo (" + (ip ? "°F" : "°C") + ")";
-        DewPointLabel.Text = "Punto de rocío (" + (ip ? "°F" : "°C") + ")";
+        DryBulbLabel.Text = "Temperatura de bulbo seco (" + (ip ? "°\u2060F" : "°\u2060C") + ")";
+        WetBulbLabel.Text = "Temperatura de bulbo húmedo (" + (ip ? "°\u2060F" : "°\u2060C") + ")";
+        DewPointLabel.Text = "Punto de rocío (" + (ip ? "°\u2060F" : "°\u2060C") + ")";
         HumidityRatioLabel.Text = "Humedad absoluta (" + (ip ? "gr/lb" : "g/kg") + " aire seco)";
         EnthalpyLabel.Text = "Entalpía (" + (ip ? "Btu/lb" : "kJ/kg") + " aire seco)";
         SpecificVolumeLabel.Text = "Volumen específico (" + (ip ? "ft³/lb" : "m³/kg") + " aire seco)";

@@ -49,18 +49,18 @@ public static class ProcessLayer
                     x2 = geometry.XFromDryBulbC(last.DryBulbC, plot),
                     y2 = geometry.YFromHumidityRatioKgPerKg(last.HumidityRatioKgPerKg, plot);
                 if (!double.IsFinite(x1 + x2 + y1 + y2)) continue;
-                var line = new Line {X1=x1,Y1=y1,X2=x2,Y2=y2,Stroke=brush,StrokeThickness=3,
+                var line = new Line {X1=x1,Y1=y1,X2=x2,Y2=y2,Stroke=brush,StrokeThickness=1.6,
                     StrokeStartLineCap=PenLineCap.Round,StrokeEndLineCap=PenLineCap.Round,
                     ToolTip=$"{process.Name}: {first.Name} → {last.Name}"};
                 canvas.Children.Add(line);
                 double dx=x2-x1,dy=y2-y1,mag=Math.Sqrt(dx*dx+dy*dy);
-                if (mag > 18)
+                if (mag > 14)
                 {
                     double ux=dx/mag,uy=dy/mag;
                     var arrow=new Polygon {Fill=brush,Points=new PointCollection {
-                        new Point(x2-12*ux,y2-12*uy),
-                        new Point(x2-23*ux-6*uy,y2-23*uy+6*ux),
-                        new Point(x2-23*ux+6*uy,y2-23*uy-6*ux)
+                        new Point(x1+.58*dx,y1+.58*dy),
+                        new Point(x1+.58*dx-8*ux-3.5*uy,y1+.58*dy-8*uy+3.5*ux),
+                        new Point(x1+.58*dx-8*ux+3.5*uy,y1+.58*dy-8*uy-3.5*ux)
                     }};
                     canvas.Children.Add(arrow);
                 }
