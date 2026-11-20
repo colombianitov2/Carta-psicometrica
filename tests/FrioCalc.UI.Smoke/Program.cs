@@ -44,7 +44,7 @@ internal static class Program
                 if (!valid) throw new InvalidOperationException("UI FAIL: " + description);
             }
             string VisibleText(TextBlock block)=>new TextRange(block.ContentStart,block.ContentEnd).Text;
-            Check(window.Title.Contains("Psicrometría"), "Ventana psicrométrica");
+            Check(window.Title == ReleaseUpdateService.OfficialProductName, "Ventana psicrométrica");
             Check(window.FindName("WorkspaceTabs") is TabControl, "Tres zonas de trabajo");
             var tabs = (TabControl)window.FindName("WorkspaceTabs");
             Check(tabs.Items.Count == 7 && tabs.Items.OfType<TabItem>().Any(t=>Equals(t.Header,"Variables")) &&
@@ -52,7 +52,7 @@ internal static class Program
                 "Carta, procesos, fundamentos, simulador, variables, instrucciones y bibliografía");
             Check(window.FindName("VariableReferencePanel") is VariableReferencePanel,"Tabla de variables independiente");
             Check(window.FindName("CheckUpdatesButton") is Button updateButton && Equals(updateButton.Content,"Buscar actualizaciones"),"Panel de actualizaciones en Bibliografía");
-            Check(window.FindName("UpdateVersionText") is TextBlock updateVersion && updateVersion.Text.Contains("1.0.0-beta.3"),"Versión en panel de actualización");
+            Check(window.FindName("UpdateVersionText") is TextBlock updateVersion && updateVersion.Text.Contains(ReleaseUpdateService.CurrentVersion.ToString()),"Versión en panel de actualización");
             Check(window.FindName("InstallUpdateButton") is Button installUpdate && installUpdate.Visibility==Visibility.Collapsed,"Instalación solo tras encontrar una actualización");
             Check(window.FindName("PsychrometricChart") != null, "Carta principal");
             Check(window.FindName("ProcessChart") != null, "Carta de procesos");

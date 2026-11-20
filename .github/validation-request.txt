@@ -1,1 +1,1 @@
-Validación de cambio de nombre y compatibilidad de actualizaciones - Beta 4
+Revalidación Beta 4: título oficial y versión dinámica en pruebas de interfaz
