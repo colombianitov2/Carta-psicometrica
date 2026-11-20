@@ -1,4 +1,4 @@
-# Mapa del proyecto FrioCalc.Psychrometrics
+# Mapa del proyecto — Calculadora de refrigeración – Parte 1 – Carta psicrométrica
 
 ## 1. Core
 

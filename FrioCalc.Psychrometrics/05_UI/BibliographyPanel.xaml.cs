@@ -52,8 +52,8 @@ public partial class BibliographyPanel : UserControl
 
     private void ExportBibliography_Click(object sender, RoutedEventArgs e)
     {
-        var dialog=new SaveFileDialog {Title="Guardar registro bibliográfico de FrioCalc",
-            Filter="CSV UTF-8|*.csv", FileName="FrioCalc_Bibliografia_Catalogo.csv"};
+        var dialog=new SaveFileDialog {Title="Guardar registro bibliográfico de la calculadora",
+            Filter="CSV UTF-8|*.csv", FileName="Calculadora_Refrigeracion_Parte1_Bibliografia.csv"};
         if(dialog.ShowDialog()!=true) return;
         File.WriteAllText(dialog.FileName,BibliographyCatalog.ExportCsv(),new UTF8Encoding(true));
     }

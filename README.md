@@ -1,6 +1,6 @@
-# FrioCalc.Psychrometrics
+# Calculadora de refrigeración – Parte 1 – Carta psicrométrica
 
-Módulo dedicado a la carta psicrométrica de FrioCalc, desarrollado en C# / WPF sobre .NET 10 para Windows.
+Primera parte de la Calculadora de refrigeración, desarrollado en C# / WPF sobre .NET 10 para Windows.
 
 ## Foco actual
 
@@ -12,8 +12,12 @@ Por ahora el desarrollo activo se limita a la carta psicrométrica. La bibliogra
 - Geometría y capas gráficas en `02_Chart`.
 - Selector de presión y panel de variables en `05_UI`.
 - Zoom, pan y barras de desplazamiento.
-- Modo **Carta estándar** con límites visuales de referencia de -10 a 55 °C de TBS y 0 a 33 g/kg de razón de humedad.
+- Modo **Carta estándar** con límites visuales de referencia de -10 a 55 °C de TBS y 0 a 60 g/kg de razón de humedad.
 
 ## Regla de trabajo
 
 Los cambios realizados desde ChatGPT deben hacerse en una rama de trabajo y quedar registrados mediante commits. Antes de integrar a `main`, compilar en Visual Studio y comprobar 0 errores.
+
+## Identidad y compatibilidad
+
+El nombre oficial del producto es **Calculadora de refrigeración – Parte 1 – Carta psicrométrica**. Los identificadores técnicos históricos permanecen durante la migración para mantener la actualización de las versiones ya publicadas. Véase [protocolo de migración](docs/MIGRACION_NOMBRE_PRODUCTO.md).

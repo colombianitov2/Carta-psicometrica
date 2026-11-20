@@ -12,9 +12,16 @@ namespace FrioCalc.Psychrometrics.Core;
 public static class ReleaseUpdateService
 {
     public const string Repository = "colombianitov2/Carta-psicometrica";
+    public const string RenamedRepository = "colombianitov2/Calculadora-de-refrigeracion-Parte-1-Carta-psicometrica";
+    public const string RenamedReleasesPage = "https://github.com/" + RenamedRepository + "/releases";
+    public const string OfficialProductName = "Calculadora de refrigeración – Parte 1 – Carta psicrométrica";
+    public const string LegacyProductName = "FrioCalc.Psychrometrics";
+    // Conservar el ID y las rutas históricas durante la migración de clientes.
+    public static bool IsCompatibleProductName(string? name) =>
+        name == LegacyProductName || name == OfficialProductName;
     public const string ReleasesPage = "https://github.com/" + Repository + "/releases";
     private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromMinutes(5) };
-    static ReleaseUpdateService() => Client.DefaultRequestHeaders.UserAgent.ParseAdd("FrioCalc/1.0");
+    static ReleaseUpdateService() => Client.DefaultRequestHeaders.UserAgent.ParseAdd("CalculadoraRefrigeracionParte1/1.0");
 
     public readonly record struct ReleaseVersion(int Major, int Minor, int Patch, int? Beta) : IComparable<ReleaseVersion>
     {
@@ -51,7 +58,7 @@ public static class ReleaseUpdateService
         get
         {
             var value = typeof(ReleaseUpdateService).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-            return ReleaseVersion.TryParse(value,out var version) ? version : new(1,0,0,3);
+            return ReleaseVersion.TryParse(value,out var version) ? version : new(1,0,0,4);
         }
     }
 
@@ -102,8 +109,10 @@ public static class ReleaseUpdateService
                 var assetName=asset.GetProperty("name").GetString();
                 if (assetName!=name && assetName!="SHA256SUMS.txt") continue;
                 if (asset.TryGetProperty("state",out var state) && state.GetString()!="uploaded") continue;
-                string url=$"{ReleasesPage}/download/{tag}/{assetName}";
-                if (asset.GetProperty("browser_download_url").GetString()!=url) continue;
+                string legacyUrl=$"{ReleasesPage}/download/{tag}/{assetName}";
+                string renamedUrl=$"{RenamedReleasesPage}/download/{tag}/{assetName}";
+                string? url=asset.GetProperty("browser_download_url").GetString();
+                if (url is null || (url != legacyUrl && url != renamedUrl)) continue;
                 long size=asset.GetProperty("size").GetInt64();
                 if (size<=0 || (assetName=="SHA256SUMS.txt" && size>65536)) continue;
                 var item=new ReleaseAsset(assetName!,new Uri(url),size,asset.TryGetProperty("digest",out var digest)?digest.GetString():null);
@@ -176,14 +185,14 @@ public static class ReleaseUpdateService
         string target=Path.GetFullPath(args[2]);
         if(!File.Exists(target) || string.Equals(source,target,StringComparison.OrdinalIgnoreCase) ||
             !string.Equals(Path.GetExtension(target),".exe",StringComparison.OrdinalIgnoreCase) ||
-            FileVersionInfo.GetVersionInfo(target).ProductName!=FileVersionInfo.GetVersionInfo(source).ProductName ||
-            string.IsNullOrEmpty(FileVersionInfo.GetVersionInfo(source).ProductName)) throw new InvalidDataException("El destino no corresponde a FrioCalc.");
+            !IsCompatibleProductName(FileVersionInfo.GetVersionInfo(target).ProductName) ||
+            !IsCompatibleProductName(FileVersionInfo.GetVersionInfo(source).ProductName)) throw new InvalidDataException("El destino no corresponde a la calculadora.");
         try
         {
             using var former=Process.GetProcessById(pid);
             if (!former.HasExited && !string.Equals(former.MainModule?.FileName,target,StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("El proceso de destino no corresponde a FrioCalc.");
-            if (!former.WaitForExit(30000)) throw new IOException("Cierre todas las ventanas de FrioCalc e inténtelo nuevamente.");
+                throw new InvalidDataException("El proceso de destino no corresponde a la calculadora.");
+            if (!former.WaitForExit(30000)) throw new IOException("Cierre todas las ventanas de la calculadora e inténtelo nuevamente.");
         }
         catch(ArgumentException) { /* El proceso anterior ya se cerró. */ }
         string staged=target+".new-"+Guid.NewGuid().ToString("N");
@@ -192,7 +201,7 @@ public static class ReleaseUpdateService
         {
             File.Copy(source,staged);
             File.Replace(staged,target,backup);
-            try { using var restarted=Process.Start(new ProcessStartInfo(target){UseShellExecute=true}) ?? throw new IOException("No se pudo iniciar FrioCalc."); }
+            try { using var restarted=Process.Start(new ProcessStartInfo(target){UseShellExecute=true}) ?? throw new IOException("No se pudo iniciar la calculadora."); }
             catch { File.Replace(backup,target,null); throw; }
         }
         finally { if(File.Exists(staged)) File.Delete(staged); }

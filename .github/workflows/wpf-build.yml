@@ -1,10 +1,11 @@
-name: FrioCalc WPF Build
+name: Calculadora de refrigeración - WPF Build
 # Run only when explicitly requested or when the isolated validation-request file changes.
 on:
   workflow_dispatch:
   push:
     branches:
       - 'chatgpt/friocalc-lista1-2026-11-07'
+      - 'chatgpt/renombrar-calculadora-refrigeracion-parte-1'
     paths:
       - '.github/validation-request.txt'
 

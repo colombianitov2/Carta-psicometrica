@@ -549,7 +549,7 @@ public partial class MainWindow
 
     private void ExportWordReport_Click(object sender,RoutedEventArgs e)
     {
-        var dialog=new SaveFileDialog{Title="Exportar informe de FrioCalc",Filter="Documento Word (*.docx)|*.docx",FileName="FrioCalc_Informe.docx"};
+        var dialog=new SaveFileDialog{Title="Exportar informe de la calculadora",Filter="Documento Word (*.docx)|*.docx",FileName="Calculadora_Refrigeracion_Parte1_Informe.docx"};
         if(dialog.ShowDialog(this)!=true)return;
         try { WordProcessReport.Write(dialog.FileName,PressureSelector.CurrentPressureKPa,PsychrometricChart.ActivePoints,_savedProcesses,ChartMetricsPanel.CurrentUnits); }
         catch(Exception ex) when(ex is IOException or UnauthorizedAccessException or InvalidDataException)
