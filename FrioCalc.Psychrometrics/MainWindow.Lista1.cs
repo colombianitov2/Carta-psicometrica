@@ -56,6 +56,8 @@ public partial class MainWindow
             PointPropertiesPanel.SetUnitSystem(units);
             PsychrometricChart.SetDisplayUnits(units);
             ProcessChart.SetDisplayUnits(units);
+            RefreshProcessGroupLists();
+            RefreshGroupCards();
             ProcessResultText.Text =
                 "Unidades cambiadas en ejes principales, entradas y propiedades. Se están auditando las etiquetas auxiliares.";
         };
@@ -237,6 +239,8 @@ public partial class MainWindow
             "Presión de trabajo: "+pressureKPa.ToString("0.###",CultureInfo.CurrentCulture)+" kPa absolutos";
         AshraeSimulatorPanel.SetPressure(pressureKPa);
         _savedProcesses.Clear();
+        _draftGroups.Clear();_lastBuilderGroupId=null;
+        CloseGroupEditor();
         _selectedPointIds.Clear();
         _nextProcessId = 1;
         _editingPointId = null;
@@ -249,6 +253,12 @@ public partial class MainWindow
     }
 
     // [5.1C.11] Selección ordenada para la segunda carta.
+    private void ChartPageScroll_SizeChanged(object sender,SizeChangedEventArgs e)
+    {
+        if(PsychrometricChart is not null && e.NewSize.Height>0)
+            PsychrometricChart.Height=Math.Max(330,e.NewSize.Height*.76);
+    }
+
     private void RefreshSelectionList()
     {
         RefreshProcessGroupLists();
@@ -548,12 +558,13 @@ public partial class MainWindow
         }
         int editingIndex=_editingProcessId is int oldId
             ? _savedProcesses.FindIndex(p=>p.Id==oldId) : -1;
-        int processId=editingIndex>=0 ? _savedProcesses[editingIndex].Id : _nextProcessId++;
+        int processId=editingIndex>=0 ? _savedProcesses[editingIndex].Id :
+            (_editingProcessId is int draftId && _draftGroups.ContainsKey(draftId)?draftId:_nextProcessId++);
         string name=string.IsNullOrWhiteSpace(NewProcessNameTextBox.Text)
             ? $"PR{processId}" : NewProcessNameTextBox.Text.Trim();
         RememberHistory();
         var saved = new PsychrometricProcess(
-            processId,name,editingIndex>=0 ? _savedProcesses[editingIndex].ColorHex : PointColorPalette.GetColorHex(processId+31),type,ids,massFlow,Report:description,
+            processId,name,editingIndex>=0 ? _savedProcesses[editingIndex].ColorHex : PointColorPalette.GetColorHex(processId+31),type,ids,massFlow,Visible:editingIndex<0||_savedProcesses[editingIndex].Visible,Report:description,
             CondensateTemperatureC:condensateTemperature,BranchFractionA:branchFraction,
             GeneratedPointId:generatedPointId,SaturationEffectiveness:saturationEffectiveness,
             BypassFactor:bypassFactorUsed,SteamAddedGramsPerKg:steamGramsUsed,
@@ -561,6 +572,8 @@ public partial class MainWindow
             DesiccantRemovedGramsPerKg:desiccantGramsUsed,
             DesiccantOutletTemperatureC:desiccantTUsed,
             MixingInletFlowsM3H:mixFlowsUsed,SegmentSettings:segmentSettings);
+        _draftGroups.Remove(processId);
+        _lastBuilderGroupId=processId;
         if(editingIndex>=0) _savedProcesses[editingIndex]=saved;
         else _savedProcesses.Add(saved);
         // Quitar un miembro o sustituir una salida nunca elimina el estado original de la carta.
@@ -599,6 +612,7 @@ public partial class MainWindow
         if(index<0||index>=_savedProcesses.Count) return;
         var process=_savedProcesses[index];
         _editingProcessId=process.Id;
+        _lastBuilderGroupId=process.Id;
         LoadSegmentDrafts(process);
         _selectedPointIds.Clear();
         _selectedPointIds.AddRange(process.PointIds);
@@ -630,7 +644,7 @@ public partial class MainWindow
         OpenGroupEditor();
         RenameProcessTextBox.Text=process.Name;
         RenderGroupResults(process,ProcessResultsPanel);
-        ProcessResultText.Text="Proceso cargado para edición. Al pulsar Graficar proceso reemplazará este proceso conservando su ID; se mantiene opción Deshacer. En predicciones puede generarse un nuevo punto de salida.";
+        ProcessResultText.Text="Proceso cargado para edición. Guardar conserva el identificador y actualiza los resultados.";
     }
 
     // [5.1C.16] Propiedades persistentes del proceso seleccionado.
@@ -649,6 +663,8 @@ public partial class MainWindow
 
     private void DeleteProcess_Click(object sender, RoutedEventArgs e)
     {
+        if(_editingProcessId is int draftId && _draftGroups.Remove(draftId))
+        {CloseGroupEditor();return;}
         int index = SavedProcessesList.SelectedIndex;
         if (index < 0 || index >= _savedProcesses.Count) return;
         RememberHistory();
@@ -723,6 +739,7 @@ public partial class MainWindow
             PsychrometricChart.SetSharedPoints(previous.Points);
             _savedProcesses.Clear();
             _savedProcesses.AddRange(previous.Processes);
+            _draftGroups.Clear();_lastBuilderGroupId=null;
             _nextProcessId=Math.Max(1,_savedProcesses.Count==0?1:_savedProcesses.Max(x=>x.Id)+1);
             OnPointsChanged(PsychrometricChart.ActivePoints);
             PointPropertiesPanel.ClearSelection();
@@ -789,6 +806,8 @@ public partial class MainWindow
             PsychrometricChart.SetSharedPoints(session.Points);
             OnPointsChanged(PsychrometricChart.ActivePoints);
             _savedProcesses.Clear();
+            _draftGroups.Clear();_lastBuilderGroupId=null;
+            CloseGroupEditor();
             _savedProcesses.AddRange(session.Processes);
             _nextProcessId=Math.Max(1,_savedProcesses.Count==0 ? 1 : _savedProcesses.Max(p=>p.Id)+1);
             _selectedPointIds.Clear();

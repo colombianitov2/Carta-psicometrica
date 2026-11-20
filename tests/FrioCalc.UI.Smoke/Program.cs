@@ -325,6 +325,57 @@ internal static class Program
             Check(processChart.ActivePoints.Count==mainChart.ActivePoints.Count,
                 "Segunda carta sincronizada al editar predicción");
 
+            // [UI.6.2.1] Constructor de tarjetas: agregar, ordenar, calcular y editar sin otra ventana.
+            var builder=(StackPanel)window.FindName("ProcessBuilderView");
+            var groupEditor=(StackPanel)window.FindName("ProcessEditor");
+            var groupCards=(StackPanel)window.FindName("ProcessCardsPanel");
+            var plus=(Button)window.FindName("AddProcessGroupButton");
+            Check(builder.Visibility==Visibility.Visible && groupEditor.Visibility==Visibility.Collapsed &&
+                available.ItemTemplate is DataTemplate,"Constructor visible con tarjetas de propiedades");
+            plus.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Check(builder.Visibility==Visibility.Visible && groupEditor.Visibility==Visibility.Collapsed,
+                "Crear grupo no despliega sus parámetros");
+            ListBox GroupList(Border card)=>((StackPanel)card.Child).Children.OfType<ListBox>().Single();
+            var draftCard=groupCards.Children.OfType<Border>().Last();
+            int groupId=(int)GroupList(draftCard).Tag;
+            var membership=typeof(MainWindow).GetMethod("UpdateBuilderMembership",
+                System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!;
+            int firstState=mainChart.ActivePoints[1].Id,secondState=mainChart.ActivePoints[0].Id;
+            membership.Invoke(window,new object[]{groupId,firstState,0,false});
+            Check(processesList.Items.Count==2 && GroupList(groupCards.Children.OfType<Border>().Last()).Items.Count==1,
+                "Un punto conserva borrador sin inventar proceso");
+            membership.Invoke(window,new object[]{groupId,secondState,1,false});
+            Check(processesList.Items.Count==3 && GroupList(groupCards.Children.OfType<Border>().Last()).Items.Count==2,
+                "Segundo punto calcula y guarda automáticamente el tramo");
+            Check(processesList.Items.Cast<string>().Last().Contains($"P{firstState} → P{secondState}"),
+                "El proceso respeta orden de ingreso, no numeración original");
+            membership.Invoke(window,new object[]{groupId,secondState,0,false});
+            Check(processesList.Items.Cast<string>().Last().Contains($"P{secondState} → P{firstState}"),
+                "Reordenar recalcula dirección sin duplicar el punto");
+            var groupCard=groupCards.Children.OfType<Border>().Last();
+            var pencil=((StackPanel)groupCard.Child).Children.OfType<DockPanel>().Single().Children.OfType<Button>().Single();
+            pencil.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Check(builder.Visibility==Visibility.Collapsed && groupEditor.Visibility==Visibility.Visible,
+                "Lápiz cambia a editor dentro de la misma pestaña");
+            ((TextBox)window.FindName("NewProcessNameTextBox")).Text="Grupo por tarjetas";
+            ((Button)window.FindName("SaveProcessGroupButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Check(builder.Visibility==Visibility.Visible && groupEditor.Visibility==Visibility.Collapsed &&
+                processesList.Items.Cast<string>().Last().Contains("Grupo por tarjetas"),
+                "Guardar vuelve al constructor conservando grupo");
+            membership.Invoke(window,new object[]{groupId,firstState,0,true});
+            Check(processesList.Items.Count==2 && mainChart.ActivePoints.Count==4,
+                "Retirar miembro no lo borra de la carta");
+            var finalDraft=groupCards.Children.OfType<Border>().Last();
+            ((StackPanel)finalDraft.Child).Children.OfType<DockPanel>().Single().Children.OfType<Button>().Single()
+                .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            remove!.Invoke(window,new object[]{window,new RoutedEventArgs(Button.ClickEvent)});
+            Check(groupCards.Children.OfType<Border>().Count()==2 && mainChart.ActivePoints.Count==4,
+                "Eliminar borrador conserva los estados existentes");
+            Check(window.FindName("ChartPageScroll") is ScrollViewer chartPage &&
+                chartPage.Content is StackPanel chartContent && chartContent.Children.Contains(mainChart) &&
+                chartContent.Children.Contains(properties),
+                "Una barra de la carta envuelve gráfico y propiedades");
+
             // [UI.6.3] Etiquetas de puntos cercanos no deben superponerse.
             var proximityCanvas=new Canvas{Width=800,Height=520};
             proximityCanvas.Measure(new Size(800,520));

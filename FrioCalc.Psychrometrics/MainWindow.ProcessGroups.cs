@@ -20,6 +20,8 @@ public partial class MainWindow
     private Point _groupDragStart;
     private ChartPoint? _groupDragPoint;
     private ListBox? _groupDragSource;
+    private readonly Dictionary<int,PsychrometricProcess> _draftGroups=new();
+    private int? _lastBuilderGroupId;
     private sealed class SegmentDraft
     {
         public ProcessType Type = ProcessType.Automatic;
@@ -27,106 +29,236 @@ public partial class MainWindow
     }
     private readonly Dictionary<(int,int),SegmentDraft> _segmentDrafts = new();
 
+    // [5.1C.20.1] Tarjetas de estado: mismas propiedades, sin acciones que borren puntos.
+    public sealed class ProcessPointCard
+    {
+        public ChartPoint Point {get;}
+        public string Title {get;}
+        public string Color {get;}
+        public string DryBulb {get;}
+        public string Humidity {get;}
+        public string RelativeHumidity {get;}
+        public string WetBulb {get;}
+        public string DewPoint {get;}
+        public string Enthalpy {get;}
+        public string Volume {get;}
+        public string Entropy {get;}
+        public ProcessPointCard(ChartPoint point,UnitSystem units,int order=0,string? groupColor=null)
+        {
+            Point=point;Title=order>0?$"{order}. {point.Name}":point.Name;Color=groupColor??point.ColorHex;
+            bool si=units==UnitSystem.SI;
+            string F(double v,string f,string unit)=>double.IsFinite(v)?v.ToString(f,CultureInfo.CurrentCulture)+" "+unit:"—";
+            DryBulb=F(PsychrometricUnits.TemperatureFromSI(point.DryBulbC,units),"0.00",si?"°C":"°F");
+            Humidity=F(PsychrometricUnits.HumidityFromSI(point.HumidityRatioKgPerKg,units),"0.00",si?"g/kg aire seco":"gr/lb aire seco");
+            RelativeHumidity=F(point.RelativeHumidityPercent,"0.0","%");
+            WetBulb=F(PsychrometricUnits.TemperatureFromSI(point.WetBulbC,units),"0.00",si?"°C":"°F");
+            DewPoint=F(PsychrometricUnits.TemperatureFromSI(point.DewPointC,units),"0.00",si?"°C":"°F");
+            Enthalpy=F(PsychrometricUnits.EnthalpyFromSI(point.EnthalpyKJPerKgDryAir,units),"0.00",si?"kJ/kg aire seco":"Btu/lb aire seco");
+            Volume=F(PsychrometricUnits.VolumeFromSI(point.SpecificVolumeM3PerKgDryAir,units),"0.000",si?"m³/kg aire seco":"ft³/lb aire seco");
+            double entropy=MoistAirSpecificEntropy.FromDryBulbAndHumidityRatio(point.DryBulbC,point.HumidityRatioKgPerKg,point.PressureKPa);
+            Entropy=F(PsychrometricUnits.EntropyFromSI(entropy,units),"0.000",si?"kJ/(kgda·K)":"Btu/(lbda·°F)");
+        }
+    }
+
+    private ProcessPointCard[] CardsFor(IEnumerable<int> ids,bool numbered,string? color=null)
+    {
+        var points=PsychrometricChart.ActivePoints;
+        return ids.Select(id=>points.FirstOrDefault(p=>p.Id==id)).OfType<ChartPoint>()
+            .Select((p,i)=>new ProcessPointCard(p,ChartMetricsPanel.CurrentUnits,numbered?i+1:0,color)).ToArray();
+    }
+
     private void RefreshProcessGroupLists()
     {
-        if (AvailablePointsList is null || ProcessSelectionList is null) return;
-        AvailablePointsList.ItemsSource = PsychrometricChart.ActivePoints.ToArray();
-        ProcessSelectionList.ItemsSource = _selectedPointIds.Select(id =>
-            PsychrometricChart.ActivePoints.FirstOrDefault(p=>p.Id==id)).OfType<ChartPoint>().ToArray();
+        if(AvailablePointsList is null || ProcessSelectionList is null || EditorAvailablePointsList is null)return;
+        var available=CardsFor(PsychrometricChart.ActivePoints.Select(p=>p.Id),false);
+        AvailablePointsList.ItemsSource=available;
+        EditorAvailablePointsList.ItemsSource=available;
+        ProcessSelectionList.ItemsSource=CardsFor(_selectedPointIds,true);
         RefreshSegmentEditors();
     }
 
     private void ProcessList_MouseDown(object sender, MouseButtonEventArgs e)
     {
-        _groupDragSource = sender as ListBox;
-        _groupDragStart = e.GetPosition(this);
-        _groupDragPoint = _groupDragSource is ListBox box &&
+        _groupDragSource=sender as ListBox;
+        _groupDragStart=e.GetPosition(this);
+        _groupDragPoint=_groupDragSource is ListBox box &&
             e.OriginalSource is DependencyObject child &&
-            ItemsControl.ContainerFromElement(box,child) is ListBoxItem item
-            ? item.Content as ChartPoint : null;
+            ItemsControl.ContainerFromElement(box,child) is ListBoxItem item &&
+            item.Content is ProcessPointCard card ? card.Point:null;
     }
 
     private void ProcessList_MouseMove(object sender, MouseEventArgs e)
     {
-        if(e.LeftButton!=MouseButtonState.Pressed || _groupDragPoint is null || _groupDragSource is null) return;
+        if(e.LeftButton!=MouseButtonState.Pressed || _groupDragPoint is null || _groupDragSource is null)return;
         Vector delta=e.GetPosition(this)-_groupDragStart;
         if(Math.Abs(delta.X)<SystemParameters.MinimumHorizontalDragDistance &&
-           Math.Abs(delta.Y)<SystemParameters.MinimumVerticalDragDistance) return;
+           Math.Abs(delta.Y)<SystemParameters.MinimumVerticalDragDistance)return;
         var data=new DataObject();
         data.SetData("FrioCalc.PointId",_groupDragPoint.Id);
         data.SetData("FrioCalc.FromSequence",ReferenceEquals(_groupDragSource,ProcessSelectionList));
+        if(_groupDragSource.Tag is int groupId)data.SetData("FrioCalc.FromGroup",groupId);
         var source=_groupDragSource;
-        _groupDragSource=null; _groupDragPoint=null;
-        DragDrop.DoDragDrop(source,data,DragDropEffects.Move);
+        _groupDragSource=null;_groupDragPoint=null;
+        DragDrop.DoDragDrop(source,data,DragDropEffects.Copy|DragDropEffects.Move);
     }
 
-    private void ProcessSequence_Drop(object sender, DragEventArgs e)
+    private static int DropPosition(ListBox box,DragEventArgs e,IReadOnlyList<int> ids)
     {
-        if(!e.Data.GetDataPresent("FrioCalc.PointId") || e.Data.GetData("FrioCalc.PointId") is not int id) return;
-        if(!PsychrometricChart.ActivePoints.Any(p=>p.Id==id))return;
-        int target=_selectedPointIds.Count;
         if(e.OriginalSource is DependencyObject child &&
-           ItemsControl.ContainerFromElement(ProcessSelectionList,child) is ListBoxItem container &&
-           container.Content is ChartPoint other)
+           ItemsControl.ContainerFromElement(box,child) is ListBoxItem item &&
+           item.Content is ProcessPointCard card)
         {
-            target=_selectedPointIds.IndexOf(other.Id);
-            if(e.GetPosition(container).Y>container.ActualHeight/2)target++;
+            int target=ids.ToList().IndexOf(card.Point.Id);
+            if(target>=0)return target+(e.GetPosition(item).Y>item.ActualHeight/2?1:0);
         }
-        int original=_selectedPointIds.IndexOf(id);
-        if(original>=0)
+        return ids.Count;
+    }
+
+    private static void InsertOrdered(List<int> ids,int id,int target)
+    {
+        int original=ids.IndexOf(id);
+        if(original>=0){ids.RemoveAt(original);if(original<target)target--;}
+        ids.Insert(Math.Clamp(target,0,ids.Count),id);
+    }
+
+    private void ProcessSequence_Drop(object sender,DragEventArgs e)
+    {
+        if(e.Data.GetData("FrioCalc.PointId") is not int id ||
+           !PsychrometricChart.ActivePoints.Any(p=>p.Id==id))return;
+        InsertOrdered(_selectedPointIds,id,DropPosition(ProcessSelectionList,e,_selectedPointIds));
+        RefreshProcessGroupLists();e.Handled=true;
+    }
+
+    private void AvailablePoints_Drop(object sender,DragEventArgs e)
+    {
+        if(e.Data.GetData("FrioCalc.PointId") is not int id)return;
+        if(e.Data.GetData("FrioCalc.FromSequence") is true)
         {
-            _selectedPointIds.RemoveAt(original);
-            if(original<target)target--;
+            _selectedPointIds.Remove(id);RefreshProcessGroupLists();e.Handled=true;
         }
-        _selectedPointIds.Insert(Math.Clamp(target,0,_selectedPointIds.Count),id);
-        RefreshProcessGroupLists();
+        else if(e.Data.GetData("FrioCalc.FromGroup") is int groupId)
+        {
+            UpdateBuilderMembership(groupId,id,0,true);e.Handled=true;
+        }
+    }
+
+    private void AvailablePoints_DoubleClick(object sender,MouseButtonEventArgs e)
+    {
+        if(sender is not ListBox box || box.SelectedItem is not ProcessPointCard card)return;
+        if(ReferenceEquals(box,EditorAvailablePointsList))
+        {
+            if(!_selectedPointIds.Contains(card.Point.Id))_selectedPointIds.Add(card.Point.Id);
+            RefreshProcessGroupLists();return;
+        }
+        int groupId=_lastBuilderGroupId??-1;
+        if(FindBuilderGroup(groupId) is null)groupId=CreateDraftGroup();
+        var group=FindBuilderGroup(groupId)!;
+        UpdateBuilderMembership(groupId,card.Point.Id,group.PointIds.Count,false);
+    }
+
+    private void ProcessSequence_DoubleClick(object sender,MouseButtonEventArgs e)
+    {
+        if(ProcessSelectionList.SelectedItem is not ProcessPointCard card)return;
+        _selectedPointIds.Remove(card.Point.Id);RefreshProcessGroupLists();
+    }
+
+    // [5.1C.20.2] Cada grupo tiene su propio recuadro; los cambios válidos se calculan sin abrir el editor.
+    private PsychrometricProcess? FindBuilderGroup(int id)=>
+        _savedProcesses.FirstOrDefault(p=>p.Id==id) ?? (_draftGroups.TryGetValue(id,out var draft)?draft:null);
+
+    private int CreateDraftGroup()
+    {
+        int id=_nextProcessId++;
+        _draftGroups[id]=new PsychrometricProcess(id,$"PR{id}",PointColorPalette.GetColorHex(id+31),
+            ProcessType.Automatic,Array.Empty<int>(),null);
+        _lastBuilderGroupId=id;
+        ProcessBuilderStatus.Text="Arrastre los puntos al nuevo grupo.";
+        RefreshGroupCards();return id;
+    }
+
+    private void NewProcessGroup_Click(object sender,RoutedEventArgs e)=>CreateDraftGroup();
+
+    private void BuilderGroup_Drop(object sender,DragEventArgs e)
+    {
+        if(sender is not ListBox box || box.Tag is not int groupId ||
+           e.Data.GetData("FrioCalc.PointId") is not int id)return;
+        var group=FindBuilderGroup(groupId);if(group is null)return;
+        UpdateBuilderMembership(groupId,id,DropPosition(box,e,group.PointIds),false);
         e.Handled=true;
     }
 
-    private void AvailablePoints_Drop(object sender, DragEventArgs e)
+    private void BuilderGroup_DoubleClick(object sender,MouseButtonEventArgs e)
     {
-        if(e.Data.GetDataPresent("FrioCalc.FromSequence") && e.Data.GetData("FrioCalc.FromSequence") is true &&
-           e.Data.GetData("FrioCalc.PointId") is int id)
+        if(sender is ListBox box && box.Tag is int groupId && box.SelectedItem is ProcessPointCard card)
+            UpdateBuilderMembership(groupId,card.Point.Id,0,true);
+    }
+
+    private void UpdateBuilderMembership(int groupId,int pointId,int target,bool remove)
+    {
+        var group=FindBuilderGroup(groupId);
+        if(group is null || !PsychrometricChart.ActivePoints.Any(p=>p.Id==pointId))return;
+        _lastBuilderGroupId=groupId;
+        var ids=group.PointIds.Distinct().ToList();
+        if(remove){if(!ids.Remove(pointId))return;}
+        else InsertOrdered(ids,pointId,target);
+        if(group.Type!=ProcessType.Automatic || group.GeneratedPointId.HasValue)
         {
-            _selectedPointIds.Remove(id);
+            // Los métodos de equipo requieren sus parámetros; editar sin sustituir el resultado guardado.
+            OpenBuilderGroupEditor(groupId);
+            _selectedPointIds.Clear();
+            _selectedPointIds.AddRange(ids.Where(id=>id!=group.GeneratedPointId));
             RefreshProcessGroupLists();
-            e.Handled=true;
+            ProcessBuilderStatus.Text="Revise los parámetros del equipo para guardar la nueva secuencia.";
+            return;
         }
+        bool closed=group.PointIds.Count>=4 && group.PointIds[0]==group.PointIds[^1] && ids.Count>=3;
+        if(closed)ids.Add(ids[0]);
+        var segments=new List<ProcessSegmentSetting>();
+        var report=new System.Text.StringBuilder();
+        for(int i=0;i<ids.Count-1;i++)
+        {
+            int fromId=ids[i],toId=ids[i+1];
+            var from=PsychrometricChart.ActivePoints.First(p=>p.Id==fromId);
+            var to=PsychrometricChart.ActivePoints.First(p=>p.Id==toId);
+            var setting=group.SegmentSettings?.FirstOrDefault(s=>s.FromId==fromId&&s.ToId==toId);
+            if(!ProcessCalculator.TryCalculate(from,to,setting?.Type??ProcessType.Automatic,
+                setting?.DryAirMassFlowKgS??group.DryAirMassFlowKgS,
+                setting?.CondensateTemperatureC??group.CondensateTemperatureC,out var result,out var error))
+            {
+                ProcessBuilderStatus.Text=$"{from.Name} → {to.Name}: {error}";
+                return;
+            }
+            if(setting is not null)segments.Add(setting);
+            report.AppendLine($"{from.Name} → {to.Name}: ΔT={result.DeltaTemperatureC:0.###} °C; ΔW={result.DeltaHumidityRatioKgPerKg*1000:0.###} g/kg; Δh={result.DeltaEnthalpyKJPerKgDryAir:0.###} kJ/kgda.");
+        }
+        var changed=group with {PointIds=ids.ToArray(),SegmentSettings=segments,Report=report.ToString()};
+        int index=_savedProcesses.FindIndex(p=>p.Id==groupId);
+        if(index>=0 || ids.Count>=2)RememberHistory();
+        if(ids.Count<2)
+        {
+            if(index>=0)_savedProcesses.RemoveAt(index);
+            _draftGroups[groupId]=changed;
+            ProcessBuilderStatus.Text="Añada otro punto para calcular el primer tramo.";
+        }
+        else
+        {
+            _draftGroups.Remove(groupId);
+            if(index>=0)_savedProcesses[index]=changed;else _savedProcesses.Add(changed);
+            ProcessBuilderStatus.Text=$"{changed.Name}: {ids.Count-1} tramo(s) calculados.";
+        }
+        UpdateProcessesInCharts();
     }
 
-    private void AvailablePoints_DoubleClick(object sender, MouseButtonEventArgs e)
+    private void OpenBuilderGroupEditor(int id)
     {
-        if(AvailablePointsList.SelectedItem is not ChartPoint point)return;
-        if(ProcessEditor.Visibility!=Visibility.Visible) NewProcessGroup_Click(sender,e);
-        if(!_selectedPointIds.Contains(point.Id))_selectedPointIds.Add(point.Id);
-        RefreshProcessGroupLists();
-    }
-
-    private void ProcessSequence_DoubleClick(object sender, MouseButtonEventArgs e)
-    {
-        if(ProcessSelectionList.SelectedItem is not ChartPoint point)return;
-        _selectedPointIds.Remove(point.Id);
-        RefreshProcessGroupLists();
-    }
-
-    private void OpenGroupEditor()
-    {
-        ProcessEditor.Visibility=Visibility.Visible; SequenceEditor.Visibility=Visibility.Visible;
-        RefreshProcessGroupLists();
-    }
-
-    private void CloseGroupEditor()
-    {
-        ProcessEditor.Visibility=Visibility.Collapsed; SequenceEditor.Visibility=Visibility.Collapsed;
-        _editingProcessId=null; _selectedPointIds.Clear(); _segmentDrafts.Clear();
-        RefreshProcessGroupLists();
-    }
-
-    private void CloseProcessEditor_Click(object sender,RoutedEventArgs e)=>CloseGroupEditor();
-
-    private void NewProcessGroup_Click(object sender,RoutedEventArgs e)
-    {
-        _editingProcessId=null; _selectedPointIds.Clear(); _segmentDrafts.Clear();
+        int index=_savedProcesses.FindIndex(p=>p.Id==id);
+        if(index>=0)
+        {
+            SavedProcessesList.SelectedIndex=index;EditProcess_Click(this,new RoutedEventArgs());return;
+        }
+        if(!_draftGroups.TryGetValue(id,out var draft))return;
+        _editingProcessId=id;_selectedPointIds.Clear();_selectedPointIds.AddRange(draft.PointIds);
+        LoadSegmentDrafts(draft);
         SavedProcessesList.SelectedIndex=-1;
         ProcessTypeComboBox.SelectedIndex=0;
         CloseCycleCheckBox.IsChecked=false;
@@ -135,9 +267,32 @@ public partial class MainWindow
             MixFlowSecondTextBox,BranchFractionTextBox,EffectivenessTextBox,ApparatusDewPointTextBox,
             BypassFactorTextBox,SteamAddedTextBox,SteamEnthalpyTextBox,DesiccantRemovedTextBox,DesiccantTemperatureTextBox})
             input.Clear();
+        NewProcessNameTextBox.Text=draft.Name;
+        DryFlowTextBox.Text=draft.DryAirMassFlowKgS?.ToString(CultureInfo.CurrentCulture)??"";
+        CondensateTemperatureTextBox.Text=draft.CondensateTemperatureC?.ToString(CultureInfo.CurrentCulture)??"";
         ProcessResultsPanel.Children.Clear();
-        ProcessResultText.Text="Arrastre los estados a la secuencia del grupo.";
         OpenGroupEditor();
+    }
+
+    private void OpenGroupEditor()
+    {
+        ProcessBuilderView.Visibility=Visibility.Collapsed;
+        ProcessEditor.Visibility=Visibility.Visible;
+        ProcessEditorHeading.Text="Editar "+(FindBuilderGroup(_editingProcessId??-1)?.Name??"grupo de procesos");
+        RefreshProcessGroupLists();ProcessPageScroll.ScrollToTop();
+    }
+
+    private void CloseGroupEditor()
+    {
+        ProcessEditor.Visibility=Visibility.Collapsed;ProcessBuilderView.Visibility=Visibility.Visible;
+        _editingProcessId=null;_selectedPointIds.Clear();_segmentDrafts.Clear();
+        RefreshProcessGroupLists();RefreshGroupCards();ProcessPageScroll.ScrollToTop();
+    }
+
+    private void CloseProcessEditor_Click(object sender,RoutedEventArgs e)
+    {
+        PointPropertiesPanel.ClearSelection();
+        CloseGroupEditor();
     }
 
     private void LoadSegmentDrafts(PsychrometricProcess process)
@@ -221,32 +376,57 @@ public partial class MainWindow
 
     private void RefreshGroupCards()
     {
-        if(ProcessCardsPanel is null)return;
-        ProcessCardsPanel.Children.Clear();
-        MainProcessResultsPanel.Children.Clear();
-        foreach(var group in _savedProcesses)
+        if(ProcessCardsPanel is null || MainProcessResultsPanel is null)return;
+        var activeIds=PsychrometricChart.ActivePoints.Select(p=>p.Id).ToHashSet();
+        foreach(int id in _draftGroups.Keys.ToArray())
         {
+            if(_savedProcesses.Any(p=>p.Id==id)){_draftGroups.Remove(id);continue;}
+            var draft=_draftGroups[id];_draftGroups[id]=draft with {PointIds=draft.PointIds.Where(activeIds.Contains).ToArray()};
+        }
+        ProcessCardsPanel.Children.Clear();MainProcessResultsPanel.Children.Clear();
+        foreach(var group in _savedProcesses.Concat(_draftGroups.Values).OrderBy(p=>p.Id))
+        {
+            bool pending=_draftGroups.ContainsKey(group.Id);
             var color=(Brush)new BrushConverter().ConvertFromString(group.ColorHex)!;
             var body=new StackPanel();
-            var header=new DockPanel();
-            var pencil=new Button {Content="✎",ToolTip="Editar grupo",Width=30,Margin=new Thickness(8,0,0,0)};
+            var header=new DockPanel{Margin=new Thickness(0,0,0,7)};
+            var pencil=new Button{Content="✎",ToolTip="Editar "+group.Name,Width=32,Height=30,Margin=new Thickness(8,0,0,0)};
+            System.Windows.Automation.AutomationProperties.SetName(pencil,"Editar "+group.Name);
             DockPanel.SetDock(pencil,Dock.Right);
-            pencil.Click+=(_,_)=>{
-                SavedProcessesList.SelectedIndex=_savedProcesses.FindIndex(p=>p.Id==group.Id);
-                EditProcess_Click(pencil,new RoutedEventArgs());
-            };
+            pencil.Click+=(_,_)=>OpenBuilderGroupEditor(group.Id);
             header.Children.Add(pencil);
-            header.Children.Add(new TextBlock {Text=group.Name+(group.Visible?"":" (oculto)"),Foreground=color,
-                FontWeight=FontWeights.SemiBold,TextWrapping=TextWrapping.Wrap,VerticalAlignment=VerticalAlignment.Center});
+            header.Children.Add(new TextBlock{Text=group.Name+(group.Visible?"":" (oculto)"),Foreground=color,
+                FontWeight=FontWeights.SemiBold,FontSize=15,TextWrapping=TextWrapping.Wrap,VerticalAlignment=VerticalAlignment.Center});
             body.Children.Add(header);
-            body.Children.Add(new TextBlock {Text=string.Join(" → ",group.PointIds.Select(id=>"P"+id)),
-                TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,7,0,3),Foreground=color});
-            ProcessCardsPanel.Children.Add(new Border {Child=body,Width=200,Padding=new Thickness(10),
-                Margin=new Thickness(0,0,8,8),Background=Brushes.White,BorderBrush=color,
-                BorderThickness=new Thickness(1.5),CornerRadius=new CornerRadius(5)});
-            if(group.Visible)RenderGroupResults(group,MainProcessResultsPanel,false);
+            var ids=group.PointIds.Distinct().ToArray();
+            body.Children.Add(new TextBlock{Text=pending?"Arrastre aquí los puntos del proceso.":$"{group.PointIds.Count-1} tramo(s) · {string.Join(" → ",group.PointIds.Select(id=>"P"+id))}",
+                Foreground=Brushes.DimGray,TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,6)});
+            var list=new ListBox{Tag=group.Id,ItemsSource=CardsFor(ids,true,group.ColorHex),
+                ItemTemplate=(DataTemplate)FindResource("ProcessPointCardTemplate"),
+                ItemContainerStyle=(Style)FindResource("ProcessPointItemStyle"),
+                MinHeight=100,AllowDrop=true,Background=Brushes.WhiteSmoke};
+            ScrollViewer.SetVerticalScrollBarVisibility(list,ScrollBarVisibility.Disabled);
+            ScrollViewer.SetHorizontalScrollBarVisibility(list,ScrollBarVisibility.Disabled);
+            list.PreviewMouseLeftButtonDown+=ProcessList_MouseDown;
+            list.PreviewMouseMove+=ProcessList_MouseMove;
+            list.Drop+=BuilderGroup_Drop;
+            list.MouseDoubleClick+=BuilderGroup_DoubleClick;
+            body.Children.Add(list);
+            if(!pending)
+            {
+                var results=new Expander{Header="Resultados del grupo",Margin=new Thickness(0,8,0,0)};
+                var tables=new StackPanel();
+                RenderGroupResults(group,tables);
+                results.Content=tables;body.Children.Add(results);
+                if(group.Visible)RenderGroupResults(group,MainProcessResultsPanel,false);
+            }
+            var border=new Border{Child=body,Padding=new Thickness(10),Margin=new Thickness(0,0,0,10),
+                Background=Brushes.White,BorderBrush=color,BorderThickness=new Thickness(1.5),CornerRadius=new CornerRadius(6)};
+            ProcessCardsPanel.Children.Add(border);
         }
         if(_savedProcesses.Count==0)MainProcessResultsPanel.Children.Add(new TextBlock{Text="Todavía no hay un proceso calculado.",Foreground=Brushes.DimGray});
+        if(ProcessCardsPanel.Children.Count==0)ProcessCardsPanel.Children.Add(new TextBlock{
+            Text="Pulse + para crear un grupo.",TextWrapping=TextWrapping.Wrap,Foreground=Brushes.DimGray,Margin=new Thickness(0,6,0,0)});
     }
 
     private void RenderGroupResults(PsychrometricProcess process,StackPanel host,bool clear=true)

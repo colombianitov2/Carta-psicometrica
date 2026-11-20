@@ -5,6 +5,46 @@
         xmlns:chart="clr-namespace:FrioCalc.Psychrometrics.Chart"
         Title="FrioCalc — Psicrometría y procesos" Width="1460" Height="850"
         MinWidth="940" MinHeight="600" WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <Style x:Key="ProcessPointItemStyle" TargetType="ListBoxItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="3"/>
+        </Style>
+        <Style x:Key="AvailableProcessPointItemStyle" TargetType="ListBoxItem" BasedOn="{StaticResource ProcessPointItemStyle}">
+            <Setter Property="Width" Value="270"/>
+        </Style>
+        <DataTemplate x:Key="ProcessPointCardTemplate">
+            <Border BorderBrush="{Binding Color}" BorderThickness="1.2" CornerRadius="5" Padding="9" Background="White" MinWidth="110">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,6">
+                        <Ellipse Width="9" Height="9" Fill="{Binding Color}" Margin="0,0,6,0" VerticalAlignment="Center" DockPanel.Dock="Left"/>
+                        <TextBlock Text="{Binding Title}" Foreground="{Binding Color}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    </DockPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Text="Bulbo seco:" Foreground="#64748B" TextWrapping="Wrap" Margin="0,1,7,2"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding DryBulb}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,1,0,2"/>
+                            <TextBlock Grid.Row="1" Text="Humedad absoluta:" Foreground="#64748B" TextWrapping="Wrap" Margin="0,1,7,2"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Humidity}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,1,0,2"/>
+                            <TextBlock Grid.Row="2" Text="Humedad relativa:" Foreground="#64748B" TextWrapping="Wrap" Margin="0,1,7,2"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding RelativeHumidity}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,1,0,2"/>
+                            <TextBlock Grid.Row="3" Text="Bulbo húmedo:" Foreground="#64748B" TextWrapping="Wrap" Margin="0,1,7,2"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding WetBulb}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,1,0,2"/>
+                            <TextBlock Grid.Row="4" Text="Punto de rocío:" Foreground="#64748B" TextWrapping="Wrap" Margin="0,1,7,2"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding DewPoint}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,1,0,2"/>
+                            <TextBlock Grid.Row="5" Text="Entalpía:" Foreground="#64748B" TextWrapping="Wrap" Margin="0,1,7,2"/>
+                            <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Enthalpy}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,1,0,2"/>
+                            <TextBlock Grid.Row="6" Text="Volumen específico:" Foreground="#64748B" TextWrapping="Wrap" Margin="0,1,7,2"/>
+                            <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Volume}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,1,0,2"/>
+                            <TextBlock Grid.Row="7" Text="Entropía relativa:" Foreground="#64748B" TextWrapping="Wrap" Margin="0,1,7,2"/>
+                            <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding Entropy}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,1,0,2"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </Window.Resources>
     <!-- [5.1X.1] Dos zonas: carta y procesos (Zona 1), teoría (Zona 2). -->
     <Grid Margin="8">
         <Grid.ColumnDefinitions>
@@ -23,19 +63,9 @@
         <TabControl Grid.Column="2" x:Name="WorkspaceTabs" SelectionChanged="WorkspaceTabs_SelectionChanged">
             <!-- [5.1X.3] Carta original conservada + panel de puntos -->
             <TabItem Header="Carta psicrométrica">
-                <Grid Margin="5">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*" MinHeight="280"/>
-                        <RowDefinition Height="8"/>
-                        <RowDefinition Height="225" MinHeight="100"/>
-                    </Grid.RowDefinitions>
-                    <chart:PsychrometricChartView x:Name="PsychrometricChart" Grid.Row="0"/>
-                    <GridSplitter Grid.Row="1" Height="8" HorizontalAlignment="Stretch"
-                                  VerticalAlignment="Center" ResizeDirection="Rows"
-                                  Background="#E2E8F0"/>
-                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"
-                                  HorizontalScrollBarVisibility="Disabled">
+                <ScrollViewer x:Name="ChartPageScroll" Margin="5" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" SizeChanged="ChartPageScroll_SizeChanged">
                     <StackPanel>
+                        <chart:PsychrometricChartView x:Name="PsychrometricChart" Height="520" Margin="0,0,0,8"/>
                         <ui:PointPropertiesPanel x:Name="PointPropertiesPanel"/>
                         <Border BorderBrush="#D0D0D0" BorderThickness="1" CornerRadius="6"
                                 Background="#FAFAFA" Margin="0,6,0,0" Padding="10">
@@ -49,8 +79,7 @@
                             </StackPanel>
                         </Border>
                     </StackPanel>
-                    </ScrollViewer>
-                </Grid>
+                </ScrollViewer>
             </TabItem>
             <!-- [5.1X.4] Segunda carta para procesos múltiples -->
             <TabItem Header="Procesos">
@@ -62,15 +91,14 @@
                     </Grid.RowDefinitions>
                     <chart:PsychrometricChartView x:Name="ProcessChart" Grid.Row="0" Visibility="Collapsed"/>
                     <GridSplitter Grid.Row="1" Visibility="Collapsed" Height="0" HorizontalAlignment="Stretch" />
-                    <ScrollViewer Grid.Row="2" Margin="0,8,0,0"
+                    <ScrollViewer x:Name="ProcessPageScroll" Grid.Row="2" Margin="0,8,0,0"
                                   HorizontalScrollBarVisibility="Disabled"
                                   VerticalScrollBarVisibility="Auto">
                         <StackPanel>
                             <TextBlock x:Name="ProcessPressureIndicator" Text="Presión: 101,325 kPa absolutos" TextWrapping="Wrap" Foreground="#53677B" Margin="0,0,0,8"/>
-                            <TextBlock Text="CONSTRUIR PROCESO" FontSize="16" FontWeight="SemiBold"
-                                       Margin="0,0,0,8"/>
-                            <TextBlock Text="La carta principal muestra estados y trayectorias. Aquí se editan parámetros, tablas y balances."
-                                       FontSize="12" TextWrapping="Wrap" Foreground="#475569" Margin="0,0,0,4"/>
+                            <StackPanel x:Name="ProcessBuilderView">
+                            <TextBlock Text="CONSTRUIR PROCESO" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <TextBlock Text="Arrastre los estados a un grupo. El orden de arriba abajo define la secuencia; los puntos de la carta se conservan." FontSize="12" TextWrapping="Wrap" Foreground="#475569" Margin="0,0,0,12"/>
                             <WrapPanel Margin="0,0,0,9" Visibility="Collapsed">
                                 <CheckBox x:Name="ProcessEnthalpyToggle" Content="Entalpía"
                                           Checked="ProcessFamilyVisibility_Changed" Unchecked="ProcessFamilyVisibility_Changed"
@@ -86,40 +114,45 @@
                                           Checked="ProcessFamilyVisibility_Changed" Unchecked="ProcessFamilyVisibility_Changed"
                                           Margin="0,0,12,4"/>
                             </WrapPanel>
+
                             <Grid Margin="0,0,0,12">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="2*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="3*"/>
-                                </Grid.ColumnDefinitions>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="14"/><ColumnDefinition Width="3*"/></Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Puntos disponibles" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                    <TextBlock Text="Arrastre los puntos a la lista del grupo. Todos los puntos de la carta se conservan." TextWrapping="Wrap" Foreground="#64748B" Margin="0,0,0,6"/>
-                                    <ListBox x:Name="AvailablePointsList" MinHeight="96" MaxHeight="200"
-                                             DisplayMemberPath="Name" AllowDrop="True"
+                                    <TextBlock Text="Puntos disponibles" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                                    <ListBox x:Name="AvailablePointsList" MinHeight="120" ItemTemplate="{StaticResource ProcessPointCardTemplate}" ItemContainerStyle="{StaticResource AvailableProcessPointItemStyle}" ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AllowDrop="True"
                                              PreviewMouseLeftButtonDown="ProcessList_MouseDown" PreviewMouseMove="ProcessList_MouseMove"
-                                             Drop="AvailablePoints_Drop" MouseDoubleClick="AvailablePoints_DoubleClick"/>
+                                             Drop="AvailablePoints_Drop" MouseDoubleClick="AvailablePoints_DoubleClick">
+                                        <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ListBox.ItemsPanel>
+                                    </ListBox>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
-                                    <DockPanel Margin="0,0,0,6">
-                                        <Button DockPanel.Dock="Right" Content="+" Width="34" Height="30" FontSize="20"
-                                                ToolTip="Crear otro grupo de procesos" Click="NewProcessGroup_Click"/>
+                                    <DockPanel Margin="0,0,0,8">
+                                        <Button x:Name="AddProcessGroupButton" DockPanel.Dock="Right" Content="+" Width="34" Height="32" FontSize="20" ToolTip="Crear un grupo de procesos" Click="NewProcessGroup_Click"/>
                                         <TextBlock Text="Lista de procesos" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                     </DockPanel>
-                                    <WrapPanel x:Name="ProcessCardsPanel"/>
-                                    <StackPanel x:Name="SequenceEditor" Visibility="Collapsed" Margin="0,7,0,0">
-                                        <TextBlock Text="Orden del grupo en edición" FontWeight="SemiBold"/>
-                                        <TextBlock Text="Arrastre hacia arriba o abajo para ordenar; arrastre a Puntos disponibles para retirar sin borrar." TextWrapping="Wrap" Foreground="#64748B" Margin="0,3,0,6"/>
-                                        <ListBox x:Name="ProcessSelectionList" MinHeight="94" MaxHeight="220" DisplayMemberPath="Name"
-                                                 AllowDrop="True" PreviewMouseLeftButtonDown="ProcessList_MouseDown"
-                                                 PreviewMouseMove="ProcessList_MouseMove" Drop="ProcessSequence_Drop"
-                                                 MouseDoubleClick="ProcessSequence_DoubleClick"/>
-                                    </StackPanel>
+                                    <TextBlock x:Name="ProcessBuilderStatus" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                    <StackPanel x:Name="ProcessCardsPanel"/>
                                 </StackPanel>
                             </Grid>
+                            <Button Content="Deshacer última acción" Click="UndoLastAction_Click" HorizontalAlignment="Left" Padding="10,6" Margin="0,0,0,6"/>
+                            <Button Content="Exportar informe Word (.docx)" Click="ExportWordReport_Click" HorizontalAlignment="Left" Padding="12,8" Margin="0,8,0,0"/>
+                            </StackPanel>
                             <StackPanel x:Name="ProcessEditor" Visibility="Collapsed">
                             <DockPanel Margin="0,0,0,12">
-                                <Button DockPanel.Dock="Right" Content="Cerrar edición" Click="CloseProcessEditor_Click" Padding="8,5"/>
-                                <TextBlock Text="Editar grupo de procesos" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <Button DockPanel.Dock="Right" Content="Volver sin guardar" Click="CloseProcessEditor_Click" Padding="8,5"/>
+                                <TextBlock x:Name="ProcessEditorHeading" Text="Editar grupo de procesos" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             </DockPanel>
+                            <Grid Margin="0,0,0,12" x:Name="SequenceEditor">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Puntos disponibles" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                                    <ListBox x:Name="EditorAvailablePointsList" MinHeight="110" ItemTemplate="{StaticResource ProcessPointCardTemplate}" ItemContainerStyle="{StaticResource ProcessPointItemStyle}" ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AllowDrop="True" PreviewMouseLeftButtonDown="ProcessList_MouseDown" PreviewMouseMove="ProcessList_MouseMove" Drop="AvailablePoints_Drop" MouseDoubleClick="AvailablePoints_DoubleClick"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Orden del grupo" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                                    <ListBox x:Name="ProcessSelectionList" MinHeight="110" ItemTemplate="{StaticResource ProcessPointCardTemplate}" ItemContainerStyle="{StaticResource ProcessPointItemStyle}" ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AllowDrop="True" PreviewMouseLeftButtonDown="ProcessList_MouseDown" PreviewMouseMove="ProcessList_MouseMove" Drop="ProcessSequence_Drop" MouseDoubleClick="ProcessSequence_DoubleClick"/>
+                                </StackPanel>
+                            </Grid>
                             <Border BorderBrush="#DDD6FE" BorderThickness="1" CornerRadius="5"
                                     Padding="8" Margin="0,0,0,10">
                                 <StackPanel>
@@ -203,8 +236,6 @@
                                       Margin="0,0,0,10"/>
                             <TextBlock Text="Nombre del nuevo proceso (opcional)" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="NewProcessNameTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"/>
-                            <Button Content="GRAFICAR PROCESO" Padding="8" FontWeight="SemiBold"
-                                    Click="PlotProcess_Click" Margin="0,0,0,10"/>
                             <ListBox x:Name="SavedProcessesList" Visibility="Collapsed"
                                      SelectionChanged="SavedProcessesList_SelectionChanged"/>
                             <TextBlock Text="Nombre para renombrar el proceso seleccionado" FontSize="11"
@@ -225,9 +256,8 @@
                             <TextBlock x:Name="ProcessResultText" Text="Seleccione al menos dos puntos." Visibility="Collapsed"
                                        TextWrapping="Wrap" FontSize="12" Margin="0,0,0,12"/>
                             <StackPanel x:Name="ProcessResultsPanel"/>
+                            <Button x:Name="SaveProcessGroupButton" Content="Guardar y volver" Padding="12,8" FontWeight="SemiBold" HorizontalAlignment="Left" Click="PlotProcess_Click" Margin="0,12,0,12"/>
                             </StackPanel>
-                            <Button Content="Exportar informe Word (.docx)" Click="ExportWordReport_Click"
-                                    HorizontalAlignment="Left" Padding="12,8" Margin="0,8,0,0"/>
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>
