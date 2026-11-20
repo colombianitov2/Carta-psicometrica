@@ -51,6 +51,9 @@ internal static class Program
                 tabs.Items.OfType<TabItem>().Any(t=>Equals(t.Header,"Instrucciones")),
                 "Carta, procesos, fundamentos, simulador, variables, instrucciones y bibliografía");
             Check(window.FindName("VariableReferencePanel") is VariableReferencePanel,"Tabla de variables independiente");
+            Check(window.FindName("CheckUpdatesButton") is Button updateButton && Equals(updateButton.Content,"Buscar actualizaciones"),"Panel de actualizaciones en Bibliografía");
+            Check(window.FindName("UpdateVersionText") is TextBlock updateVersion && updateVersion.Text.Contains("1.0.0-beta.2"),"Versión en panel de actualización");
+            Check(window.FindName("InstallUpdateButton") is Button installUpdate && installUpdate.Visibility==Visibility.Collapsed,"Instalación solo tras encontrar una actualización");
             Check(window.FindName("PsychrometricChart") != null, "Carta principal");
             Check(window.FindName("ProcessChart") != null, "Carta de procesos");
             Check(window.FindName("PointPropertiesPanel") is PointPropertiesPanel, "Gestor puntos");

@@ -1,7 +1,8 @@
 param(
     [Parameter(Mandatory = $true)]
     [string] $OutputDirectory,
-    [string] $InnoCompiler = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+    [string] $InnoCompiler = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+    [ValidateRange(1,65535)] [int] $BetaNumber = 2
 )
 
 $ErrorActionPreference = 'Stop'
@@ -45,7 +46,7 @@ try {
     Invoke-Checked 'dotnet' @('publish',$project,'-c','Release','-r','win-x64','--self-contained','true',
         '-p:PublishSingleFile=true','-p:IncludeNativeLibrariesForSelfExtract=true','-p:EnableCompressionInSingleFile=true',
         '-p:PublishTrimmed=false','-p:DebugType=None','-p:DebugSymbols=false',
-        '-p:Version=1.0.0-beta.1','-p:AssemblyVersion=1.0.0.0','-p:FileVersion=1.0.0.0','-o',$stage)
+        "-p:Version=1.0.0-beta.$BetaNumber",'-p:AssemblyVersion=1.0.0.0',"-p:FileVersion=1.0.0.$BetaNumber",'-o',$stage)
     $application = Join-Path $stage 'FrioCalc.Psychrometrics.exe'
     if (!(Test-Path $application -PathType Leaf)) { throw 'No se produjo el ejecutable.' }
     $remaining = @(Get-ChildItem -LiteralPath $stage -Recurse -File | Where-Object { $_.FullName -ne $application })
@@ -58,19 +59,37 @@ try {
     } finally {
         if (!$process.HasExited) { Stop-Process -Id $process.Id }
     }
-    $portable = Join-Path $output 'FrioCalc-Beta1-win-x64-Portable.exe'
+    $portable = Join-Path $output "FrioCalc-Beta$BetaNumber-win-x64-Portable.exe"
     Copy-Item -LiteralPath $application -Destination $portable
-    Compress-Archive -LiteralPath $portable -DestinationPath (Join-Path $output 'FrioCalc-Beta1-win-x64-Portable.zip')
-    Invoke-Checked $InnoCompiler @('/Qp',"/DSourceDir=$stage","/DOutputDir=$output",(Join-Path $PSScriptRoot 'FrioCalc-Beta1.iss'))
-    $setup = Join-Path $output 'FrioCalc-Beta1-win-x64-Setup.exe'
+    # Probar el reemplazo real del EXE portable en un directorio aislado de CI.
+    $updateTest = Join-Path $output 'update-test'
+    New-Item -ItemType Directory -Path $updateTest | Out-Null
+    $target = Join-Path $updateTest 'FrioCalc-test.exe'
+    Copy-Item -LiteralPath $application -Destination $target
+    $old = Start-Process -FilePath $target -PassThru
+    try {
+        $helper = Start-Process -FilePath $application -ArgumentList @('--apply-portable-update',"$($old.Id)","`"$target`"") -PassThru
+        if (!$old.HasExited) { Stop-Process -Id $old.Id }
+        if (!$helper.WaitForExit(60000)) { Stop-Process -Id $helper.Id; throw 'El actualizador no terminó.' }
+        if ($helper.ExitCode -ne 0) { throw "Actualización portable fallida: $($helper.ExitCode)." }
+        if (@(Get-ChildItem -LiteralPath $updateTest -Filter '*.bak').Count -ne 1) { throw 'No se creó el respaldo del ejecutable.' }
+        if ((Get-FileHash -LiteralPath $target).Hash -ne (Get-FileHash -LiteralPath $application).Hash) { throw 'Hash incorrecto después de actualizar.' }
+        Write-Host 'Actualizador portable: reemplazo y respaldo verificados.'
+    } finally {
+        if (!$old.HasExited) { Stop-Process -Id $old.Id }
+        Get-Process -Name 'FrioCalc-test' -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $target } | Stop-Process
+    }
+    Compress-Archive -LiteralPath $portable -DestinationPath (Join-Path $output "FrioCalc-Beta$BetaNumber-win-x64-Portable.zip")
+    Invoke-Checked $InnoCompiler @('/Qp',"/DSourceDir=$stage","/DOutputDir=$output","/DBetaNumber=$BetaNumber",(Join-Path $PSScriptRoot 'FrioCalc-Beta1.iss'))
+    $setup = Join-Path $output "FrioCalc-Beta$BetaNumber-win-x64-Setup.exe"
     if (!(Test-Path $setup -PathType Leaf)) { throw 'No se produjo el instalador.' }
-    $files = @($portable, (Join-Path $output 'FrioCalc-Beta1-win-x64-Portable.zip'), $setup)
+    $files = @($portable, (Join-Path $output "FrioCalc-Beta$BetaNumber-win-x64-Portable.zip"), $setup)
     $files | ForEach-Object {
         $hash = Get-FileHash -LiteralPath $_ -Algorithm SHA256
         "$($hash.Hash.ToLowerInvariant())  $([IO.Path]::GetFileName($_))"
     } | Set-Content -LiteralPath (Join-Path $output 'SHA256SUMS.txt') -Encoding ASCII
     Get-Item -LiteralPath $files | Select-Object Name,Length
-    Write-Host "Beta 1: paquetes disponibles en $output"
+    Write-Host "Beta ${BetaNumber}: paquetes disponibles en $output"
 } finally {
     Pop-Location
 }

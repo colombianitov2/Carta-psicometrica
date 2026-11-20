@@ -134,7 +134,7 @@
                                     <StackPanel x:Name="ProcessCardsPanel"/>
                                 </StackPanel>
                             </Grid>
-                            <Button Content="Deshacer última acción" Click="UndoLastAction_Click" HorizontalAlignment="Left" Padding="10,6" Margin="0,0,0,6"/>
+                            <Button Visibility="Collapsed" Content="Deshacer última acción" Click="UndoLastAction_Click" HorizontalAlignment="Left" Padding="10,6" Margin="0,0,0,6"/>
                             <Button Content="Exportar informe Word (.docx)" Click="ExportWordReport_Click" HorizontalAlignment="Left" Padding="12,8" Margin="0,8,0,0"/>
                             </StackPanel>
                             <StackPanel x:Name="ProcessEditor" Visibility="Collapsed">
@@ -353,6 +353,19 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="16" MaxWidth="1100">
                         <TextBlock Text="BIBLIOGRAFÍA" FontSize="20" FontWeight="Bold" Margin="0,0,0,14"/>
+                        <Border BorderBrush="#CAD5E1" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Buscar actualizaciones" FontSize="17" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="UpdateVersionText" Margin="0,5,0,5"/>
+                                <TextBlock x:Name="UpdateStatusText" Text="Consulta las versiones oficiales de FrioCalc." TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                <ProgressBar x:Name="UpdateProgress" Height="12" Minimum="0" Maximum="100" Visibility="Collapsed" Margin="0,0,0,8"/>
+                                <WrapPanel>
+                                    <Button x:Name="CheckUpdatesButton" Content="Buscar actualizaciones" Click="CheckUpdates_Click" Padding="12,6" Margin="0,0,8,0"/>
+                                    <Button x:Name="InstallUpdateButton" Content="Descargar e instalar" Click="InstallUpdate_Click" Padding="12,6" Visibility="Collapsed" Margin="0,0,8,0"/>
+                                    <Button Content="Ver versiones publicadas" Click="OpenReleases_Click" Padding="12,6"/>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
                         <Grid Background="#E6EDF5" Margin="0,0,0,4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="3*"/></Grid.ColumnDefinitions>
                             <TextBlock Text="Tema" FontWeight="SemiBold" Margin="8"/>

@@ -1,0 +1,38 @@
+# FrioCalc — auditoría consolidada de correcciones solicitadas
+
+Base revisada: `2f7b6ec`, publicación `v1.0.0-beta.1`. Se contrastan las órdenes recuperables de Calculadora de Refrigeración 1–4, el historial reciente y `LISTA_1_CONSTRUCCION.md` / `LISTA_1_ESTADO.md`. No se afirma acceso exhaustivo a conversaciones no recuperadas ni se da por aprobada la inspección manual de Windows. Los estados siguientes describen código, no una certificación de ingeniería.
+
+| ID | Orden | Beta 1 / resultado de esta revisión | Evidencia en código |
+|---|---|---|---|
+| C01 | Presión absoluta, presets inmediatos, personalizada con Aplicar; selector SI/IP arriba | Presente | `PressureSelector`, `ChartMetricsPanel` |
+| C02 | Carta estándar, −10 a 55 °C y 0 a 60 g/kg, bloquear desplazamiento y zoom; fuera de estándar, arrastre/rueda | Presente; verificar visualmente | `ChartGeometry`, `PsychrometricChartView` |
+| C03 | Control individual de familias y números, FCS independiente | Presente | `ChartMetricsPanel`, `SensibleHeatFactorScaleLayer` |
+| C04 | Saturación, HR hasta 100 %, Tbs, W, Tbh, entalpía, volumen, rocío, entropía relativa y desviación | Presentes; falta contrastar geometría y etiquetas con cartas originales y auditar Δh y FCS | capas `02_Chart`, `01_Core` |
+| C05 | Escala exterior inclinada de entalpía, precisión y acabado ASHRAE, evitar rótulos superpuestos | Parcial: isolíneas recortadas y etiquetas inclinadas; no se ha demostrado equivalencia con la carta ASHRAE | `EnthalpyLayer`, `GUIA_AUDITORIA_VISUAL_LISTA1.md` |
+| C06 | Desplazamiento de toda la página de carta, incluyendo carta y propiedades; tamaño adaptativo | Presente; comprobar rueda y distintas resoluciones manualmente | `ChartPageScroll` |
+| C07 | Ubicar punto con dos propiedades, limpiar solo al éxito, clic derecho y colores; editar, eliminar, duplicar | Presente y pruebas | `StateInputSolver`, `PointPropertiesPanel`, `MainWindow.Lista1` |
+| C08 | Puntos con tarjetas de todas las propiedades; no eliminar puntos al retirarlos del grupo | Presente | `ProcessPointCardTemplate`, `MainWindow.ProcessGroups` |
+| C09 | Procesos sin segunda carta visible, grupos con tarjetas y lápiz; editor en misma ventana, Guardar y volver | Presente | `ProcessBuilder`, `ProcessEditor`, `RefreshGroupCards` |
+| C10 | Arrastrar desde catálogo en orden, calcular al agregar, repetir punto para cerrar ciclo sin mover primera aparición; retirar arrastrando fuera | Presente, prueba de orden/cierre; comprobar interacción real | `EditOrderedSequence`, `UpdateBuilderMembership` |
+| C11 | Renombrar/ocultar/restaurar/deshacer/eliminar dentro del editor | Beta 1 aún mostraba Deshacer general; ocultado en Beta 2, conservado dentro del editor | `MainWindow.xaml` |
+| C12 | Método automático predeterminado, método y datos técnicos por cada conexión, FCS | Parcial: FCS por tramo, caudal y condensado; parámetros predictivos de equipo a nivel de grupo; pares dirigidos repetidos comparten parámetros. Pendiente individualizar completamente cada ocurrencia y las entradas adicionales según método | `SegmentDraft`, `ProcessSegmentSetting`, `TryReadSegmentSettings` |
+| C13 | Cálculos de calor sensible, vapor, evaporativo, enfriamiento y condensación, desecante, mezclas, bypass, ramas y ciclos | Motor presente; pendientes modelos de fabricante, sorción/regeneración y redes complejas no inferibles de dos estados | `ProcessCalculator`, `ProcessCycleAnalyzer` |
+| C14 | Eliminar exportadores JSON, CSV, PNG, Markdown de la interfaz; entregar Word normal | Word visible; exportadores antiguos ocultos; recuperación interna conserva JSON sin exponer botones | `WordProcessReport`, `MainWindow.xaml` |
+| C15 | Temario numerado consecutivo, nombres sin § ni símbolos; ecuaciones fijas de cada tema | Presente: 24 temas, 45 ecuaciones tras esta revisión | `AshraeStudyCatalog`, `AshraeStudyPanel` |
+| C16 | Fundamentos completos, orden de estudio ASHRAE complementado con Hermes, definiciones, deducciones, conceptos y ejemplos | Parcial: curso original de 24 temas; falta corroboración documental completa con presentación Hermes y profundización donde cada tema exige más desarrollo; no se ha revisado la totalidad del PowerPoint en esta sesión | `AshraeStudyCatalog`, `DRIVE_REFERENCES.md` |
+| C17 | Formato matemático: subíndices reales y fracciones, no denominador artificial 1; sin referencias intercaladas | Renderizador de ecuaciones presente y ecuaciones Word OMML; aún falta revisión manual de todas las sustituciones de texto y fórmulas por tema | `RenderMathematicalFraction`, `FormatMath`, `WordProcessReport` |
+| C18 | Fundamentos fijos y simulación separada; ejemplos por proceso seleccionables, paso a paso, gráficos adaptados y nivel completo | Presente; falta inspección extrema de recortes y exhaustividad pedagógica. Corregidos enlaces de pasos 8 y 9 a sus ecuaciones | `ProcessTheoryPanel`, `AshraeSimulatorPanel`, `AshraeStudyCatalog` |
+| C19 | Resultados de ejemplos y procesos en tablas como tarjetas de estados | Presente; Beta 1 tenía tablas de procesos en SI; Beta 2 las convierte también a IP | `BuildStateTable`, `RenderGroupResults` |
+| C20 | Pestaña Variables con símbolo, nombre, definición, obtención, unidades y ecuaciones por modelo | Presente; añadida energía interna u con ecuación SI/IP; pendiente cotejo exhaustivo de símbolos y variantes de fórmulas | `VariableReferencePanel`, `EducationalUnits` |
+| C21 | Instrucciones como pestaña con funcionalidades de carta y simulador | Presente | `MainWindow.xaml` |
+| C22 | SI/IP en fundamentos, simulador y aplicación | Parcial: tablas y numerosas ecuaciones/ejemplos convertidos; resultados de procesos corregidos en Beta 2. Entradas técnicas de editor aún explícitamente SI; informe Word aún SI; falta comprobar todas las constantes y etiquetas auxiliares y cambiar la entrada de procesos al sistema elegido | `EducationalUnits`, `RenderGroupResults`, `WordProcessReport` |
+| C23 | Bibliografía independiente con nombre de libro por tema, sin URLs/páginas intercaladas | Presente; falta corroborar correspondencia con cada fuente y presentación docente | `BibliographyTopics` |
+| C24 | Buscar actualizaciones en Bibliografía, conectado a repo, descargar e instalar | Ausente en Beta 1. Implementado en Beta 2: versiones preliminares o estables compatibles, selección de EXE/setup, hash y tamaño, consentimiento, respaldo de sesión y reemplazo portable | `ReleaseUpdateService`, `MainWindow.Updates`, `App` |
+| C25 | Ejecutable y portable para docente | Beta 1 publicada; Beta 2 se genera mediante acciones Windows y conserva Beta 1 | `beta-release.yml`, `Publicar-FrioCalc-Beta1.ps1` |
+
+## Validación pendiente
+
+- Compilación, regresión WPF y numérica, prueba de sustitución de un EXE portable en ambiente Windows aislado, y publicación de Beta 2 mediante el workflow. La Beta 1 no incorpora el actualizador: requiere descarga manual única de Beta 2. No modificar `main` ni reemplazar los archivos de la Beta 1.
+- Comprobar actualización instalada de una versión publicada a otra posterior, con instalación real; verificar una actualización portable descargada del repositorio cuando exista una versión posterior. SHA-256 comprueba integridad respecto del repositorio; no constituye firma Authenticode.
+- Continuar el cierre de C04, C05, C12, C13, C16, C17, C18, C20, C22 y C23. No ocultar hipótesis matemáticas necesarias o afirmar exactitud de modelos sin validación externa. Validar con ASHRAE Handbook—Fundamentals y presentación A03 de Hermes Ramírez León.
+- Ampliaciones de cargas térmicas, cuartos fríos, selección de equipos, descongelación y motores corresponden a módulos futuros del programa macro, no se entienden como correcciones terminadas de la carta psicrométrica.

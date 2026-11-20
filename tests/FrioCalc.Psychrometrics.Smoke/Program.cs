@@ -28,6 +28,25 @@ static class Program
     {
         try
         {
+            // [T.Updates] SemVer, selección de canal y verificación del manifiesto.
+            Check(ReleaseUpdateService.ReleaseVersion.TryParse("1.0.0-beta.2+abc",out var beta2),"Versión beta con metadatos Git");
+            Check(ReleaseUpdateService.ReleaseVersion.TryParse("v1.0.0-beta.10",out var beta10) && beta10.CompareTo(beta2)>0,"Orden numérico de versiones beta");
+            Check(ReleaseUpdateService.ReleaseVersion.TryParse("v1.0.0",out var stable) && stable.CompareTo(beta10)>0,"Versión estable posterior a beta");
+            Check(!ReleaseUpdateService.ReleaseVersion.TryParse("v1.0-beta.2",out _),"Etiqueta inválida rechazada");
+            var releases=new[]{new { draft=false,tag_name="v1.0.0-beta.10",assets=new[]{
+                new {name="FrioCalc-Beta10-win-x64-Portable.exe",browser_download_url=ReleaseUpdateService.ReleasesPage+"/download/v1.0.0-beta.10/FrioCalc-Beta10-win-x64-Portable.exe",size=100L,state="uploaded"},
+                new {name="FrioCalc-Beta10-win-x64-Setup.exe",browser_download_url=ReleaseUpdateService.ReleasesPage+"/download/v1.0.0-beta.10/FrioCalc-Beta10-win-x64-Setup.exe",size=110L,state="uploaded"},
+                new {name="SHA256SUMS.txt",browser_download_url=ReleaseUpdateService.ReleasesPage+"/download/v1.0.0-beta.10/SHA256SUMS.txt",size=120L,state="uploaded"}}}};
+            var releaseJson=System.Text.Json.JsonSerializer.SerializeToElement(releases);
+            Check(ReleaseUpdateService.FindUpdate(releaseJson,beta2,false)?.Executable.Name=="FrioCalc-Beta10-win-x64-Portable.exe","Selecciona paquete portable");
+            Check(ReleaseUpdateService.FindUpdate(releaseJson,beta2,true)?.Executable.Name=="FrioCalc-Beta10-win-x64-Setup.exe","Selecciona instalador");
+            Check(ReleaseUpdateService.FindUpdate(releaseJson,stable,false) is null,"No retrocede de estable a beta");
+            Check(ReleaseUpdateService.FindUpdate(releaseJson,beta10,false) is null,"No reinstala la misma versión");
+            string digest=new string('a',64);
+            Check(ReleaseUpdateService.ReadChecksum(digest+"  FrioCalc.exe\r\n","FrioCalc.exe")==digest,"Lee SHA-256 del archivo correcto");
+            bool rejected=false;
+            try { ReleaseUpdateService.ReadChecksum("123  FrioCalc.exe","FrioCalc.exe"); } catch(System.IO.InvalidDataException){ rejected=true; }
+            Check(rejected,"Rechaza checksum inválido");
             var p=Create(1,25,60);
             Check(Math.Abs(p.RelativeHumidityPercent-60)<.001,"HR");
             Check(p.DewPointC < p.DryBulbC,"Punto de rocío");
@@ -529,7 +548,7 @@ static class Program
 
             // [T15] Orden pedagógico ASHRAE y geometría solicitada 0–60 g/kgda.
             Check(AshraeStudyCatalog.Units.Count==24,"Temario de fundamentos tiene 24 temas");
-            Check(AshraeStudyCatalog.Equations.Count==44,"44 ecuaciones matemáticas documentadas");
+            Check(AshraeStudyCatalog.Equations.Count==45,"45 ecuaciones matemáticas documentadas");
             Check(AshraeStudyCatalog.Units.Select(t=>t.AshraeSection).SequenceEqual(Enumerable.Range(1,24).Select(n=>n.ToString())),
                 "Numeración pedagógica consecutiva");
             Check(AshraeStudyCatalog.Equations.Select(e=>e.Key).Distinct().Count()==AshraeStudyCatalog.Equations.Count,"Claves de ecuaciones únicas");

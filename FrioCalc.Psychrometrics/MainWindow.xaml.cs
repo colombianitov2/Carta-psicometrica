@@ -18,6 +18,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        InitializeUpdates();
         SizeChanged+=(sender,args)=>ApplyResponsiveWorkspaceLayout();
 
         PressureSelector.PressureApplied +=

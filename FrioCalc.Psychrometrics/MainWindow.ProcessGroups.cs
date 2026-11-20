@@ -472,12 +472,17 @@ public partial class MainWindow
 
     private void RenderGroupResults(PsychrometricProcess process,StackPanel host,bool clear=true)
     {
+        var units=ChartMetricsPanel.CurrentUnits;
+        bool ip=units==UnitSystem.IP;
+        string flowUnit=ip?"lb/h":"kg/s",powerUnit=ip?"Btu/h":"kW";
+        string Flow(double value)=> (value*(ip?7936.64143865559:1)).ToString("0.######");
+        string Power(double value)=> (value*(ip?3412.14163312794:1)).ToString("0.###");
         if(clear)host.Children.Clear();
         host.Children.Add(new TextBlock{Text=process.Name,FontWeight=FontWeights.Bold,Margin=new Thickness(0,8,0,5)});
         var points=process.PointIds.Distinct().Select(id=>PsychrometricChart.ActivePoints.FirstOrDefault(p=>p.Id==id))
             .OfType<ChartPoint>().ToArray();
         if(points.Length>0)
-            host.Children.Add(UI.AshraeStudyPanel.BuildStateTable(points,points.Select(p=>p.Name).ToArray()));
+            host.Children.Add(UI.AshraeStudyPanel.BuildStateTable(points,points.Select(p=>p.Name).ToArray(),units));
         var table=new Grid { Margin=new Thickness(0,0,0,8) };
         void Row(params string[] cells)
         {
@@ -494,7 +499,7 @@ public partial class MainWindow
         var segmentTable=new Grid{Margin=new Thickness(0,0,0,8)};
         foreach(double weight in new[]{1.2,1,1,1,1,1,1,1})segmentTable.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(weight,GridUnitType.Star)});
         table=segmentTable;
-        Row("Tramo","ΔT (°C)","ΔW (g/kg)","Δh (kJ/kg)","Potencia (kW)","FCS calculado","FCS indicado","Condensado (kg/s)");
+        Row("Tramo",$"ΔT ({EducationalUnits.TemperatureUnit(units)})",$"ΔW ({EducationalUnits.HumidityUnit(units)})",$"Δh ({EducationalUnits.EnthalpyUnit(units)})",$"Potencia ({powerUnit})","FCS calculado","FCS indicado",$"Condensado ({flowUnit})");
         if(process.Type!=ProcessType.AdiabaticMixing && process.Type!=ProcessType.Branching)
         {
             for(int i=0;i<process.PointIds.Count-1;i++)
@@ -505,8 +510,8 @@ public partial class MainWindow
                 var type=seg?.Type??(process.Type==ProcessType.Bypass?ProcessType.Automatic:process.Type);
                 if(ProcessCalculator.TryCalculate(from,to,type,seg?.DryAirMassFlowKgS??process.DryAirMassFlowKgS,
                     seg?.CondensateTemperatureC??process.CondensateTemperatureC,out var r,out _))
-                    Row(from.Name+" → "+to.Name,r.DeltaTemperatureC.ToString("0.###"),(r.DeltaHumidityRatioKgPerKg*1000).ToString("0.###"),
-                        r.DeltaEnthalpyKJPerKgDryAir.ToString("0.###"),r.ThermalPowerKW?.ToString("0.###")??"Sin caudal",r.SensibleHeatFactor?.ToString("0.###")??"—",seg?.SensibleHeatFactor?.ToString("0.###")??"—",r.CondensateMassFlowKgS?.ToString("0.######")??"—");
+                    Row(from.Name+" → "+to.Name,EducationalUnits.DT(r.DeltaTemperatureC,units).ToString("0.###"),EducationalUnits.W(r.DeltaHumidityRatioKgPerKg,units).ToString("0.###"),
+                        EducationalUnits.H(r.DeltaEnthalpyKJPerKgDryAir,units).ToString("0.###"),r.ThermalPowerKW is double power?Power(power):"Sin caudal",r.SensibleHeatFactor?.ToString("0.###")??"—",seg?.SensibleHeatFactor?.ToString("0.###")??"—",r.CondensateMassFlowKgS is double condensate?Flow(condensate):"—");
             }
             host.Children.Add(segmentTable);
         }
@@ -522,21 +527,21 @@ public partial class MainWindow
                 for(int i=0;i<flows.Count;i++)
                 {
                     double flow=flows[i]/3600/points[i].SpecificVolumeM3PerKgDryAir;
-                    totalMixed+=flow;Row($"Caudal másico de {points[i].Name} (kg/s)",flow.ToString("0.#####"));
+                    totalMixed+=flow;Row($"Caudal másico de {points[i].Name} ({flowUnit})",Flow(flow));
                 }
-                Row("Caudal másico total (kg/s)",totalMixed.ToString("0.#####"));
+                Row($"Caudal másico total ({flowUnit})",Flow(totalMixed));
             }
             else if(process.Type==ProcessType.Branching && points.Length==3 && process.DryAirMassFlowKgS is double total &&
                 process.BranchFractionA is double fraction &&
                 ProcessCalculator.TryBranchBalance(points[0],points[1],points[2],total,fraction,out var b,out _) && b is not null)
             {
-                Row("Caudal de entrada (kg/s)",total.ToString("0.#####"));
-                Row("Caudal rama 1 (kg/s)",b.FirstMassFlowKgS.ToString("0.#####"));
-                Row("Caudal rama 2 (kg/s)",b.SecondMassFlowKgS.ToString("0.#####"));
-                Row("Agua rama 1 (kg/s)",b.AddedWaterFirstKgS.ToString("0.######"));
-                Row("Agua rama 2 (kg/s)",b.AddedWaterSecondKgS.ToString("0.######"));
-                Row("Potencia rama 1 (kW)",b.ThermalFirstKW.ToString("0.###"));
-                Row("Potencia rama 2 (kW)",b.ThermalSecondKW.ToString("0.###"));
+                Row($"Caudal de entrada ({flowUnit})",Flow(total));
+                Row($"Caudal rama 1 ({flowUnit})",Flow(b.FirstMassFlowKgS));
+                Row($"Caudal rama 2 ({flowUnit})",Flow(b.SecondMassFlowKgS));
+                Row($"Agua rama 1 ({flowUnit})",Flow(b.AddedWaterFirstKgS));
+                Row($"Agua rama 2 ({flowUnit})",Flow(b.AddedWaterSecondKgS));
+                Row($"Potencia rama 1 ({powerUnit})",Power(b.ThermalFirstKW));
+                Row($"Potencia rama 2 ({powerUnit})",Power(b.ThermalSecondKW));
             }
             host.Children.Add(table);
         }

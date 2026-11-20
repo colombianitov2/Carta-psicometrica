@@ -1,5 +1,7 @@
 #define AppName "FrioCalc"
-#define AppVersion "1.0.0-beta.1"
+#ifndef BetaNumber
+  #define BetaNumber "2"
+#endif
 #ifndef SourceDir
   #error SourceDir required
 #endif
@@ -9,10 +11,10 @@
 [Setup]
 AppId={{BFE39269-7325-4B56-A122-8623E6CD85DF}
 AppName={#AppName}
-AppVersion={#AppVersion}
+AppVersion=1.0.0-beta.{#BetaNumber}
 AppPublisher=FrioCalc
-VersionInfoVersion=1.0.0.0
-VersionInfoDescription=FrioCalc Beta 1
+VersionInfoVersion=1.0.0.{#BetaNumber}
+VersionInfoDescription=FrioCalc Beta {#BetaNumber}
 DefaultDirName={localappdata}\Programs\FrioCalc
 DefaultGroupName=FrioCalc
 UninstallDisplayIcon={app}\FrioCalc.Psychrometrics.exe
@@ -20,7 +22,7 @@ PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir={#OutputDir}
-OutputBaseFilename=FrioCalc-Beta1-win-x64-Setup
+OutputBaseFilename=FrioCalc-Beta{#BetaNumber}-win-x64-Setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

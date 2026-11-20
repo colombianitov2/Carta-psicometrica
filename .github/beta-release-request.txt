@@ -1,1 +1,1 @@
-Beta 1 Windows x64: build and publish for delivery; validate active lesson in IP.
+Beta 2 Windows x64: validate updater, portable replacement, SI/IP process tables and publish without modifying Beta 1.

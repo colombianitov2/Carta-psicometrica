@@ -42,6 +42,7 @@ public static class EducationalUnits
             "PwsWater"=>result with {Numerator="−10440,39708 T⁻¹ − 11,294649577 − 0,027022355 T + 1,289036049·10⁻⁵ T² − 2,478068073·10⁻⁹ T³ + 6,5459673 ln T",Origin="T en °R (valor numérico); L es logaritmo natural del valor numérico de p en psia; t > 32,018 °F.",Derivation="Correlación del motor transformada a Rankine y psia."},
             "TK"=>result with {Numerator="t + 459,67",Units="°R",Origin="t: temperatura en °F; T: temperatura absoluta en °R.",Derivation="Conversión de Fahrenheit a Rankine."},
             "h"=>result with {Numerator="0,240279·(t − 32) + W·[1075,236458 + 0,444253·(t − 32)]",Origin="t en °F; W en lb/lb de aire seco. Calores específicos en Btu/(lb·°R); 1075,236458 Btu/lb es la referencia a 32 °F.",Derivation="Conversión del modelo SI de FrioCalc, conservando su referencia de entalpía a 32 °F."},
+            "InternalEnergy"=>result with {Numerator="h − 0,18505 Pv",Origin="h en Btu/lb de aire seco, P en psia y v en ft³/lb de aire seco. El factor convierte psia·ft³ a Btu."},
             "v"=>result with {Numerator="R_{da}·T·(1 + 1,607858·W)",Origin="R_{da} = 0,370489 psia·ft³/(lb·°R); T en °R; P en psia."},
             "vInverse"=>result with {Origin="P en psia; T en °R; R_{da} = 0,370489 psia·ft³/(lb·°R)."},
             "MixT"=>result with {Left="t − 32",Numerator="h − 1075,236458 W",Denominator="0,240279 + 0,444253 W",Origin="t en °F; h en Btu/lb de aire seco; W en lb/lb. Sumar 32 °F al cociente para obtener t."},
