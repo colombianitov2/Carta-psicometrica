@@ -1,4 +1,6 @@
-# Carta psicométrica
+# Calculadora de refrigeración – Parte 1 – Carta psicrométrica
+
+> **Versión actual:** consulta la [rama de desarrollo activa](https://github.com/colombianitov2/Carta-psicometrica/tree/chatgpt/friocalc-lista1-2026-11-07) y las [publicaciones oficiales](https://github.com/colombianitov2/Carta-psicometrica/releases). Esta rama contiene la implementación histórica. La URL del repositorio se conserva temporalmente para no interrumpir la actualización de las versiones publicadas. El cambio de nombre del software se está validando en la [rama de migración](https://github.com/colombianitov2/Carta-psicometrica/pull/2).
 
 Aplicación WPF independiente para cálculo psicrométrico en SI, trazado inicial de carta y análisis de procesos HVAC entre dos estados de aire húmedo.
 
