@@ -92,13 +92,13 @@
                     <chart:PsychrometricChartView x:Name="ProcessChart" Grid.Row="0" Visibility="Collapsed"/>
                     <GridSplitter Grid.Row="1" Visibility="Collapsed" Height="0" HorizontalAlignment="Stretch" />
                     <ScrollViewer x:Name="ProcessPageScroll" Grid.Row="2" Margin="0,8,0,0"
-                                  HorizontalScrollBarVisibility="Disabled"
-                                  VerticalScrollBarVisibility="Auto">
+                                  HorizontalScrollBarVisibility="Disabled" Background="Transparent"
+                                  VerticalScrollBarVisibility="Auto" AllowDrop="True" Drop="ProcessPage_Drop">
                         <StackPanel>
                             <TextBlock x:Name="ProcessPressureIndicator" Text="Presión: 101,325 kPa absolutos" TextWrapping="Wrap" Foreground="#53677B" Margin="0,0,0,8"/>
                             <StackPanel x:Name="ProcessBuilderView">
                             <TextBlock Text="CONSTRUIR PROCESO" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                            <TextBlock Text="Arrastre los estados a un grupo. El orden de arriba abajo define la secuencia; los puntos de la carta se conservan." FontSize="12" TextWrapping="Wrap" Foreground="#475569" Margin="0,0,0,12"/>
+                            <TextBlock Text="Arrastre los estados a un grupo para añadirlos, incluso si ya aparecen en él. Mueva las tarjetas del grupo para reordenarlas o suéltelas fuera del recuadro para retirarlas. Los puntos de la carta se conservan." FontSize="12" TextWrapping="Wrap" Foreground="#475569" Margin="0,0,0,12"/>
                             <WrapPanel Margin="0,0,0,9" Visibility="Collapsed">
                                 <CheckBox x:Name="ProcessEnthalpyToggle" Content="Entalpía"
                                           Checked="ProcessFamilyVisibility_Changed" Unchecked="ProcessFamilyVisibility_Changed"
@@ -231,7 +231,7 @@
                             </StackPanel>
                              <TextBlock x:Name="PredictiveExplanation" Visibility="Collapsed" Text="Estos métodos generan un estado de salida usando exactamente los datos del equipo indicados. No hay parámetros predeterminados ocultos."
                                        TextWrapping="Wrap" FontSize="11" Foreground="#666" Margin="0,0,0,9"/>
-                            <CheckBox x:Name="CloseCycleCheckBox" Content="Cerrar recorrido regresando al punto inicial (método automático)"
+                            <CheckBox x:Name="CloseCycleCheckBox" Content="Añadir retorno al punto inicial al guardar, si el recorrido aún está abierto"
                                       ToolTip="Se conserva el orden de los estados; cierra el polígono y verifica el balance del recorrido."
                                       Margin="0,0,0,10"/>
                             <TextBlock Text="Nombre del nuevo proceso (opcional)" FontSize="12" Margin="0,0,0,3"/>

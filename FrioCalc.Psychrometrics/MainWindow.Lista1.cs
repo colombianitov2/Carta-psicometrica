@@ -326,7 +326,7 @@ public partial class MainWindow
         if (selected.Any(p => p == null)) return;
         // [5.1C.12.0] Validar el cierre ANTES de generar puntos predictivos.
         // Rechazar luego de crear la salida deja puntos huérfanos sin proceso.
-        bool closeCycle=CloseCycleCheckBox.IsChecked==true;
+        bool closeCycle=CloseCycleCheckBox.IsChecked==true && _selectedPointIds[0]!=_selectedPointIds[^1];
         if(closeCycle && (type!=ProcessType.Automatic || selected.Length<3))
         {
             MessageBox.Show("Para cerrar un ciclo seleccione método Automático " +
@@ -622,9 +622,13 @@ public partial class MainWindow
             _selectedPointIds.RemoveAt(_selectedPointIds.Count-1);
         RefreshSelectionList();
         NewProcessNameTextBox.Text=process.Name;
-        CloseCycleCheckBox.IsChecked=process.PointIds.Count>=4 && process.PointIds[0]==process.PointIds[^1];
-        if(CloseCycleCheckBox.IsChecked==true && _selectedPointIds.Count>0) _selectedPointIds.RemoveAt(_selectedPointIds.Count-1);
-        PointPropertiesPanel.SetSelection(_selectedPointIds.ToArray());
+        // El cierre se representa por una tarjeta final real; no se oculta ni se añade otra al guardar.
+        CloseCycleCheckBox.IsChecked=false;
+        var editorRoute=_selectedPointIds.ToArray();
+        PointPropertiesPanel.SetSelection(editorRoute.Distinct().ToArray());
+        // La selección visual de la carta es un conjunto; el recorrido admite repeticiones.
+        _selectedPointIds.Clear();
+        _selectedPointIds.AddRange(editorRoute);
         CondensateTemperatureTextBox.Text=process.CondensateTemperatureC?.ToString("0.###",CultureInfo.CurrentCulture) ?? "";
         BranchFractionTextBox.Text=process.BranchFractionA?.ToString("0.###",CultureInfo.CurrentCulture) ?? "";
         DryFlowTextBox.Text=process.DryAirMassFlowKgS?.ToString("0.######",CultureInfo.CurrentCulture) ?? "";

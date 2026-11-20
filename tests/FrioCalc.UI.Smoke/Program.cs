@@ -341,36 +341,56 @@ internal static class Program
             var membership=typeof(MainWindow).GetMethod("UpdateBuilderMembership",
                 System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!;
             int firstState=mainChart.ActivePoints[1].Id,secondState=mainChart.ActivePoints[0].Id;
-            membership.Invoke(window,new object[]{groupId,firstState,0,false});
+            membership.Invoke(window,new object[]{groupId,firstState,0,false,-1});
             Check(processesList.Items.Count==2 && GroupList(groupCards.Children.OfType<Border>().Last()).Items.Count==1,
                 "Un punto conserva borrador sin inventar proceso");
-            membership.Invoke(window,new object[]{groupId,secondState,1,false});
+            membership.Invoke(window,new object[]{groupId,secondState,1,false,-1});
             Check(processesList.Items.Count==3 && GroupList(groupCards.Children.OfType<Border>().Last()).Items.Count==2,
                 "Segundo punto calcula y guarda automáticamente el tramo");
             Check(processesList.Items.Cast<string>().Last().Contains($"P{firstState} → P{secondState}"),
                 "El proceso respeta orden de ingreso, no numeración original");
-            membership.Invoke(window,new object[]{groupId,secondState,0,false});
+            membership.Invoke(window,new object[]{groupId,secondState,0,false,1});
             Check(processesList.Items.Cast<string>().Last().Contains($"P{secondState} → P{firstState}"),
                 "Reordenar recalcula dirección sin duplicar el punto");
+            int thirdState=mainChart.ActivePoints[2].Id,fourthState=mainChart.ActivePoints[3].Id;
+            membership.Invoke(window,new object[]{groupId,thirdState,2,false,-1});
+            membership.Invoke(window,new object[]{groupId,fourthState,3,false,-1});
+            membership.Invoke(window,new object[]{groupId,secondState,4,false,-1});
+            string closedRoute=$"P{secondState} → P{firstState} → P{thirdState} → P{fourthState} → P{secondState}";
+            Check(processesList.Items.Cast<string>().Last().Contains(closedRoute) &&
+                GroupList(groupCards.Children.OfType<Border>().Last()).Items.Count==5 &&
+                mainChart.ActivePoints.Count==4,
+                "Arrastrar desde disponibles repite el estado inicial y cierra cuatro tramos sin mover la primera tarjeta");
             var groupCard=groupCards.Children.OfType<Border>().Last();
             var pencil=((StackPanel)groupCard.Child).Children.OfType<DockPanel>().Single().Children.OfType<Button>().Single();
             pencil.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Check(builder.Visibility==Visibility.Collapsed && groupEditor.Visibility==Visibility.Visible,
                 "Lápiz cambia a editor dentro de la misma pestaña");
+            Check(((ListBox)window.FindName("ProcessSelectionList")).Items.Count==5,
+                "Editor conserva las dos apariciones del punto inicial");
             ((TextBox)window.FindName("NewProcessNameTextBox")).Text="Grupo por tarjetas";
             ((Button)window.FindName("SaveProcessGroupButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Check(builder.Visibility==Visibility.Visible && groupEditor.Visibility==Visibility.Collapsed &&
-                processesList.Items.Cast<string>().Last().Contains("Grupo por tarjetas"),
+                processesList.Items.Cast<string>().Last().Contains("Grupo por tarjetas") &&
+                processesList.Items.Cast<string>().Last().Contains(closedRoute),
                 "Guardar vuelve al constructor conservando grupo");
-            membership.Invoke(window,new object[]{groupId,firstState,0,true});
+            membership.Invoke(window,new object[]{groupId,secondState,0,true,4});
+            Check(processesList.Items.Cast<string>().Last().Contains($"P{secondState} → P{firstState} → P{thirdState} → P{fourthState}") &&
+                GroupList(groupCards.Children.OfType<Border>().Last()).Items.Count==4 && mainChart.ActivePoints.Count==4,
+                "Retirar la tarjeta de cierre abre el recorrido sin borrar el punto inicial");
+            membership.Invoke(window,new object[]{groupId,firstState,0,true,1});
+            membership.Invoke(window,new object[]{groupId,fourthState,0,true,2});
+            membership.Invoke(window,new object[]{groupId,thirdState,0,true,1});
             Check(processesList.Items.Count==2 && mainChart.ActivePoints.Count==4,
-                "Retirar miembro no lo borra de la carta");
+                "Retirar miembros no los borra de la carta");
             var finalDraft=groupCards.Children.OfType<Border>().Last();
             ((StackPanel)finalDraft.Child).Children.OfType<DockPanel>().Single().Children.OfType<Button>().Single()
                 .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             remove!.Invoke(window,new object[]{window,new RoutedEventArgs(Button.ClickEvent)});
             Check(groupCards.Children.OfType<Border>().Count()==2 && mainChart.ActivePoints.Count==4,
                 "Eliminar borrador conserva los estados existentes");
+            Check(window.FindName("ProcessPageScroll") is ScrollViewer processPage && processPage.AllowDrop,
+                "El fondo de la página admite retirar tarjetas del grupo");
             Check(window.FindName("ChartPageScroll") is ScrollViewer chartPage &&
                 chartPage.Content is StackPanel chartContent && chartContent.Children.Contains(mainChart) &&
                 chartContent.Children.Contains(properties),
