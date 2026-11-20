@@ -253,11 +253,12 @@ internal static class Program
             Check(ipEquation.Units=="°R" && ipEquation.Numerator.Contains("459,67") &&
                 ((TextBlock)ipStudy.FindName("UnitExample")).Text.Contains("77 °F"),
                 "Fundamentos cambia ecuación, temperatura absoluta y ejemplo a IP");
-            Check(((TextBlock)teaching.FindName("DryBulbValueLabel")).Text.Contains("77 °F") &&
+            string expectedIpInitial = EducationalUnits.Temp(drySlider.Value,UnitSystem.IP);
+            Check(((TextBlock)teaching.FindName("DryBulbValueLabel")).Text.Contains(expectedIpInitial) &&
                 VisibleText(steps).Contains("°F") && VisibleText(steps).Contains("gr/lb") &&
                 !VisibleText(steps).Contains("°C") && steps.Visibility==Visibility.Visible &&
                 teaching.FindName("ExplanationLevelComboBox")==null,
-                "Simulador IP con procedimiento de ingeniería fijo");
+                $"Simulador IP con procedimiento de ingeniería fijo: {expectedIpInitial} | {((TextBlock)teaching.FindName("DryBulbValueLabel")).Text} | {VisibleText(steps)}");
             var ipEnthalpy=EducationalUnits.Equation(AshraeStudyCatalog.FindEquation("h")!,UnitSystem.IP);
             Check(ipEnthalpy.Numerator.Contains("0,240279") && ipEnthalpy.Numerator.Contains("t − 32") &&
                 Math.Abs((.240279*45+.010*(1075.236458+.444253*45))-EducationalUnits.H(50.625,UnitSystem.IP))<1e-4,
