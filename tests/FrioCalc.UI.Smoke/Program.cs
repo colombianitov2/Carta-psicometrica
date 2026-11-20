@@ -52,7 +52,7 @@ internal static class Program
                 "Carta, procesos, fundamentos, simulador, variables, instrucciones y bibliografía");
             Check(window.FindName("VariableReferencePanel") is VariableReferencePanel,"Tabla de variables independiente");
             Check(window.FindName("CheckUpdatesButton") is Button updateButton && Equals(updateButton.Content,"Buscar actualizaciones"),"Panel de actualizaciones en Bibliografía");
-            Check(window.FindName("UpdateVersionText") is TextBlock updateVersion && updateVersion.Text.Contains("1.0.0-beta.2"),"Versión en panel de actualización");
+            Check(window.FindName("UpdateVersionText") is TextBlock updateVersion && updateVersion.Text.Contains("1.0.0-beta.3"),"Versión en panel de actualización");
             Check(window.FindName("InstallUpdateButton") is Button installUpdate && installUpdate.Visibility==Visibility.Collapsed,"Instalación solo tras encontrar una actualización");
             Check(window.FindName("PsychrometricChart") != null, "Carta principal");
             Check(window.FindName("ProcessChart") != null, "Carta de procesos");
@@ -249,7 +249,14 @@ internal static class Program
                 "Retirar selección conserva punto");
 
             // [UI.6] Conversión de unidades en controles, presión y puntos.
+            var flowEditor=(TextBox)window.FindName("DryFlowTextBox");
+            var condensateEditor=(TextBox)window.FindName("CondensateTemperatureTextBox");
+            flowEditor.Text="1"; condensateEditor.Text="10";
             chartMetrics.SetUnitSystem(UnitSystem.IP);
+            Check(((TextBlock)window.FindName("DryFlowLabel")).Text.Contains("lb/h") &&
+                ((TextBlock)window.FindName("CondensateTemperatureLabel")).Text.Contains("°F") &&
+                Math.Abs(double.Parse(flowEditor.Text,CultureInfo.CurrentCulture)-7936.64143865559)<1e-5 &&
+                Math.Abs(double.Parse(condensateEditor.Text,CultureInfo.CurrentCulture)-50)<1e-7,"Editor convierte caudal y temperatura a IP sin reinterpretación");
             var ipStudy=(AshraeStudyPanel)window.FindName("AshraeStudyPanel");
             ipStudy.SelectUnit("A19");
             var ipEquation=(AshraeEquation)((ComboBox)ipStudy.FindName("FormulaSelector")).SelectedItem;
@@ -269,6 +276,9 @@ internal static class Program
             var pressureUnit=pressurePanel.FindName("PressureUnitLabel") as TextBlock;
             Check(pressureUnit?.Text=="psi abs","Selector presión muestra psi absoluta");
             chartMetrics.SetUnitSystem(UnitSystem.SI);
+            Check(Math.Abs(double.Parse(flowEditor.Text,CultureInfo.CurrentCulture)-1)<1e-7 &&
+                Math.Abs(double.Parse(condensateEditor.Text,CultureInfo.CurrentCulture)-10)<1e-7,"Editor restaura entradas originales SI");
+            flowEditor.Clear(); condensateEditor.Clear();
             Check(pressureUnit?.Text=="kPa abs","Selector presión restaura kPa absoluta");
             Check(((AshraeEquation)((ComboBox)ipStudy.FindName("FormulaSelector")).SelectedItem).Units=="K",
                 "Fundamentos vuelve al SI");

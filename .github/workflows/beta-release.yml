@@ -1,4 +1,4 @@
-name: FrioCalc Beta 2 - Windows x64
+name: FrioCalc Beta 3 - Windows x64
 on:
   workflow_dispatch:
   push:
@@ -28,31 +28,31 @@ jobs:
             choco install innosetup --yes --no-progress
             if ($LASTEXITCODE -ne 0) { throw 'Inno Setup installation failed' }
           }
-      - name: Build, test and package Beta 2
+      - name: Build, test and package Beta 3
         shell: pwsh
         run: |
-          ./06_Tools/Publicar-FrioCalc-Beta1.ps1 -BetaNumber 2 -OutputDirectory "$env:RUNNER_TEMP\friocalc-beta2"
+          ./06_Tools/Publicar-FrioCalc-Beta1.ps1 -BetaNumber 3 -OutputDirectory "$env:RUNNER_TEMP\friocalc-beta3"
       - name: Preserve release packages
         uses: actions/upload-artifact@v4
         with:
-          name: FrioCalc-Beta2-win-x64
+          name: FrioCalc-Beta3-win-x64
           path: |
-            ${{ runner.temp }}/friocalc-beta2/FrioCalc-Beta2-win-x64-*.exe
-            ${{ runner.temp }}/friocalc-beta2/FrioCalc-Beta2-win-x64-Portable.zip
-            ${{ runner.temp }}/friocalc-beta2/SHA256SUMS.txt
+            ${{ runner.temp }}/friocalc-beta3/FrioCalc-Beta3-win-x64-*.exe
+            ${{ runner.temp }}/friocalc-beta3/FrioCalc-Beta3-win-x64-Portable.zip
+            ${{ runner.temp }}/friocalc-beta3/SHA256SUMS.txt
           if-no-files-found: error
       - name: Publish GitHub prerelease
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $out = "$env:RUNNER_TEMP\friocalc-beta2"
-          gh release create v1.0.0-beta.2 --repo "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --title "FrioCalc Beta 2" --prerelease --notes "Beta 2 para Windows x64: Buscar actualizaciones en Bibliografía, comprobación SHA-256, respaldo de sesión y tablas de procesos SI/IP. Portable y versión instalable, .NET 10 incluido. Binarios sin firma Authenticode." "$out\FrioCalc-Beta2-win-x64-Portable.exe" "$out\FrioCalc-Beta2-win-x64-Portable.zip" "$out\FrioCalc-Beta2-win-x64-Setup.exe" "$out\SHA256SUMS.txt"
+          $out = "$env:RUNNER_TEMP\friocalc-beta3"
+          gh release create v1.0.0-beta.3 --repo "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --title "FrioCalc Beta 3" --prerelease --notes "Beta 3 para Windows x64: Actualizador, correcciones de ciclos, unidades del editor e informe Word, fundamentos y variables. Portable y versión instalable, .NET 10 incluido. Binarios sin firma Authenticode." "$out\FrioCalc-Beta3-win-x64-Portable.exe" "$out\FrioCalc-Beta3-win-x64-Portable.zip" "$out\FrioCalc-Beta3-win-x64-Setup.exe" "$out\SHA256SUMS.txt"
           if ($LASTEXITCODE -ne 0) { throw 'GitHub Release publication failed' }
       - name: Preserve UI screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: friocalc-beta2-ui-snapshots
+          name: friocalc-beta3-ui-snapshots
           path: ui-snapshots
           if-no-files-found: warn

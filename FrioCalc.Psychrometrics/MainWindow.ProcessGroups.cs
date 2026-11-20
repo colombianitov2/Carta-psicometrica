@@ -28,7 +28,7 @@ public partial class MainWindow
         public ProcessType Type = ProcessType.Automatic;
         public string Flow = "", Fcs = "", Condensate = "";
     }
-    private readonly Dictionary<(int,int),SegmentDraft> _segmentDrafts = new();
+    private readonly Dictionary<(int,int,int),SegmentDraft> _segmentDrafts = new();
 
     // [5.1C.20.1] Tarjetas de estado: mismas propiedades, sin acciones que borren puntos.
     public sealed class ProcessPointCard
@@ -256,7 +256,7 @@ public partial class MainWindow
             int fromId=ids[i],toId=ids[i+1];
             var from=PsychrometricChart.ActivePoints.First(p=>p.Id==fromId);
             var to=PsychrometricChart.ActivePoints.First(p=>p.Id==toId);
-            var setting=group.SegmentSettings?.FirstOrDefault(s=>s.FromId==fromId&&s.ToId==toId);
+            var setting=ProcessSegmentSetting.Find(group.SegmentSettings,ids,i);
             if(!ProcessCalculator.TryCalculate(from,to,setting?.Type??ProcessType.Automatic,
                 setting?.DryAirMassFlowKgS??group.DryAirMassFlowKgS,
                 setting?.CondensateTemperatureC??group.CondensateTemperatureC,out var result,out var error))
@@ -308,8 +308,8 @@ public partial class MainWindow
             BypassFactorTextBox,SteamAddedTextBox,SteamEnthalpyTextBox,DesiccantRemovedTextBox,DesiccantTemperatureTextBox})
             input.Clear();
         NewProcessNameTextBox.Text=draft.Name;
-        DryFlowTextBox.Text=draft.DryAirMassFlowKgS?.ToString(CultureInfo.CurrentCulture)??"";
-        CondensateTemperatureTextBox.Text=draft.CondensateTemperatureC?.ToString(CultureInfo.CurrentCulture)??"";
+        DryFlowTextBox.Text=DisplayParameter(draft.DryAirMassFlowKgS,FlowFromSI);
+        CondensateTemperatureTextBox.Text=DisplayParameter(draft.CondensateTemperatureC,TemperatureFromSI);
         ProcessResultsPanel.Children.Clear();
         OpenGroupEditor();
     }
@@ -340,10 +340,10 @@ public partial class MainWindow
         _segmentDrafts.Clear();
         if(process.SegmentSettings is null)return;
         foreach(var s in process.SegmentSettings)
-            _segmentDrafts[(s.FromId,s.ToId)]=new SegmentDraft {
-                Type=s.Type, Flow=s.DryAirMassFlowKgS?.ToString(CultureInfo.CurrentCulture)??"",
+            _segmentDrafts[(s.FromId,s.ToId,s.Occurrence)]=new SegmentDraft {
+                Type=s.Type, Flow=DisplayParameter(s.DryAirMassFlowKgS,FlowFromSI),
                 Fcs=s.SensibleHeatFactor?.ToString(CultureInfo.CurrentCulture)??"",
-                Condensate=s.CondensateTemperatureC?.ToString(CultureInfo.CurrentCulture)??""};
+                Condensate=DisplayParameter(s.CondensateTemperatureC,TemperatureFromSI)};
     }
 
     private void RefreshSegmentEditors()
@@ -352,11 +352,11 @@ public partial class MainWindow
         SegmentEditorsPanel.Children.Clear();
         for(int i=0;i<_selectedPointIds.Count-1;i++)
         {
-            var key=(_selectedPointIds[i],_selectedPointIds[i+1]);
+            var key=ProcessSegmentSetting.Key(_selectedPointIds,i);
             if(!_segmentDrafts.TryGetValue(key,out var draft))
                 _segmentDrafts[key]=draft=new SegmentDraft();
             var fields=new StackPanel { Margin=new Thickness(0,5,0,5) };
-            fields.Children.Add(new TextBlock { Text=$"P{key.Item1} → P{key.Item2}",FontWeight=FontWeights.SemiBold });
+            fields.Children.Add(new TextBlock { Text=$"Tramo {i+1}: P{key.Item1} → P{key.Item2}",FontWeight=FontWeights.SemiBold });
             var choices=new Dictionary<ProcessType,string>{
                 [ProcessType.Automatic]="Automático", [ProcessType.Sensible]="Calor sensible",
                 [ProcessType.HeatingHumidification]="Calentamiento y humidificación",
@@ -379,9 +379,9 @@ public partial class MainWindow
                 box.TextChanged+=(_,_)=>setter(box.Text);
                 panel.Children.Add(box);row.Children.Add(panel);
             }
-            Field("Caudal seco (kg/s), opcional",draft.Flow,v=>draft.Flow=v);
+            Field($"Caudal seco ({FlowUnit}), opcional",draft.Flow,v=>draft.Flow=v);
             Field("FCS especificado (0 a 1), opcional",draft.Fcs,v=>draft.Fcs=v);
-            Field("Temperatura del condensado (°C), opcional",draft.Condensate,v=>draft.Condensate=v);
+            Field($"Temperatura del condensado ({TempUnit}), opcional",draft.Condensate,v=>draft.Condensate=v);
             fields.Children.Add(row);
             SegmentEditorsPanel.Children.Add(new Border{Child=fields,BorderBrush=Brushes.LightGray,BorderThickness=new Thickness(1),
                 Padding=new Thickness(9),CornerRadius=new CornerRadius(5),Margin=new Thickness(0,0,0,6)});
@@ -394,7 +394,7 @@ public partial class MainWindow
         if(type!=ProcessType.Automatic)return true;
         for(int i=0;i<_selectedPointIds.Count-1;i++)
         {
-            var key=(_selectedPointIds[i],_selectedPointIds[i+1]);
+            var key=ProcessSegmentSetting.Key(_selectedPointIds,i);
             if(!_segmentDrafts.TryGetValue(key,out var draft))continue;
             if(!TryReadOptionalFlow(draft.Flow,out double? flow,out error))return false;
             double? fcs=null,cond=null;
@@ -405,11 +405,11 @@ public partial class MainWindow
             }
             if(!string.IsNullOrWhiteSpace(draft.Condensate))
             {
-                if(!TryReadFinite(draft.Condensate,out double t)||t< -50||t>100)
-                {error="Temperatura del condensado fuera del intervalo −50 a 100 °C.";return false;}
-                cond=t;
+                if(!TryReadFinite(draft.Condensate,out double t)||TemperatureToSI(t)< -50||TemperatureToSI(t)>100)
+                {error=$"Temperatura del condensado fuera del intervalo {TemperatureFromSI(-50):0.##} a {TemperatureFromSI(100):0.##} {TempUnit}.";return false;}
+                cond=TemperatureToSI(t);
             }
-            settings.Add(new ProcessSegmentSetting(key.Item1,key.Item2,draft.Type,flow,fcs,cond));
+            settings.Add(new ProcessSegmentSetting(key.Item1,key.Item2,draft.Type,flow,fcs,cond,key.Occurrence));
         }
         return true;
     }
@@ -506,7 +506,7 @@ public partial class MainWindow
             {
                 var from=points.FirstOrDefault(p=>p.Id==process.PointIds[i]);var to=points.FirstOrDefault(p=>p.Id==process.PointIds[i+1]);
                 if(from is null||to is null)continue;
-                var seg=process.SegmentSettings?.FirstOrDefault(x=>x.FromId==from.Id&&x.ToId==to.Id);
+                var seg=ProcessSegmentSetting.Find(process.SegmentSettings,process.PointIds,i);
                 var type=seg?.Type??(process.Type==ProcessType.Bypass?ProcessType.Automatic:process.Type);
                 if(ProcessCalculator.TryCalculate(from,to,type,seg?.DryAirMassFlowKgS??process.DryAirMassFlowKgS,
                     seg?.CondensateTemperatureC??process.CondensateTemperatureC,out var r,out _))
@@ -551,7 +551,7 @@ public partial class MainWindow
     {
         var dialog=new SaveFileDialog{Title="Exportar informe de FrioCalc",Filter="Documento Word (*.docx)|*.docx",FileName="FrioCalc_Informe.docx"};
         if(dialog.ShowDialog(this)!=true)return;
-        try { WordProcessReport.Write(dialog.FileName,PressureSelector.CurrentPressureKPa,PsychrometricChart.ActivePoints,_savedProcesses); }
+        try { WordProcessReport.Write(dialog.FileName,PressureSelector.CurrentPressureKPa,PsychrometricChart.ActivePoints,_savedProcesses,ChartMetricsPanel.CurrentUnits); }
         catch(Exception ex) when(ex is IOException or UnauthorizedAccessException or InvalidDataException)
         { MessageBox.Show(ex.Message,"Exportar Word",MessageBoxButton.OK,MessageBoxImage.Warning); }
     }

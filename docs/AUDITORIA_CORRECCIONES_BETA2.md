@@ -36,3 +36,11 @@ Base revisada: `2f7b6ec`, publicación `v1.0.0-beta.1`. Se contrastan las órden
 - Comprobar actualización instalada de una versión publicada a otra posterior, con instalación real; verificar una actualización portable descargada del repositorio cuando exista una versión posterior. SHA-256 comprueba integridad respecto del repositorio; no constituye firma Authenticode.
 - Continuar el cierre de C04, C05, C12, C13, C16, C17, C18, C20, C22 y C23. No ocultar hipótesis matemáticas necesarias o afirmar exactitud de modelos sin validación externa. Validar con ASHRAE Handbook—Fundamentals y presentación A03 de Hermes Ramírez León.
 - Ampliaciones de cargas térmicas, cuartos fríos, selección de equipos, descongelación y motores corresponden a módulos futuros del programa macro, no se entienden como correcciones terminadas de la carta psicrométrica.
+
+## Seguimiento Beta 3
+
+- Beta 2 (`1922cc6`) publicada: compilación Windows sin errores ni advertencias, 794 comprobaciones lógicas, 153 de UI en cada configuración regional y prueba de sustitución portable. No implica validación física de todos los modelos.
+- C12: cada ocurrencia de un par dirigido tiene su propia configuración (incluido un ciclo con conexiones repetidas). Siguen pendientes los parámetros predictivos individuales de equipos por tramo.
+- C22: entradas técnicas del editor y tablas Word se convierten al sistema elegido; se conserva el SI interno y se identifican datos originales de entrada en SI para trazabilidad. Pruebas de ida y vuelta de unidades añadidas. Queda por revisar cada mensaje auxiliar.
+- C15, C16, C20 y C23: se localizó y consultó A03 Procesos Psicrométricos — Hermes Ramírez León y el capítulo Psychrometrics, ASHRAE Handbook—Fundamentals 2001 (SI). Se amplían presión atmosférica, humedad, grado de saturación, fracción molar y factores de calor sensible, se incorporan tres ecuaciones y las variables correspondientes, y se identifica el material docente por tema en Bibliografía. La revisión pedagógica total y la comparación visual de todas las ilustraciones continúan pendientes.
+- El seguimiento Beta 3 requiere resultado satisfactorio de su propia compilación y pruebas antes de marcarse como publicación verificada.

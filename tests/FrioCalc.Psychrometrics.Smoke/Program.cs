@@ -425,6 +425,10 @@ static class Program
                 "Informe conserva presión absoluta");
             Check(markdown.Contains("Procedencia de los estados",StringComparison.Ordinal),
                 "Informe conserva trazabilidad del método");
+            string imperialReport=ProcessReportService.BuildMarkdown(101.325,
+                new List<ChartPoint>{p,humidIn},Array.Empty<PsychrometricProcess>(),UnitSystem.IP);
+            Check(imperialReport.Contains("Tbs °F") && imperialReport.Contains("gr/lbda") &&
+                imperialReport.Contains("psi. Sistema IP") && imperialReport.Contains("Btu/(lbda·°F)"),"Informe Word utiliza presentación IP");
             Check(BibliographyCatalog.ExportCsv().Contains("MoistAirSpecificEntropy",
                 StringComparison.Ordinal),
                 "Bibliografía exporta referencia del modelo de entropía");
@@ -548,7 +552,11 @@ static class Program
 
             // [T15] Orden pedagógico ASHRAE y geometría solicitada 0–60 g/kgda.
             Check(AshraeStudyCatalog.Units.Count==24,"Temario de fundamentos tiene 24 temas");
-            Check(AshraeStudyCatalog.Equations.Count==45,"45 ecuaciones matemáticas documentadas");
+            Check(AshraeStudyCatalog.Equations.Count==48,"48 ecuaciones matemáticas documentadas");
+            var repeatRoute=new[]{1,2,1,2};
+            var repeatSettings=new[]{new ProcessSegmentSetting(1,2,ProcessType.Automatic,1,Occurrence:0),new ProcessSegmentSetting(1,2,ProcessType.Automatic,3,Occurrence:1)};
+            Check(ProcessSegmentSetting.Find(repeatSettings,repeatRoute,0)?.DryAirMassFlowKgS==1 && ProcessSegmentSetting.Find(repeatSettings,repeatRoute,2)?.DryAirMassFlowKgS==3,"Tramos repetidos con parámetros independientes");
+            Check(ProcessSegmentSetting.Find(repeatSettings,repeatRoute,1) is null,"Tramo sin parámetros conserva automático");
             Check(AshraeStudyCatalog.Units.Select(t=>t.AshraeSection).SequenceEqual(Enumerable.Range(1,24).Select(n=>n.ToString())),
                 "Numeración pedagógica consecutiva");
             Check(AshraeStudyCatalog.Equations.Select(e=>e.Key).Distinct().Count()==AshraeStudyCatalog.Equations.Count,"Claves de ecuaciones únicas");

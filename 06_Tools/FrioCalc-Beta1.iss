@@ -1,6 +1,6 @@
 #define AppName "FrioCalc"
 #ifndef BetaNumber
-  #define BetaNumber "2"
+  #define BetaNumber "3"
 #endif
 #ifndef SourceDir
   #error SourceDir required

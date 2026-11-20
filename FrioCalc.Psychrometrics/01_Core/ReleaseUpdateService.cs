@@ -51,7 +51,7 @@ public static class ReleaseUpdateService
         get
         {
             var value = typeof(ReleaseUpdateService).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-            return ReleaseVersion.TryParse(value,out var version) ? version : new(1,0,0,2);
+            return ReleaseVersion.TryParse(value,out var version) ? version : new(1,0,0,3);
         }
     }
 

@@ -30,6 +30,7 @@ public sealed class VariableReferencePanel : UserControl
         Add("m_{da}","Masa de aire seco","Masa de los gases secos, sin vapor de agua.","Pesaje o balance de masa seca.",mass,massIP,"mDa|Wmass");
         Add("mᵥ","Masa de vapor","Masa de agua presente en fase gaseosa.","Balance de agua o masa seca multiplicada por W.",mass,massIP,"mV|Wmass");
         Add("P","Presión absoluta total","Presión barométrica local medida respecto al vacío.","Barómetro o presión de referencia por altitud.",pressure,pressureIP,"Dalton");
+        Add("Z","Altitud","Elevación respecto al nivel del mar.","Dato geográfico; se usa en el modelo de atmósfera estándar para estimar presión, no como medición barométrica.","m","ft","Atmospheric");
         Add("p_{da}","Presión parcial de aire seco","Contribución del aire seco a la presión total.","Por diferencia entre P y presión del vapor.",pressure,pressureIP,"pDa|Dalton");
         Add("pᵥ","Presión parcial de vapor","Contribución del vapor de agua a la presión total.","Se deduce de W y P, o HR y saturación.",pressure,pressureIP,"pv|RH");
         Add("p_{ws}","Presión de saturación","Presión del vapor en equilibrio con líquido o hielo a una temperatura.","Correlación termodinámica de saturación del agua, evaluada a la temperatura indicada.",pressure,pressureIP,"PwsIce|PwsWater|PwsExp|Ws|RH|Tdp");
@@ -40,6 +41,8 @@ public sealed class VariableReferencePanel : UserControl
         Add("Tdp","Temperatura de rocío","Temperatura en la cual comienza la condensación a W y P constantes.","Invertir la presión de saturación a pᵥ.",temp,tempIP,"Tdp");
         Add("W","Razón de humedad","Masa de vapor por masa de aire seco; la variable de las fórmulas es una razón de masas.","Balance de masas o ley de Dalton y gases ideales.",w,wIP,"Wmass|W|hInverse|vInverse|MixW|BFW");
         Add("Wₛ","Razón de humedad saturada","Máxima masa de vapor por masa seca en equilibrio a P y temperatura dados.","Evaluar p de saturación y sustituir en W.",w,wIP,"Ws");
+        Add("μ","Grado de saturación","Razón entre la humedad real y la humedad de saturación a iguales presión y temperatura.","Cociente de W y Wₛ, distinto de la humedad relativa salvo en los límites de aire seco y saturado.",dim,dim,"SaturationDegree");
+        Add("xᵥ","Fracción molar de vapor","Número de moles de vapor dividido entre los moles de la mezcla.","En el modelo ideal equivale a la presión parcial de vapor dividida por P.",dim,dim,"MoleFractionV");
         Add("γ","Humedad específica","Masa de vapor dividida por masa total de aire húmedo.","Definición de masa de mezcla.", "kg/kg mezcla","lb/lb mezcla","SpecificHumidity");
         Add("ρᵥ","Densidad de vapor","Masa de vapor por volumen de aire húmedo.","Dividir W entre el volumen específico.","kg/m³","lb/ft³","VaporDensity");
         Add("φ / HR","Humedad relativa","Porcentaje de la presión parcial de vapor respecto de la de saturación a la misma temperatura.","Higrómetro o relación de presiones.","%","%","RH");

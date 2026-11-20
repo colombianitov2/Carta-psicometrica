@@ -1,1 +1,1 @@
-Beta 2 Windows x64: validate updater, portable replacement, SI/IP process tables and publish without modifying Beta 1.
+Beta 3 Windows x64: audit process units, repeated cycle segments, Word output and expanded teacher-based material.

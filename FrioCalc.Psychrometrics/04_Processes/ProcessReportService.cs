@@ -13,19 +13,26 @@ public static class ProcessReportService
 {
     public static string BuildMarkdown(double pressureKPa,
         IReadOnlyList<ChartPoint> points,
-        IReadOnlyList<PsychrometricProcess> processes)
+        IReadOnlyList<PsychrometricProcess> processes, UnitSystem units=UnitSystem.SI)
     {
+        bool ip=units==UnitSystem.IP;
+        string t=ip?"°F":"°C",w=ip?"gr/lbda":"g/kgda",h=ip?"Btu/lbda":"kJ/kgda",v=ip?"ft³/lbda":"m³/kgda",s=ip?"Btu/(lbda·°F)":"kJ/(kgda·K)",mUnit=ip?"lb/h":"kg/s",q=ip?"Btu/h":"kW",vol=ip?"ft³/h":"m³/h";
+        string T(double x)=>F(PsychrometricUnits.TemperatureFromSI(x,units));
+        string W(double x)=>F(PsychrometricUnits.HumidityFromSI(x,units));
+        string H(double x)=>F(PsychrometricUnits.EnthalpyFromSI(x,units));
+        string M(double x)=>F(x*(ip?7936.64143865559:1));
+        string Q(double x)=>F(x*(ip?3412.14163312794:1));
         var sb = new StringBuilder();
         sb.AppendLine("# Informe de estados y procesos psicrométricos — FrioCalc");
         sb.AppendLine();
         sb.AppendLine($"Fecha (UTC): {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm}");
-        sb.AppendLine($"Presión absoluta: {F(pressureKPa)} kPa. Valores internos en SI.");
+        sb.AppendLine($"Presión absoluta: {F(PsychrometricUnits.PressureFromSI(pressureKPa,units))} {(ip?"psi":"kPa")}. Sistema {units}.");
         sb.AppendLine();
         sb.AppendLine("## Estados");
-        sb.AppendLine("| Punto | Tbs °C | Tbh °C | Trocío °C | HR % | W g/kgda | h kJ/kgda | v m³/kgda | s* kJ/(kgda·K) | Método |");
+        sb.AppendLine($"| Punto | Tbs {t} | Tbh {t} | Trocío {t} | HR % | W {w} | h {h} | v {v} | s* {s} | Método |");
         sb.AppendLine("|---|---:|---:|---:|---:|---:|---:|---:|---:|---|");
         foreach (ChartPoint p in points)
-            sb.AppendLine($"|{p.Name}|{F(p.DryBulbC)}|{F(p.WetBulbC)}|{F(p.DewPointC)}|{F(p.RelativeHumidityPercent)}|{F(p.HumidityRatioKgPerKg*1000)}|{F(p.EnthalpyKJPerKgDryAir)}|{F(p.SpecificVolumeM3PerKgDryAir)}|{F(MoistAirSpecificEntropy.FromDryBulbAndHumidityRatio(p.DryBulbC,p.HumidityRatioKgPerKg,p.PressureKPa))}|{p.Method}|");
+            sb.AppendLine($"|{p.Name}|{T(p.DryBulbC)}|{T(p.WetBulbC)}|{T(p.DewPointC)}|{F(p.RelativeHumidityPercent)}|{W(p.HumidityRatioKgPerKg)}|{H(p.EnthalpyKJPerKgDryAir)}|{F(PsychrometricUnits.VolumeFromSI(p.SpecificVolumeM3PerKgDryAir,units))}|{F(PsychrometricUnits.EntropyFromSI(MoistAirSpecificEntropy.FromDryBulbAndHumidityRatio(p.DryBulbC,p.HumidityRatioKgPerKg,p.PressureKPa),units))}|{p.Method}|");
         sb.AppendLine();
         sb.AppendLine();
         sb.AppendLine("### Procedencia de los estados");
@@ -42,11 +49,11 @@ public static class ProcessReportService
         {
             sb.AppendLine($"### {process.Name} — {process.Type}");
             sb.AppendLine($"Secuencia: {string.Join(" → ",process.PointIds.Select(id=>"P"+id))}. Color {process.ColorHex}; visible: {(process.Visible?"sí":"no")}.");
-            sb.AppendLine($"Flujo másico de aire seco: {(process.DryAirMassFlowKgS is double m?F(m)+" kgda/s":"no aportado")}.");
+            sb.AppendLine($"Flujo másico de aire seco: {(process.DryAirMassFlowKgS is double m?M(m)+" "+mUnit:"no aportado")}.");
             sb.AppendLine();
             if (process.Type==ProcessType.AdiabaticMixing && process.MixingInletFlowsM3H is {Count:>0} flows)
             {
-                sb.AppendLine("|Corriente|Caudal volumétrico (m³/h)|Caudal másico seco (kg/s)|");
+                sb.AppendLine($"|Corriente|Caudal volumétrico ({vol})|Caudal másico seco ({mUnit})|");
                 sb.AppendLine("|---|---:|---:|");
                 double total=0;
                 for(int i=0;i<flows.Count && i<process.PointIds.Count;i++)
@@ -54,9 +61,9 @@ public static class ProcessReportService
                     var point=points.FirstOrDefault(p=>p.Id==process.PointIds[i]);
                     if(point is null)continue;
                     double mass=flows[i]/3600/point.SpecificVolumeM3PerKgDryAir;
-                    total+=mass;sb.AppendLine($"|{point.Name}|{F(flows[i])}|{F(mass)}|");
+                    total+=mass;sb.AppendLine($"|{point.Name}|{F(flows[i]*(ip?35.31466672149:1))}|{M(mass)}|");
                 }
-                sb.AppendLine($"|Total|—|{F(total)}|");
+                sb.AppendLine($"|Total|—|{M(total)}|");
             }
             if(process.Type==ProcessType.Branching && process.PointIds.Count==3 &&
                 process.DryAirMassFlowKgS is double totalFlow && process.BranchFractionA is double fraction)
@@ -65,15 +72,15 @@ public static class ProcessReportService
                 if(states.All(p=>p is not null) &&
                     ProcessCalculator.TryBranchBalance(states[0]!,states[1]!,states[2]!,totalFlow,fraction,out var b,out _) && b is not null)
                 {
-                    sb.AppendLine("|Rama|Caudal (kg/s)|Agua (kg/s)|Potencia (kW)|");
+                    sb.AppendLine($"|Rama|Caudal ({mUnit})|Agua ({mUnit})|Potencia ({q})|");
                     sb.AppendLine("|---|---:|---:|---:|");
-                    sb.AppendLine($"|{states[1]!.Name}|{F(b.FirstMassFlowKgS)}|{F(b.AddedWaterFirstKgS)}|{F(b.ThermalFirstKW)}|");
-                    sb.AppendLine($"|{states[2]!.Name}|{F(b.SecondMassFlowKgS)}|{F(b.AddedWaterSecondKgS)}|{F(b.ThermalSecondKW)}|");
+                    sb.AppendLine($"|{states[1]!.Name}|{M(b.FirstMassFlowKgS)}|{M(b.AddedWaterFirstKgS)}|{Q(b.ThermalFirstKW)}|");
+                    sb.AppendLine($"|{states[2]!.Name}|{M(b.SecondMassFlowKgS)}|{M(b.AddedWaterSecondKgS)}|{Q(b.ThermalSecondKW)}|");
                 }
             }
             if (process.Type != ProcessType.AdiabaticMixing && process.Type != ProcessType.Branching)
             {
-                sb.AppendLine("|Tramo|ΔT °C|ΔW g/kgda|Δh kJ/kgda|Potencia (kW)|FCS calculado|FCS indicado|Condensado (kg/s)|Carga serpentín (kW)|");
+                sb.AppendLine($"|Tramo|ΔT {t}|ΔW {w}|Δh {h}|Potencia ({q})|FCS calculado|FCS indicado|Condensado ({mUnit})|Carga serpentín ({q})|");
                 sb.AppendLine("|---|---:|---:|---:|---:|---:|---:|---:|---:|");
                 for (int i = 0; i < process.PointIds.Count - 1; i++)
                 {
@@ -84,7 +91,7 @@ public static class ProcessReportService
                         sb.AppendLine("|Estado faltante|—|—|—|—|—|");
                         continue;
                     }
-                    var segment=process.SegmentSettings?.FirstOrDefault(x=>x.FromId==from.Id&&x.ToId==to.Id);
+                    var segment=ProcessSegmentSetting.Find(process.SegmentSettings,process.PointIds,i);
                     ProcessType method=segment?.Type??(process.Type==ProcessType.Bypass ? ProcessType.Automatic : process.Type);
                     if (!ProcessCalculator.TryCalculate(from,to,method,segment?.DryAirMassFlowKgS??process.DryAirMassFlowKgS,
                         segment?.CondensateTemperatureC??process.CondensateTemperatureC,out ProcessResult result,out string error))
@@ -92,7 +99,7 @@ public static class ProcessReportService
                         sb.AppendLine($"|{from.Name}→{to.Name}: {error}|—|—|—|—|—|");
                         continue;
                     }
-                    sb.AppendLine($"|{from.Name}→{to.Name}|{F(result.DeltaTemperatureC)}|{F(result.DeltaHumidityRatioKgPerKg*1000)}|{F(result.DeltaEnthalpyKJPerKgDryAir)}|{(result.ThermalPowerKW.HasValue?F(result.ThermalPowerKW.Value):"sin caudal")}|{(result.SensibleHeatFactor.HasValue?F(result.SensibleHeatFactor.Value):"indefinido")}|{(segment?.SensibleHeatFactor is double f?F(f):"—")}|{(result.CondensateMassFlowKgS is double mc?F(mc):"—")}|{(result.CoilCoolingLoadKW is double qc?F(qc):"—")}|");
+                    sb.AppendLine($"|{from.Name}→{to.Name}|{F(result.DeltaTemperatureC*(ip?1.8:1))}|{W(result.DeltaHumidityRatioKgPerKg)}|{H(result.DeltaEnthalpyKJPerKgDryAir)}|{(result.ThermalPowerKW.HasValue?Q(result.ThermalPowerKW.Value):"sin caudal")}|{(result.SensibleHeatFactor.HasValue?F(result.SensibleHeatFactor.Value):"indefinido")}|{(segment?.SensibleHeatFactor is double f?F(f):"—")}|{(result.CondensateMassFlowKgS is double mc?M(mc):"—")}|{(result.CoilCoolingLoadKW is double qc?Q(qc):"—")}|");
 
                 }
             }

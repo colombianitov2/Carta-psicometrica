@@ -75,6 +75,18 @@ public static class SessionFileIntegrity
                process.DesiccantOutletTemperatureC is double dt && !double.IsFinite(dt) ||
                process.MixingInletFlowsM3H is { } mixFlows && mixFlows.Any(v=>!double.IsFinite(v)||v<=0))
             {diagnostic=$"Parámetros del proceso {process.Name} inválidos.";return false;}
+            if(process.SegmentSettings is { } settings)
+            {
+                var keys=Enumerable.Range(0,process.PointIds.Count-1).Select(i=>ProcessSegmentSetting.Key(process.PointIds,i)).ToHashSet();
+                foreach(var segment in settings)
+                {
+                    if(segment is null || !keys.Contains((segment.FromId,segment.ToId,segment.Occurrence)) || !Enum.IsDefined(segment.Type) ||
+                        segment.DryAirMassFlowKgS is double mf && (!double.IsFinite(mf)||mf<=0) ||
+                        segment.SensibleHeatFactor is double fcs && (!double.IsFinite(fcs)||fcs<0||fcs>1) ||
+                        segment.CondensateTemperatureC is double tc && (!double.IsFinite(tc)||tc< -50||tc>100))
+                    {diagnostic=$"Parámetros de tramo inválidos en {process.Name}.";return false;}
+                }
+            }
         }
         return true;
     }

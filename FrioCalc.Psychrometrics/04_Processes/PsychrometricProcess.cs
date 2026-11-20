@@ -11,7 +11,27 @@ public enum ProcessType
 }
 
 public sealed record ProcessSegmentSetting(int FromId,int ToId, ProcessType Type,
-    double? DryAirMassFlowKgS = null, double? SensibleHeatFactor = null, double? CondensateTemperatureC = null);
+    double? DryAirMassFlowKgS = null, double? SensibleHeatFactor = null, double? CondensateTemperatureC = null,
+    int Occurrence = 0)
+{
+    // [4.1.1] Cada aparición de la misma conexión es un tramo independiente.
+    // Occurrence cero identifica la primera y conserva compatibilidad con las sesiones antiguas.
+    public static (int From,int To,int Occurrence) Key(IReadOnlyList<int> ids,int index)
+    {
+        int from=ids[index],to=ids[index+1],occurrence=0;
+        for(int i=0;i<index;i++)if(ids[i]==from && ids[i+1]==to)occurrence++;
+        return (from,to,occurrence);
+    }
+
+    public static ProcessSegmentSetting? Find(IReadOnlyList<ProcessSegmentSetting>? settings,IReadOnlyList<int> ids,int index)
+    {
+        if(settings is null)return null;
+        var key=Key(ids,index);
+        foreach(var setting in settings)
+            if(setting.FromId==key.From && setting.ToId==key.To && setting.Occurrence==key.Occurrence)return setting;
+        return null;
+    }
+}
 
 public sealed record PsychrometricProcess(
     int Id,

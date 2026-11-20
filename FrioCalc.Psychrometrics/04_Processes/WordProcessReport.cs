@@ -6,6 +6,7 @@ using System.Linq;
 using System.Xml.Linq;
 using System.Text.RegularExpressions;
 using FrioCalc.Psychrometrics.Points;
+using FrioCalc.Psychrometrics.Core;
 
 namespace FrioCalc.Psychrometrics.Processes;
 
@@ -18,9 +19,9 @@ public static class WordProcessReport
     private static readonly XNamespace R="http://schemas.openxmlformats.org/package/2006/relationships";
 
     public static void Write(string fileName,double pressure,IReadOnlyList<ChartPoint> points,
-        IReadOnlyList<PsychrometricProcess> processes)
+        IReadOnlyList<PsychrometricProcess> processes, UnitSystem units=UnitSystem.SI)
     {
-        string report=ProcessReportService.BuildMarkdown(pressure,points,processes);
+        string report=ProcessReportService.BuildMarkdown(pressure,points,processes,units);
         var body=new XElement(W+"body");
         var lines=report.Split('\n').Select(s=>s.TrimEnd('\r')).ToArray();
         for(int i=0;i<lines.Length;i++)
@@ -34,7 +35,7 @@ public static class WordProcessReport
                     if(AshraeStudyCatalog.FindEquation(key) is AshraeEquation formula)
                     {
                         body.Add(Paragraph(formula.Title,3));
-                        body.Add(Equation(formula));
+                        body.Add(Equation(EducationalUnits.Equation(formula,units)));
                     }
             }
             if(line.StartsWith("|",StringComparison.Ordinal))

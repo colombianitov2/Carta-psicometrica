@@ -60,6 +60,7 @@ public partial class MainWindow
             AshraeSimulatorPanel.SetUnits(units);
             ProcessTheoryPanel.SetUnits(units);
             VariableReferencePanel.SetUnits(units);
+            SetProcessEditorUnits(units);
             RefreshProcessGroupLists();
             RefreshGroupCards();
             ProcessResultText.Text =
@@ -360,12 +361,12 @@ public partial class MainWindow
         if (!string.IsNullOrWhiteSpace(CondensateTemperatureTextBox.Text))
         {
             if (!TryReadFinite(CondensateTemperatureTextBox.Text,out double condensateInput) ||
-                condensateInput < -50 || condensateInput > 100)
+                TemperatureToSI(condensateInput) < -50 || TemperatureToSI(condensateInput) > 100)
             {
-                MessageBox.Show("Temperatura de condensado inválida. Se requiere −50 a 100 °C.",
+                MessageBox.Show($"Temperatura de condensado inválida. Se requiere {TemperatureFromSI(-50):0.##} a {TemperatureFromSI(100):0.##} {TempUnit}.",
                     "Balance de serpentín",MessageBoxButton.OK,MessageBoxImage.Warning);return;
             }
-            condensateTemperature = condensateInput;
+            condensateTemperature = TemperatureToSI(condensateInput);
         }
         double? branchFraction = null;
         int? generatedPointId = null;
@@ -391,7 +392,8 @@ public partial class MainWindow
             {
                 if (!TryReadFinite(ApparatusDewPointTextBox.Text,out double adp) ||
                     !TryReadUnitInterval(BypassFactorTextBox.Text,out double bf))
-                { MessageBox.Show("Indique ADP numérico (°C) y BF de 0 a 1.","Bypass",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
+                { MessageBox.Show($"Indique ADP numérico ({TempUnit}) y BF de 0 a 1.","Bypass",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
+                adp=TemperatureToSI(adp);
                 bypassFactorUsed=bf; adpUsed=adp;
                 success = ProcessCalculator.TryBypassOutlet(inlet,adp,bf,0,inlet.ColorHex,
                     out predicted,out predictionNote);
@@ -401,10 +403,11 @@ public partial class MainWindow
                 if (!TryReadNonNegative(DesiccantRemovedTextBox.Text,out double removed) || removed < 0 ||
                     !TryReadFinite(DesiccantTemperatureTextBox.Text,out double outputT))
                 {
-                    MessageBox.Show("Se necesitan ΔW retirada ≥ 0 g/kgda y la Tbs de salida (°C), " +
+                    MessageBox.Show($"Se necesitan ΔW retirada ≥ 0 {WaterUnit} y la Tbs de salida ({TempUnit}), " +
                         "derivada de especificación o medición. No se inventa rendimiento del material.",
                         "Desecante",MessageBoxButton.OK,MessageBoxImage.Warning);return;
                 }
+                removed=WaterToSI(removed);outputT=TemperatureToSI(outputT);
                 desiccantGramsUsed=removed; desiccantTUsed=outputT;
                 success=ProcessCalculator.TryDesiccantOutlet(inlet,removed/1000.0,outputT,
                     0,inlet.ColorHex,out predicted,out predictionNote);
@@ -413,8 +416,9 @@ public partial class MainWindow
             {
                 if (!TryReadNonNegative(SteamAddedTextBox.Text,out double waterGrams) ||
                     !TryReadPositive(SteamEnthalpyTextBox.Text,out double steamEnthalpy))
-                { MessageBox.Show("Indique vapor añadido ≥ 0 g/kg y entalpía positiva (kJ/kg).",
+                { MessageBox.Show($"Indique vapor añadido ≥ 0 {WaterUnit} y entalpía positiva ({WaterEnthalpyUnit}).",
                     "Humidificación por vapor",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
+                waterGrams=WaterToSI(waterGrams);steamEnthalpy=WaterEnthalpyToSI(steamEnthalpy);
                 steamGramsUsed=waterGrams; steamEnthalpyUsed=steamEnthalpy;
                 success = ProcessCalculator.TrySteamOutlet(inlet,waterGrams/1000.0,steamEnthalpy,
                     0,inlet.ColorHex,out predicted,out predictionNote);
@@ -444,7 +448,7 @@ public partial class MainWindow
                 fraction <= 0 || fraction >= 1)
             {
                 MessageBox.Show("Seleccione entrada, salida 1 y salida 2 en ese orden. " +
-                    "Introduzca caudal másico de entrada (kg/s) y fracción estrictamente entre 0 y 1.",
+                    $"Introduzca caudal másico de entrada ({FlowUnit}) y fracción estrictamente entre 0 y 1.",
                     "División en ramas",MessageBoxButton.OK,MessageBoxImage.Warning);return;
             }
             if(!ProcessCalculator.TryBranchBalance(selected[0]!,selected[1]!,selected[2]!,totalFlow,
@@ -474,18 +478,18 @@ public partial class MainWindow
                         MessageBox.Show("Cada caudal de mezcla debe ser positivo, separado por punto y coma.",
                             "Mezcla",MessageBoxButton.OK,MessageBoxImage.Warning);return;
                     }
-                    flows.Add(flowValue);
+                    flows.Add(VolumeFlowToSI(flowValue));
                 }
             }
             else if (selected.Length == 2 &&
                 TryReadPositive(MixFlowFirstTextBox.Text,out double v1) &&
                 TryReadPositive(MixFlowSecondTextBox.Text,out double v2))
             {
-                flows.Add(v1); flows.Add(v2);
+                flows.Add(VolumeFlowToSI(v1)); flows.Add(VolumeFlowToSI(v2));
             }
             if (flows.Count != selected.Length)
             {
-                MessageBox.Show($"Introduzca {selected.Length} caudales (m³/h), uno por corriente seleccionada.",
+                MessageBox.Show($"Introduzca {selected.Length} caudales ({VolumeFlowUnit}), uno por corriente seleccionada.",
                     "Mezcla",MessageBoxButton.OK,MessageBoxImage.Warning);return;
             }
             var inlet = selected[0]!;
@@ -520,7 +524,7 @@ public partial class MainWindow
             var report = new StringBuilder();
             for (int i=0;i<selected.Length-1;i++)
             {
-                var segment=segmentSettings.FirstOrDefault(x=>x.FromId==selected[i]!.Id && x.ToId==selected[i+1]!.Id);
+                var segment=ProcessSegmentSetting.Find(segmentSettings,ids,i);
                 var segmentType=segment?.Type ?? (type == ProcessType.Bypass ? ProcessType.Automatic : type);
                 var segmentFlow=segment?.DryAirMassFlowKgS ?? massFlow;
                 var segmentCondensate=segment?.CondensateTemperatureC ?? condensateTemperature;
@@ -633,18 +637,18 @@ public partial class MainWindow
         // La selección visual de la carta es un conjunto; el recorrido admite repeticiones.
         _selectedPointIds.Clear();
         _selectedPointIds.AddRange(editorRoute);
-        CondensateTemperatureTextBox.Text=process.CondensateTemperatureC?.ToString("0.###",CultureInfo.CurrentCulture) ?? "";
+        CondensateTemperatureTextBox.Text=DisplayParameter(process.CondensateTemperatureC,TemperatureFromSI);
         BranchFractionTextBox.Text=process.BranchFractionA?.ToString("0.###",CultureInfo.CurrentCulture) ?? "";
-        DryFlowTextBox.Text=process.DryAirMassFlowKgS?.ToString("0.######",CultureInfo.CurrentCulture) ?? "";
+        DryFlowTextBox.Text=DisplayParameter(process.DryAirMassFlowKgS,FlowFromSI);
         EffectivenessTextBox.Text=process.SaturationEffectiveness?.ToString("0.######",CultureInfo.CurrentCulture) ?? "";
         BypassFactorTextBox.Text=process.BypassFactor?.ToString("0.######",CultureInfo.CurrentCulture) ?? "";
-        ApparatusDewPointTextBox.Text=process.ApparatusDewPointC?.ToString("0.######",CultureInfo.CurrentCulture) ?? "";
-        SteamAddedTextBox.Text=process.SteamAddedGramsPerKg?.ToString("0.######",CultureInfo.CurrentCulture) ?? "";
-        SteamEnthalpyTextBox.Text=process.SteamEnthalpyKJPerKg?.ToString("0.######",CultureInfo.CurrentCulture) ?? "";
-        DesiccantRemovedTextBox.Text=process.DesiccantRemovedGramsPerKg?.ToString("0.######",CultureInfo.CurrentCulture) ?? "";
-        DesiccantTemperatureTextBox.Text=process.DesiccantOutletTemperatureC?.ToString("0.######",CultureInfo.CurrentCulture) ?? "";
+        ApparatusDewPointTextBox.Text=DisplayParameter(process.ApparatusDewPointC,TemperatureFromSI);
+        SteamAddedTextBox.Text=DisplayParameter(process.SteamAddedGramsPerKg,WaterFromSI);
+        SteamEnthalpyTextBox.Text=DisplayParameter(process.SteamEnthalpyKJPerKg,WaterEnthalpyFromSI);
+        DesiccantRemovedTextBox.Text=DisplayParameter(process.DesiccantRemovedGramsPerKg,WaterFromSI);
+        DesiccantTemperatureTextBox.Text=DisplayParameter(process.DesiccantOutletTemperatureC,TemperatureFromSI);
         MixFlowsListTextBox.Text=process.MixingInletFlowsM3H is {Count:>0}
-            ? string.Join(";",process.MixingInletFlowsM3H.Select(flow=>flow.ToString("0.######",CultureInfo.CurrentCulture)))
+            ? string.Join(";",process.MixingInletFlowsM3H.Select(flow=>DisplayParameter(flow,VolumeFlowFromSI)))
             : "";
         foreach(ComboBoxItem item in ProcessTypeComboBox.Items)
             if(item.Tag?.ToString()==process.Type.ToString())
@@ -713,13 +717,13 @@ public partial class MainWindow
         return valid && double.IsFinite(value) && value > 0;
     }
 
-    private static bool TryReadOptionalFlow(string raw, out double? flow, out string error)
+    private bool TryReadOptionalFlow(string raw, out double? flow, out string error)
     {
         flow = null; error = "";
         if (string.IsNullOrWhiteSpace(raw)) return true;
         if (!TryReadPositive(raw,out double value))
-        { error="Introduzca un flujo másico de aire seco positivo, en kg/s."; return false; }
-        flow = value;
+        { error=$"Introduzca un flujo másico de aire seco positivo, en {FlowUnit}."; return false; }
+        flow = FlowToSI(value);
         return true;
     }
 

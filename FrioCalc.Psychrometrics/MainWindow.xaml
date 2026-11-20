@@ -181,23 +181,23 @@
                                 <ComboBoxItem Content="Divisor con dos ramas y estados conocidos" Tag="Branching"/>
                             </ComboBox>
                             <StackPanel x:Name="SegmentEditorsPanel" Margin="0,0,0,10"/>
-                            <TextBlock Text="Caudal másico de aire seco, kg/s (opcional salvo donde se requiera)"
+                            <TextBlock x:Name="DryFlowLabel" Text="Caudal másico de aire seco, kg/s (opcional salvo donde se requiera)"
                                        TextWrapping="Wrap" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="DryFlowTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"/>
                             <StackPanel x:Name="CondensateGroup" Visibility="Collapsed">
-                             <TextBlock Text="Temperatura del condensado para balance del serpentín (°C, opcional)"
+                             <TextBlock x:Name="CondensateTemperatureLabel" Text="Temperatura del condensado para balance del serpentín (°C, opcional)"
                                        TextWrapping="Wrap" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="CondensateTemperatureTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"/>
                             </StackPanel>
                              <StackPanel x:Name="MixingGroup" Visibility="Collapsed">
-                             <TextBlock Text="Mezcla de N entradas: caudales m³/h separados por punto y coma (opcional)"
+                             <TextBlock x:Name="MixFlowsLabel" Text="Mezcla de N entradas: caudales m³/h separados por punto y coma (opcional)"
                                        TextWrapping="Wrap" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="MixFlowsListTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"/>
                             <TextBlock Text="Alternativa para mezcla de solo dos entradas:" FontWeight="SemiBold"
                                        FontSize="11" Margin="0,0,0,4"/>
-                            <TextBlock Text="Solo para mezcla: caudal de entrada 1, m³/h" FontSize="12" Margin="0,0,0,3"/>
+                            <TextBlock x:Name="MixFlowFirstLabel" Text="Solo para mezcla: caudal de entrada 1, m³/h" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="MixFlowFirstTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,6"/>
-                            <TextBlock Text="Solo para mezcla: caudal de entrada 2, m³/h" FontSize="12" Margin="0,0,0,3"/>
+                            <TextBlock x:Name="MixFlowSecondLabel" Text="Solo para mezcla: caudal de entrada 2, m³/h" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="MixFlowSecondTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,10"/>
                             </StackPanel>
                              <StackPanel x:Name="BranchingGroup" Visibility="Collapsed">
@@ -212,21 +212,21 @@
                             <TextBox x:Name="EffectivenessTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,6"/>
                             </StackPanel>
                              <StackPanel x:Name="BypassGroup" Visibility="Collapsed">
-                             <TextBlock Text="ADP o punto de rocío del aparato (°C)" FontSize="12" Margin="0,0,0,3"/>
+                             <TextBlock x:Name="ApparatusDewPointLabel" Text="ADP o punto de rocío del aparato (°C)" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="ApparatusDewPointTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,6"/>
                             <TextBlock Text="Factor de bypass BF (0–1)" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="BypassFactorTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,6"/>
                             </StackPanel>
                              <StackPanel x:Name="SteamGroup" Visibility="Collapsed">
-                             <TextBlock Text="Vapor añadido (g/kg aire seco)" FontSize="12" Margin="0,0,0,3"/>
+                             <TextBlock x:Name="SteamAddedLabel" Text="Vapor añadido (g/kg aire seco)" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="SteamAddedTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,6"/>
-                            <TextBlock Text="Entalpía del vapor inyectado (kJ/kg de vapor)" FontSize="12" Margin="0,0,0,3"/>
+                            <TextBlock x:Name="SteamEnthalpyLabel" Text="Entalpía del vapor inyectado (kJ/kg de vapor)" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="SteamEnthalpyTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,10"/>
                             </StackPanel>
                              <StackPanel x:Name="DesiccantGroup" Visibility="Collapsed">
-                             <TextBlock Text="Desecante: humedad retirada (g/kg aire seco)" FontSize="12" Margin="0,0,0,3"/>
+                            <TextBlock x:Name="DesiccantRemovedLabel" Text="Desecante: humedad retirada (g/kg aire seco)" FontSize="12" Margin="0,0,0,3"/>
                             <TextBox x:Name="DesiccantRemovedTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,6"/>
-                            <TextBlock Text="Desecante: bulbo seco medido o especificado a la salida (°C)" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,3"/>
+                            <TextBlock x:Name="DesiccantTemperatureLabel" Text="Desecante: bulbo seco medido o especificado a la salida (°C)" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,3"/>
                             <TextBox x:Name="DesiccantTemperatureTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"/>
                             </StackPanel>
                              <TextBlock x:Name="PredictiveExplanation" Visibility="Collapsed" Text="Estos métodos generan un estado de salida usando exactamente los datos del equipo indicados. No hay parámetros predeterminados ocultos."
@@ -377,7 +377,7 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="3*"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="{Binding DisplayTitle}" TextWrapping="Wrap" Margin="8"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding Source}" TextWrapping="Wrap" Margin="8"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding BibliographyDisplaySource}" TextWrapping="Wrap" Margin="8"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate></ItemsControl.ItemTemplate>

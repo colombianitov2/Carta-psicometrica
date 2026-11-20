@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string] $OutputDirectory,
     [string] $InnoCompiler = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
-    [ValidateRange(1,65535)] [int] $BetaNumber = 2
+    [ValidateRange(1,65535)] [int] $BetaNumber = 3
 )
 
 $ErrorActionPreference = 'Stop'
