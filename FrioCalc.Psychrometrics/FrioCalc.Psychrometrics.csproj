@@ -6,7 +6,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <Version>1.0.0-beta.3</Version>
+    <Version>1.0.0-beta.4</Version>
+    <Product>Calculadora de refrigeración – Parte 1 – Carta psicrométrica</Product>
+    <Description>Calculadora de refrigeración – Parte 1 – Carta psicrométrica</Description>
   </PropertyGroup>
 
   <ItemGroup>

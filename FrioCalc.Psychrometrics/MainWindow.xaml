@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="clr-namespace:FrioCalc.Psychrometrics.UI"
         xmlns:chart="clr-namespace:FrioCalc.Psychrometrics.Chart"
-        Title="FrioCalc — Psicrometría y procesos" Width="1460" Height="850"
+        Title="Calculadora de refrigeración – Parte 1 – Carta psicrométrica" Width="1460" Height="850"
         MinWidth="940" MinHeight="600" WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <Style x:Key="ProcessPointItemStyle" TargetType="ListBoxItem">
@@ -357,7 +357,7 @@
                             <StackPanel>
                                 <TextBlock Text="Buscar actualizaciones" FontSize="17" FontWeight="SemiBold"/>
                                 <TextBlock x:Name="UpdateVersionText" Margin="0,5,0,5"/>
-                                <TextBlock x:Name="UpdateStatusText" Text="Consulta las versiones oficiales de FrioCalc." TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                <TextBlock x:Name="UpdateStatusText" Text="Consulta las versiones oficiales de la calculadora." TextWrapping="Wrap" Margin="0,0,0,8"/>
                                 <ProgressBar x:Name="UpdateProgress" Height="12" Minimum="0" Maximum="100" Visibility="Collapsed" Margin="0,0,0,8"/>
                                 <WrapPanel>
                                     <Button x:Name="CheckUpdatesButton" Content="Buscar actualizaciones" Click="CheckUpdates_Click" Padding="12,6" Margin="0,0,8,0"/>

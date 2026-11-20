@@ -23,7 +23,7 @@ public static class ProcessReportService
         string M(double x)=>F(x*(ip?7936.64143865559:1));
         string Q(double x)=>F(x*(ip?3412.14163312794:1));
         var sb = new StringBuilder();
-        sb.AppendLine("# Informe de estados y procesos psicrométricos — FrioCalc");
+        sb.AppendLine("# Informe de estados y procesos psicrométricos — Calculadora de refrigeración – Parte 1 – Carta psicrométrica");
         sb.AppendLine();
         sb.AppendLine($"Fecha (UTC): {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm}");
         sb.AppendLine($"Presión absoluta: {F(PsychrometricUnits.PressureFromSI(pressureKPa,units))} {(ip?"psi":"kPa")}. Sistema {units}.");

@@ -40,6 +40,13 @@ static class Program
             var releaseJson=System.Text.Json.JsonSerializer.SerializeToElement(releases);
             Check(ReleaseUpdateService.FindUpdate(releaseJson,beta2,false)?.Executable.Name=="FrioCalc-Beta10-win-x64-Portable.exe","Selecciona paquete portable");
             Check(ReleaseUpdateService.FindUpdate(releaseJson,beta2,true)?.Executable.Name=="FrioCalc-Beta10-win-x64-Setup.exe","Selecciona instalador");
+            using var renamedRelease = System.Text.Json.JsonDocument.Parse(releaseJson.GetRawText().Replace(ReleaseUpdateService.ReleasesPage, ReleaseUpdateService.RenamedReleasesPage));
+            Check(ReleaseUpdateService.FindUpdate(renamedRelease.RootElement,beta2,false)?.Executable.Url.AbsoluteUri.StartsWith(ReleaseUpdateService.RenamedReleasesPage+"/download/")==true,"Compatible con ruta oficial renombrada");
+            using var foreignRelease = System.Text.Json.JsonDocument.Parse(releaseJson.GetRawText().Replace(ReleaseUpdateService.ReleasesPage, "https://github.com/otro/proyecto/releases"));
+            Check(ReleaseUpdateService.FindUpdate(foreignRelease.RootElement,beta2,false) is null,"Rechaza origen ajeno al repositorio oficial");
+            Check(ReleaseUpdateService.IsCompatibleProductName(ReleaseUpdateService.LegacyProductName),"Identidad portable histórica");
+            Check(ReleaseUpdateService.IsCompatibleProductName(ReleaseUpdateService.OfficialProductName),"Identidad portable renombrada");
+            Check(!ReleaseUpdateService.IsCompatibleProductName("Otro producto") && !ReleaseUpdateService.IsCompatibleProductName(null),"Rechaza identidad portable ajena");
             Check(ReleaseUpdateService.FindUpdate(releaseJson,stable,false) is null,"No retrocede de estable a beta");
             Check(ReleaseUpdateService.FindUpdate(releaseJson,beta10,false) is null,"No reinstala la misma versión");
             string digest=new string('a',64);

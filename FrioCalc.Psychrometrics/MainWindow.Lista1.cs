@@ -768,8 +768,8 @@ public partial class MainWindow
     {
         var dialog = new SaveFileDialog
         {
-            Title="Guardar proyecto FrioCalc", Filter="FrioCalc JSON|*.friocalc.json|JSON|*.json",
-            FileName="FrioCalc_Sesion.friocalc.json"
+            Title="Guardar sesión de la calculadora", Filter="Sesión de la calculadora JSON|*.friocalc.json|JSON|*.json",
+            FileName="Calculadora_Refrigeracion_Parte1_Sesion.friocalc.json"
         };
         if (dialog.ShowDialog(this) != true) return;
         var session = new SessionV1(1, PressureSelector.CurrentPressureKPa,
@@ -787,7 +787,7 @@ public partial class MainWindow
             JsonException or InvalidDataException or NotSupportedException)
         {
             MessageBox.Show("No se pudo guardar la sesión: "+ex.Message,
-                "FrioCalc",MessageBoxButton.OK,MessageBoxImage.Error);
+                "Calculadora de refrigeración – Parte 1 – Carta psicrométrica",MessageBoxButton.OK,MessageBoxImage.Error);
         }
     }
 
@@ -795,7 +795,7 @@ public partial class MainWindow
     {
         var dialog = new OpenFileDialog
         {
-            Title="Abrir sesión FrioCalc", Filter="FrioCalc JSON|*.friocalc.json;*.json|Todos|*.*"
+            Title="Abrir sesión de la calculadora", Filter="Sesión de la calculadora JSON|*.friocalc.json;*.json|Todos|*.*"
         };
         if (dialog.ShowDialog(this) != true) return;
         try
@@ -868,8 +868,8 @@ public partial class MainWindow
     // [5.1C.17] Informe con ecuaciones, supuestos, estados, procesos y bibliografía.
     private void ExportMarkdownReport_Click(object sender, RoutedEventArgs e)
     {
-        var dialog=new SaveFileDialog {Title="Exportar informe técnico de FrioCalc",
-            Filter="Markdown (*.md)|*.md",FileName="FrioCalc_Informe_Tecnico.md"};
+        var dialog=new SaveFileDialog {Title="Exportar informe técnico de la calculadora",
+            Filter="Markdown (*.md)|*.md",FileName="Calculadora_Refrigeracion_Parte1_Informe_Tecnico.md"};
         if(dialog.ShowDialog(this)!=true) return;
         var report=ProcessReportService.BuildMarkdown(PressureSelector.CurrentPressureKPa,
             PsychrometricChart.ActivePoints,_savedProcesses);
@@ -881,7 +881,7 @@ public partial class MainWindow
     private void ExportChartPng_Click(object sender,RoutedEventArgs e)
     {
         var dialog=new SaveFileDialog {Title="Exportar carta de procesos",
-            Filter="Imagen PNG (*.png)|*.png",FileName="FrioCalc_Carta_Procesos.png"};
+            Filter="Imagen PNG (*.png)|*.png",FileName="Calculadora_Refrigeracion_Parte1_Carta_Procesos.png"};
         if(dialog.ShowDialog(this)!=true) return;
         try
         {
@@ -900,7 +900,7 @@ public partial class MainWindow
         {
             Title="Exportar resultados psicrométricos",
             Filter="CSV (UTF-8)|*.csv",
-            FileName="FrioCalc_Psicrometria_Informe.csv"
+            FileName="Calculadora_Refrigeracion_Parte1_Psicrometria_Informe.csv"
         };
         if (dialog.ShowDialog(this)!=true) return;
         var sb=new StringBuilder();

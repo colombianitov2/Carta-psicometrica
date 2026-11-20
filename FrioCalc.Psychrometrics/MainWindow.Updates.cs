@@ -33,7 +33,7 @@ public partial class MainWindow
             if(_availableUpdate is not null)
             {
                 if(ReleaseUpdateService.IsPublished) InstallUpdateButton.Visibility=Visibility.Visible;
-                else UpdateStatusText.Text+=" Abra la versión publicada de FrioCalc para instalarla automáticamente.";
+                else UpdateStatusText.Text+=" Abra la versión publicada de la calculadora para instalarla automáticamente.";
             }
         }
         catch(Exception ex) { UpdateStatusText.Text="No se pudo consultar GitHub: "+ex.Message; }
@@ -43,7 +43,7 @@ public partial class MainWindow
     private async void InstallUpdate_Click(object sender,RoutedEventArgs e)
     {
         if(_availableUpdate is not { } release || !ReleaseUpdateService.IsPublished)return;
-        if(MessageBox.Show(this,$"Se descargará FrioCalc {release.Version} desde GitHub, se verificará su SHA-256 y se cerrará el programa. Los puntos y procesos guardados se podrán recuperar al abrirlo nuevamente. Los grupos todavía sin guardar no se recuperarán. ¿Continuar?","Actualizar FrioCalc",MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes)return;
+        if(MessageBox.Show(this,$"Se descargará la calculadora {release.Version} desde GitHub, se verificará su SHA-256 y se cerrará el programa. Los puntos y procesos guardados se podrán recuperar al abrirlo nuevamente. Los grupos todavía sin guardar no se recuperarán. ¿Continuar?","Actualizar calculadora",MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes)return;
         CheckUpdatesButton.IsEnabled=false; InstallUpdateButton.IsEnabled=false;
         UpdateProgress.Value=0; UpdateProgress.Visibility=Visibility.Visible;
         try
@@ -57,7 +57,7 @@ public partial class MainWindow
                 var session=new SessionV1(1,PressureSelector.CurrentPressureKPa,ChartMetricsPanel.CurrentUnits,PsychrometricChart.ActivePoints.ToList(),new(_savedProcesses));
                 if(!SessionFileIntegrity.TryValidate(session.PressureKPa,session.Points,session.Processes,out string error))throw new InvalidDataException(error);
                 Directory.CreateDirectory(Path.GetDirectoryName(UpdateRecoveryPath)!);
-                if(File.Exists(UpdateRecoveryPath))throw new IOException("Hay una sesión anterior pendiente de recuperación. Abra nuevamente FrioCalc antes de actualizar.");
+                if(File.Exists(UpdateRecoveryPath))throw new IOException("Hay una sesión anterior pendiente de recuperación. Abra nuevamente la calculadora antes de actualizar.");
                 using var file=new FileStream(UpdateRecoveryPath,FileMode.CreateNew,FileAccess.Write);
                 JsonSerializer.Serialize(file,session,SessionFileIntegrity.JsonOptions(indented:true));
             }
@@ -73,7 +73,7 @@ public partial class MainWindow
         if(!File.Exists(UpdateRecoveryPath))return;
         try
         {
-            if(MessageBox.Show(this,"Hay puntos y procesos respaldados antes de actualizar. ¿Recuperarlos ahora?","FrioCalc",MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes)return;
+            if(MessageBox.Show(this,"Hay puntos y procesos respaldados antes de actualizar. ¿Recuperarlos ahora?","Calculadora de refrigeración – Parte 1 – Carta psicrométrica",MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes)return;
             var session=JsonSerializer.Deserialize<SessionV1>(File.ReadAllText(UpdateRecoveryPath),SessionFileIntegrity.JsonOptions());
             if(session is null || session.Version!=1 || !SessionFileIntegrity.TryValidate(session.PressureKPa,session.Points,session.Processes,out _))throw new InvalidDataException("Sesión de recuperación incompatible.");
             ChartMetricsPanel.ClearStateConditions();
@@ -86,7 +86,7 @@ public partial class MainWindow
             UpdateProcessesInCharts();
             File.Delete(UpdateRecoveryPath);
         }
-        catch(Exception ex) { MessageBox.Show(this,"No se pudo recuperar la sesión. Se conserva el respaldo: "+ex.Message,"FrioCalc",MessageBoxButton.OK,MessageBoxImage.Warning); }
+        catch(Exception ex) { MessageBox.Show(this,"No se pudo recuperar la sesión. Se conserva el respaldo: "+ex.Message,"Calculadora de refrigeración – Parte 1 – Carta psicrométrica",MessageBoxButton.OK,MessageBoxImage.Warning); }
     }
 
     private void OpenReleases_Click(object sender,RoutedEventArgs e)

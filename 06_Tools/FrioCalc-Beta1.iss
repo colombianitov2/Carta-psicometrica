@@ -1,4 +1,4 @@
-#define AppName "FrioCalc"
+#define AppName "Calculadora de refrigeración – Parte 1 – Carta psicrométrica"
 #ifndef BetaNumber
   #define BetaNumber "3"
 #endif
@@ -12,11 +12,11 @@
 AppId={{BFE39269-7325-4B56-A122-8623E6CD85DF}
 AppName={#AppName}
 AppVersion=1.0.0-beta.{#BetaNumber}
-AppPublisher=FrioCalc
+AppPublisher=Calculadora de refrigeración
 VersionInfoVersion=1.0.0.{#BetaNumber}
-VersionInfoDescription=FrioCalc Beta {#BetaNumber}
+VersionInfoDescription={#AppName} Beta {#BetaNumber}
 DefaultDirName={localappdata}\Programs\FrioCalc
-DefaultGroupName=FrioCalc
+DefaultGroupName={#AppName}
 UninstallDisplayIcon={app}\FrioCalc.Psychrometrics.exe
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
@@ -36,7 +36,7 @@ Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs 
 [Tasks]
 Name: "desktopicon"; Description: "Crear acceso directo en el escritorio"; Flags: unchecked
 [Icons]
-Name: "{userprograms}\FrioCalc"; Filename: "{app}\FrioCalc.Psychrometrics.exe"
-Name: "{userdesktop}\FrioCalc"; Filename: "{app}\FrioCalc.Psychrometrics.exe"; Tasks: desktopicon
+Name: "{userprograms}\{#AppName}"; Filename: "{app}\FrioCalc.Psychrometrics.exe"
+Name: "{userdesktop}\{#AppName}"; Filename: "{app}\FrioCalc.Psychrometrics.exe"; Tasks: desktopicon
 [Run]
-Filename: "{app}\FrioCalc.Psychrometrics.exe"; Description: "Abrir FrioCalc"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\FrioCalc.Psychrometrics.exe"; Description: "Abrir la calculadora"; Flags: nowait postinstall skipifsilent
