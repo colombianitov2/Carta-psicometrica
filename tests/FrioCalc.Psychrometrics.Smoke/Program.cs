@@ -529,10 +529,10 @@ static class Program
 
             // [T15] Orden pedagógico ASHRAE y geometría solicitada 0–60 g/kgda.
             Check(AshraeStudyCatalog.Units.Count==24,"Temario de fundamentos tiene 24 temas");
-            Check(AshraeStudyCatalog.Equations.Count==37,"37 ecuaciones matemáticas documentadas");
+            Check(AshraeStudyCatalog.Equations.Count==44,"44 ecuaciones matemáticas documentadas");
             Check(AshraeStudyCatalog.Units.Select(t=>t.AshraeSection).SequenceEqual(Enumerable.Range(1,24).Select(n=>n.ToString())),
                 "Numeración pedagógica consecutiva");
-            Check(AshraeStudyCatalog.Equations.Select(e=>e.Key).Distinct().Count()==37,"Claves de ecuaciones únicas");
+            Check(AshraeStudyCatalog.Equations.Select(e=>e.Key).Distinct().Count()==AshraeStudyCatalog.Equations.Count,"Claves de ecuaciones únicas");
             foreach(var topic in AshraeStudyCatalog.Units)
                 Check(topic.EquationKey.Split('|').All(key=>AshraeStudyCatalog.FindEquation(key) is not null) &&
                     topic.Source==AshraeStudyCatalog.Book && !string.IsNullOrWhiteSpace(topic.Definition),
