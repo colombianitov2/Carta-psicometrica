@@ -327,6 +327,28 @@
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
+            <TabItem Header="Variables">
+                <ui:VariableReferencePanel x:Name="VariableReferencePanel"/>
+            </TabItem>
+            <TabItem Header="Instrucciones">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="20" MaxWidth="1100">
+                        <TextBlock Text="INSTRUCCIONES DE USO" FontSize="22" FontWeight="Bold" Margin="0,0,0,14"/>
+                        <TextBlock Text="1. Configurar la carta psicrométrica" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <TextBlock Text="Seleccione SI o IP y la condición de presión de referencia. Para una presión personalizada, ingrese la presión absoluta del lugar y pulse Aplicar presión. La elección afecta todas las propiedades calculadas. Active Carta estándar para fijar el encuadre; desactívela para ampliar con la rueda del ratón o desplazar la carta arrastrando." TextWrapping="Wrap" Margin="0,0,0,14"/>
+                        <TextBlock Text="2. Ubicar y leer estados" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <TextBlock Text="Active Seleccionar puntos. Haga clic derecho en un estado de la carta o escriba dos propiedades independientes en la tabla lateral y pulse Ubicar punto. Las casillas muestran u ocultan familias de líneas; no son datos de entrada. La curva negra representa saturación y las curvas interiores HR constante. Las tarjetas inferiores presentan las propiedades de cada punto. Puede editar, duplicar o eliminar un punto desde su tarjeta." TextWrapping="Wrap" Margin="0,0,0,14"/>
+                        <TextBlock Text="3. Construir y editar procesos" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <TextBlock Text="Abra Procesos y agregue un grupo con +. Arrastre los puntos disponibles en el orden físico del proceso; puede repetir el inicial al final para cerrar un ciclo. Mueva las tarjetas dentro del grupo para ordenar y suéltelas fuera para retirar una aparición sin borrar el estado. Los tramos automáticos se calculan al insertar puntos. Pulse el lápiz para elegir método, caudal y condiciones adicionales de cada tramo; Guardar y volver conserva el grupo. Las flechas de la carta indican el sentido y el color distingue cada grupo. El informe Word reúne los resultados." TextWrapping="Wrap" Margin="0,0,0,14"/>
+                        <TextBlock Text="4. Estudiar los fundamentos y las variables" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <TextBlock Text="Seleccione cada tema de Fundamentos en orden. Consulte sus definiciones y ecuaciones fijas. En Variables busque un símbolo o nombre para consultar unidades, significado, obtención y fórmulas de los distintos modelos." TextWrapping="Wrap" Margin="0,0,0,14"/>
+                        <TextBlock Text="5. Usar el simulador" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <TextBlock Text="Abra Simulador y seleccione la transformación: calefacción o enfriamiento sensible, humidificación, deshumidificación, mezcla, bypass o factor sensible. Ajuste la temperatura y humedad inicial, la intensidad o el parámetro de equipo; en mezcla configure además la segunda corriente. Observe la trayectoria direccional, las ecuaciones y el procedimiento de ingeniería. Revise las tablas de estados y variaciones. Si el problema requiere caudal, ADP o una condición de salida adicional, introduzca datos suficientes en Procesos." TextWrapping="Wrap" Margin="0,0,0,14"/>
+                        <TextBlock Text="6. Construir la carta paso a paso" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <TextBlock Text="En el simulador use los pasos de construcción para visualizar sucesivamente la saturación, la humedad relativa, entalpía, bulbo húmedo y volumen específico. El sistema de unidades elegido en la carta se aplica también a las escalas y resultados del simulador." TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
             <TabItem Header="Bibliografía">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="16" MaxWidth="1100">

@@ -56,6 +56,10 @@ public partial class MainWindow
             PointPropertiesPanel.SetUnitSystem(units);
             PsychrometricChart.SetDisplayUnits(units);
             ProcessChart.SetDisplayUnits(units);
+            AshraeStudyPanel.SetUnits(units);
+            AshraeSimulatorPanel.SetUnits(units);
+            ProcessTheoryPanel.SetUnits(units);
+            VariableReferencePanel.SetUnits(units);
             RefreshProcessGroupLists();
             RefreshGroupCards();
             ProcessResultText.Text =

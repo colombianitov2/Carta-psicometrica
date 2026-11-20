@@ -47,7 +47,10 @@ internal static class Program
             Check(window.Title.Contains("Psicrometría"), "Ventana psicrométrica");
             Check(window.FindName("WorkspaceTabs") is TabControl, "Tres zonas de trabajo");
             var tabs = (TabControl)window.FindName("WorkspaceTabs");
-            Check(tabs.Items.Count == 5, "Carta, procesos, fundamentos, simulador, bibliografía");
+            Check(tabs.Items.Count == 7 && tabs.Items.OfType<TabItem>().Any(t=>Equals(t.Header,"Variables")) &&
+                tabs.Items.OfType<TabItem>().Any(t=>Equals(t.Header,"Instrucciones")),
+                "Carta, procesos, fundamentos, simulador, variables, instrucciones y bibliografía");
+            Check(window.FindName("VariableReferencePanel") is VariableReferencePanel,"Tabla de variables independiente");
             Check(window.FindName("PsychrometricChart") != null, "Carta principal");
             Check(window.FindName("ProcessChart") != null, "Carta de procesos");
             Check(window.FindName("PointPropertiesPanel") is PointPropertiesPanel, "Gestor puntos");
@@ -244,10 +247,28 @@ internal static class Program
 
             // [UI.6] Conversión de unidades en controles, presión y puntos.
             chartMetrics.SetUnitSystem(UnitSystem.IP);
+            var ipStudy=(AshraeStudyPanel)window.FindName("AshraeStudyPanel");
+            ipStudy.SelectUnit("A19");
+            var ipEquation=(AshraeEquation)((ComboBox)ipStudy.FindName("FormulaSelector")).SelectedItem;
+            Check(ipEquation.Units=="°R" && ipEquation.Numerator.Contains("459,67") &&
+                ((TextBlock)ipStudy.FindName("UnitExample")).Text.Contains("77 °F"),
+                "Fundamentos cambia ecuación, temperatura absoluta y ejemplo a IP");
+            Check(((TextBlock)teaching.FindName("DryBulbValueLabel")).Text.Contains("77 °F") &&
+                VisibleText(steps).Contains("°F") && VisibleText(steps).Contains("gr/lb") &&
+                !VisibleText(steps).Contains("°C") && steps.Visibility==Visibility.Visible &&
+                teaching.FindName("ExplanationLevelComboBox")==null,
+                "Simulador IP con procedimiento de ingeniería fijo");
+            var ipEnthalpy=EducationalUnits.Equation(AshraeStudyCatalog.FindEquation("h")!,UnitSystem.IP);
+            Check(ipEnthalpy.Numerator.Contains("0,240279") && ipEnthalpy.Numerator.Contains("t − 32") &&
+                Math.Abs((.240279*45+.010*(1075.236458+.444253*45))-EducationalUnits.H(50.625,UnitSystem.IP))<1e-4,
+                "Entalpía IP conserva referencia y valor del modelo SI");
             var pressureUnit=pressurePanel.FindName("PressureUnitLabel") as TextBlock;
             Check(pressureUnit?.Text=="psi abs","Selector presión muestra psi absoluta");
             chartMetrics.SetUnitSystem(UnitSystem.SI);
             Check(pressureUnit?.Text=="kPa abs","Selector presión restaura kPa absoluta");
+            Check(((AshraeEquation)((ComboBox)ipStudy.FindName("FormulaSelector")).SelectedItem).Units=="K",
+                "Fundamentos vuelve al SI");
+            ipStudy.SelectUnit("A1");
 
 
 

@@ -19,6 +19,8 @@ public partial class ProcessTheoryPanel : UserControl
     public event Action<TheoryLesson?>? LessonChanged;
     public TheoryLesson? CurrentLesson=>_currentLesson;
     private bool _ready;
+    private UnitSystem _units=UnitSystem.SI;
+    public void SetUnits(UnitSystem units){_units=units;_previousLesson=null;Recompute();}
     private bool _updatingControls;
     private bool _recomputing;
     private double _pressureKPa = AtmosphericPressure.StandardSeaLevelKPa;
@@ -180,14 +182,14 @@ public partial class ProcessTheoryPanel : UserControl
         string kind=item.Tag?.ToString()??"Heating";
         double tSecond=SecondDryBulbSlider.Value,rhSecond=SecondHumiditySlider.Value;
         SecondStreamControls.Visibility=kind=="Mixing"?Visibility.Visible:Visibility.Collapsed;
-        SecondDryBulbLabel.Text=$"Tbs exterior: {tSecond:0} °C";
+        SecondDryBulbLabel.Text="Tbs exterior: "+EducationalUnits.Temp(tSecond,_units);
         SecondHumidityLabel.Text=$"HR exterior: {rhSecond:0} %";
-        DryBulbValueLabel.Text=$"Tbs inicial: {t:0} °C";
+        DryBulbValueLabel.Text="Tbs inicial: "+EducationalUnits.Temp(t,_units);
         RelativeHumidityValueLabel.Text=$"HR inicial: {rh:0} %";
         ParameterLabel.Text=kind switch
         {
             "Evaporative"=>$"Efectividad de saturación ε: {intensity:0.00}",
-            "Steam"=>$"Vapor supuesto añadido: {intensity*3:0.00} g/kgda",
+            "Steam"=>"Vapor supuesto añadido: "+EducationalUnits.Hum(intensity*.003,_units),
             "Mixing"=>$"Fracción de masa de aire seco exterior: {intensity:P0}",
             "Bypass"=>$"Fracción de contacto ideal: {intensity:P0} (BF={1-intensity:0.00})",
             "SHR"=>$"FCS indicado: {intensity:0.00}",
@@ -211,17 +213,17 @@ public partial class ProcessTheoryPanel : UserControl
         if(_previousLesson is not null && _previousKind==kind)
         {
             if(Math.Abs(t-_previousTemperature)>1e-8)
-                change=$"Tbs inicial: {_previousTemperature:0.##} → {t:0.##} °C. ";
+                change=$"Tbs inicial: {EducationalUnits.Temp(_previousTemperature,_units)} → {EducationalUnits.Temp(t,_units)}. ";
             else if(Math.Abs(rh-_previousRH)>1e-8)
                 change=$"HR inicial: {_previousRH:0.##} → {rh:0.##} %. ";
             else if(kind=="Mixing" && Math.Abs(tSecond-_previousSecondT)>1e-8)
-                change=$"Tbs exterior: {_previousSecondT:0.##} → {tSecond:0.##} °C. ";
+                change=$"Tbs exterior: {EducationalUnits.Temp(_previousSecondT,_units)} → {EducationalUnits.Temp(tSecond,_units)}. ";
             else if(kind=="Mixing" && Math.Abs(rhSecond-_previousSecondRH)>1e-8)
                 change=$"HR exterior: {_previousSecondRH:0.##} → {rhSecond:0.##} %. ";
             else if(Math.Abs(intensity-_previousFraction)>1e-8)
                 change=$"Intensidad: {_previousFraction:P0} → {intensity:P0}. ";
             else if(Math.Abs(_pressureKPa-_previousPressure)>1e-7)
-                change=$"Presión absoluta: {_previousPressure:0.###} → {_pressureKPa:0.###} kPa. ";
+                change=$"Presión absoluta: {EducationalUnits.Press(_previousPressure,_units)} → {EducationalUnits.Press(_pressureKPa,_units)}. ";
         }
         if(string.IsNullOrEmpty(change))
             change="Modifique cualquier control para explorar el efecto del proceso. ";
@@ -235,7 +237,7 @@ public partial class ProcessTheoryPanel : UserControl
             };
             change+=direction+$"; la HR pasa de {lesson.Initial.RelativeHumidityPercent:0.#} % a " +
                 $"{final.RelativeHumidityPercent:0.#} %. " +
-                $"La entalpía cambia {final.EnthalpyKJPerKgDryAir-lesson.Initial.EnthalpyKJPerKgDryAir:+0.###;-0.###;0} kJ/kgda.";
+                $"La entalpía cambia {EducationalUnits.Enth(final.EnthalpyKJPerKgDryAir-lesson.Initial.EnthalpyKJPerKgDryAir,_units)}.";
         }
         else change+="No puede determinarse un estado de impulsión sin información adicional.";
         if(!unchanged || string.IsNullOrWhiteSpace(TheoryChangeText.Text))TheoryChangeText.Text=change;
@@ -256,8 +258,9 @@ public partial class ProcessTheoryPanel : UserControl
         };
         var equations=new StackPanel();
         foreach(string key in equationKeys.Split('|'))
-            if(AshraeStudyCatalog.FindEquation(key) is AshraeEquation equation)
+            if(AshraeStudyCatalog.FindEquation(key) is AshraeEquation raw)
             {
+                var equation=EducationalUnits.Equation(raw,_units);
                 equations.Children.Add(new TextBlock{Text=equation.Title,FontWeight=FontWeights.SemiBold,TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,6,0,4)});
                 equations.Children.Add(AshraeStudyPanel.RenderMathematicalFraction(equation));
                 var units=new TextBlock{TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,4,0,6)};
@@ -265,18 +268,18 @@ public partial class ProcessTheoryPanel : UserControl
                 equations.Children.Add(units);
             }
         TheoryEquationVisual.Content=equations;
-        AshraeStudyPanel.FormatMath(TheoryStepsText,lesson.Steps);
-        TheoryWarningText.Text=lesson.Warning;
+        AshraeStudyPanel.FormatMath(TheoryStepsText,(_units==UnitSystem.IP?EducationalUnits.ImperialSteps(lesson,intensity):lesson.Steps)+
+            "\n\nCondiciones del modelo: "+EducationalUnits.EngineeringConditions(kind,_units));
+        TheoryWarningText.Text=_units==UnitSystem.IP?EducationalUnits.UnitText(lesson.Warning).Replace("2700 Btu/lb","1160,791 Btu/lb"):lesson.Warning;
         TheorySourceText.Text=lesson.References;
         TheoryQuestionText.Text=lesson.Question;
-        TheoryValues.Text=FormatStateSummary(lesson);
+        TheoryValues.Text=_units==UnitSystem.IP?EducationalUnits.ImperialSteps(lesson,intensity):FormatStateSummary(lesson);
         RenderStateResults(lesson);
         int oldSelected=TheoryAnswerCombo.SelectedIndex;
         TheoryAnswerCombo.ItemsSource=lesson.Answers.ToArray();
         TheoryAnswerCombo.SelectedIndex=-1;
         TheoryFeedbackText.Text="Seleccione la respuesta y compruébela.";
-        int level=ExplanationLevelComboBox.SelectedIndex;
-        TheoryStepsText.Visibility=level==0?Visibility.Collapsed:Visibility.Visible;
+        TheoryStepsText.Visibility=Visibility.Visible;
         TheoryFormulaText.Visibility=Visibility.Collapsed;
         TheorySourceText.Visibility=Visibility.Collapsed;
         VariableSelector_Changed(VariableSelector,new SelectionChangedEventArgs(
@@ -304,7 +307,7 @@ public partial class ProcessTheoryPanel : UserControl
         {
             states.Add(aux);labels.Add(lesson.Kind=="Mixing"?"Segunda entrada":"ADP");
         }
-        TheoryStateTable.Children.Add(AshraeStudyPanel.BuildStateTable(states,labels));
+        TheoryStateTable.Children.Add(AshraeStudyPanel.BuildStateTable(states,labels,_units));
         if(lesson.Final is ChartPoint final)
         {
             var initial=lesson.Initial;
@@ -320,9 +323,9 @@ public partial class ProcessTheoryPanel : UserControl
                     Grid.SetRow(border,i);Grid.SetColumn(border,cell.Item2);deltas.Children.Add(border);
                 }
             }
-            Row("Variación de temperatura (°C)",$"{final.DryBulbC-initial.DryBulbC:+0.###;-0.###;0}");
-            Row("Variación de razón de humedad (g/kg aire seco)",$"{(final.HumidityRatioKgPerKg-initial.HumidityRatioKgPerKg)*1000:+0.###;-0.###;0}");
-            Row("Variación de entalpía (kJ/kg aire seco)",$"{final.EnthalpyKJPerKgDryAir-initial.EnthalpyKJPerKgDryAir:+0.###;-0.###;0}");
+            Row("Variación de temperatura ("+EducationalUnits.TemperatureUnit(_units)+")",$"{EducationalUnits.DT(final.DryBulbC-initial.DryBulbC,_units):+0.###;-0.###;0}");
+            Row("Variación de razón de humedad ("+EducationalUnits.HumidityUnit(_units)+")",$"{EducationalUnits.W(final.HumidityRatioKgPerKg-initial.HumidityRatioKgPerKg,_units):+0.###;-0.###;0}");
+            Row("Variación de entalpía ("+EducationalUnits.EnthalpyUnit(_units)+")",$"{EducationalUnits.H(final.EnthalpyKJPerKgDryAir-initial.EnthalpyKJPerKgDryAir,_units):+0.###;-0.###;0}");
             TheoryStateTable.Children.Add(deltas);
         }
         else TheoryStateTable.Children.Add(new TextBlock{Text="Estado de salida pendiente de una condición adicional.",TextWrapping=TextWrapping.Wrap});
@@ -365,7 +368,26 @@ public partial class ProcessTheoryPanel : UserControl
     {
         if(!_ready||VariableExplanationText is null)return;
         string key=(VariableSelector.SelectedItem as TheoryVariable)?.Key??"";
-        AshraeStudyPanel.FormatMath(VariableExplanationText,TheoryLessonService.DescribeVariable(key,_currentLesson?.Initial));
+        if(_units==UnitSystem.SI)
+            AshraeStudyPanel.FormatMath(VariableExplanationText,TheoryLessonService.DescribeVariable(key,_currentLesson?.Initial));
+        else
+        {
+            var v=TheoryLessonService.Variables.FirstOrDefault(x=>x.Key==key);
+            var state=_currentLesson?.Initial;
+            string value=state is null?"No calculado":key switch
+            {
+                "Tbs"=>EducationalUnits.Temp(state.DryBulbC,_units),
+                "Tbh"=>EducationalUnits.Temp(state.WetBulbC,_units),
+                "Tdp"=>EducationalUnits.Temp(state.DewPointC,_units),
+                "W"=>EducationalUnits.Hum(state.HumidityRatioKgPerKg,_units),
+                "h"=>EducationalUnits.Enth(state.EnthalpyKJPerKgDryAir,_units),
+                "P"=>EducationalUnits.Press(state.PressureKPa,_units),
+                "v"=>$"{EducationalUnits.V(state.SpecificVolumeM3PerKgDryAir,_units):0.###} ft³/lb da",
+                "RH"=>$"{state.RelativeHumidityPercent:0.###} %",
+                _=>"Depende de los datos del proceso o las referencias."
+            };
+            AshraeStudyPanel.FormatMath(VariableExplanationText,v is null?"":v.Title+"\n"+EducationalUnits.UnitText(v.Definition)+"\nObtención: "+EducationalUnits.UnitText(v.HowObtained)+"\nEstado inicial: "+value);
+        }
         VariableEquationsPanel.Children.Clear();
         string eqs=key switch
         {
@@ -374,7 +396,7 @@ public partial class ProcessTheoryPanel : UserControl
         };
         foreach(string eq in eqs.Split('|'))
             if(AshraeStudyCatalog.FindEquation(eq) is AshraeEquation equation)
-                VariableEquationsPanel.Children.Add(AshraeStudyPanel.RenderMathematicalFraction(equation));
+                VariableEquationsPanel.Children.Add(AshraeStudyPanel.RenderMathematicalFraction(EducationalUnits.Equation(equation,_units)));
     }
 
     private void CheckTheoryAnswer_Click(object sender,RoutedEventArgs e)
@@ -397,7 +419,6 @@ public partial class ProcessTheoryPanel : UserControl
         SecondDryBulbSlider.Value=35;
         SecondHumiditySlider.Value=60;
         ProcessSelector.SelectedIndex=0;
-        ExplanationLevelComboBox.SelectedIndex=1;
         _updatingControls=false;
         _previousLesson=null;
         Recompute();
@@ -428,17 +449,17 @@ public partial class ProcessTheoryPanel : UserControl
         for(double tc=Math.Ceiling(minT/10)*10;tc<=maxT;tc+=10)
         {
             AddLine(X(tc),top,X(tc),top+plotH,Brushes.Gainsboro,1);
-            AddText(tc.ToString("0",CultureInfo.InvariantCulture),
+            AddText(EducationalUnits.T(tc,_units).ToString("0",CultureInfo.InvariantCulture),
                 X(tc)-8,top+plotH+4,Brushes.DimGray,10);
         }
         for(int g=0;g<=upperGrams;g+=10)
         {
             AddLine(left,Y(g/1000.0),left+plotW,Y(g/1000.0),Brushes.Gainsboro,1);
-            AddText(g.ToString(CultureInfo.InvariantCulture),
+            AddText(EducationalUnits.W(g/1000.0,_units).ToString("0",CultureInfo.InvariantCulture),
                 14,Y(g/1000.0)-8,Brushes.DimGray,10);
         }
-        AddText("Tbs (°C)",left+plotW/2-20,height-17,Brushes.Black,11);
-        AddText("W (g/kgda)",4,1,Brushes.Black,11);
+        AddText("Tbs ("+EducationalUnits.TemperatureUnit(_units)+")",left+plotW/2-20,height-17,Brushes.Black,11);
+        AddText(_units==UnitSystem.IP?"W (gr/lbda)":"W (g/kgda)",4,1,Brushes.Black,11);
         var sat=new Polyline{Stroke=Brushes.SlateGray,StrokeThickness=1.5};
         for(double tc=minT;tc<=maxT;tc+=.25)
         {

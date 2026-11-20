@@ -68,13 +68,6 @@
             <Slider x:Name="ParameterSlider" Minimum="0" Maximum="100" Value="50"
                     TickFrequency="1" IsSnapToTickEnabled="True"
                     ValueChanged="ControlsChanged" Margin="0,0,0,10"/>
-            <TextBlock Text="Nivel de explicación" FontWeight="SemiBold" Margin="0,0,0,4"/>
-            <ComboBox x:Name="ExplanationLevelComboBox" Height="30" Margin="0,0,0,10"
-                      SelectedIndex="1" SelectionChanged="ControlsChanged">
-                <ComboBoxItem Content="Conceptual — ¿qué sucede y por qué?"/>
-                <ComboBoxItem Content="Universitario — procedimiento y ecuaciones"/>
-                <ComboBoxItem Content="Ingeniería — hipótesis, límites y referencias"/>
-            </ComboBox>
             <Border Padding="12" Background="#E9F2FE" CornerRadius="5" Margin="0,0,0,8">
                 <StackPanel>
                     <TextBlock Text="EXPLICACIÓN SEGÚN SUS CAMBIOS" FontWeight="SemiBold"

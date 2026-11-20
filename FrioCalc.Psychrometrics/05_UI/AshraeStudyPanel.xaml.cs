@@ -19,6 +19,8 @@ namespace FrioCalc.Psychrometrics.UI;
 public partial class AshraeStudyPanel : UserControl
 {
     private bool _ready;
+    private UnitSystem _units=UnitSystem.SI;
+    public void SetUnits(UnitSystem units){_units=units;RefreshStudy();}
     private bool _updating;
     private double _pressureKPa=AtmosphericPressure.StandardSeaLevelKPa;
     private ChartPoint? _state;
@@ -114,8 +116,9 @@ public partial class AshraeStudyPanel : UserControl
     private void RefreshStudy()
     {
         if(!_ready)return;
-        if(StudySelector.SelectedItem is AshraeStudyUnit unit)
+        if(StudySelector.SelectedItem is AshraeStudyUnit rawUnit)
         {
+            var unit=EducationalUnits.Study(rawUnit,_units);
             UnitHeading.Text=unit.Title;
             UnitDefinition.Text=unit.Definition;
             UnitDerivation.Text=unit.Derivation;
@@ -126,7 +129,8 @@ public partial class AshraeStudyPanel : UserControl
             BibliographyReference.Text="";
             _updating=true;
             FormulaSelector.ItemsSource=unit.EquationKey.Split('|')
-                .Select(AshraeStudyCatalog.FindEquation).OfType<AshraeEquation>().ToArray();
+                .Select(AshraeStudyCatalog.FindEquation).OfType<AshraeEquation>()
+                .Select(e=>EducationalUnits.Equation(e,_units)).ToArray();
             FormulaSelector.SelectedIndex=0;
             _updating=false;
         }
@@ -138,9 +142,9 @@ public partial class AshraeStudyPanel : UserControl
     {
         if(!_ready)return;
         double temperature=TemperatureSlider.Value,relativeHumidity=HumiditySlider.Value;
-        TemperatureValue.Text=$"Tbs: {temperature:0} °C";
+        TemperatureValue.Text="Tbs: "+EducationalUnits.Temp(temperature,_units);
         HumidityValue.Text=$"HR: {relativeHumidity:0} %";
-        PressureValue.Text=$"Presión absoluta aplicada: {_pressureKPa:0.###} kPa";
+        PressureValue.Text="Presión absoluta aplicada: "+EducationalUnits.Press(_pressureKPa,_units);
         _state=null;
         try
         {
@@ -153,22 +157,16 @@ public partial class AshraeStudyPanel : UserControl
         catch(ArgumentException){/* Estado incompatible con P; texto de aviso. */}
         if(_state is null)
             LiveValues.Text="No existe un estado monofásico válido para esta combinación de T, HR y presión.";
-        else
-            LiveValues.Text=$"Resultado: W={_state.HumidityRatioKgPerKg*1000:0.###} g/kgda; "+
-                $"h={_state.EnthalpyKJPerKgDryAir:0.###} kJ/kgda; "+
-                $"v={_state.SpecificVolumeM3PerKgDryAir:0.######} m³/kgda; "+
-                $"Tbh={_state.WetBulbC:0.###} °C; "+
-                $"Trocío={_state.DewPointC:0.###} °C. "+
-                "Cambie Tbs o HR para observar las diferencias.";
+        else LiveValues.Text="Propiedades calculadas en la tabla.";
         LiveStateTable.Children.Clear();
         if(_state is ChartPoint state)
-            LiveStateTable.Children.Add(BuildStateTable(new[] {state},new[] {"Estado"}));
+            LiveStateTable.Children.Add(BuildStateTable(new[] {state},new[] {"Estado"},_units));
         else LiveStateTable.Children.Add(new TextBlock{Text=LiveValues.Text, TextWrapping=TextWrapping.Wrap});
         RefreshFormula();
         RefreshConstruction();
     }
 
-    public static Grid BuildStateTable(IReadOnlyList<ChartPoint> states,IReadOnlyList<string> headers)
+    public static Grid BuildStateTable(IReadOnlyList<ChartPoint> states,IReadOnlyList<string> headers,UnitSystem units=UnitSystem.SI)
     {
         var grid=new Grid { Margin=new Thickness(0,8,0,8) };
         grid.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(2,GridUnitType.Star)});
@@ -187,15 +185,15 @@ public partial class AshraeStudyPanel : UserControl
             }
         }
         AddRow("Propiedad",_=>"",true);
-        AddRow("Temperatura de bulbo seco (°C)",p=>$"{p.DryBulbC:0.##}");
+        AddRow("Temperatura de bulbo seco ("+EducationalUnits.TemperatureUnit(units)+")",p=>$"{EducationalUnits.T(p.DryBulbC,units):0.##}");
         AddRow("Humedad relativa (%)",p=>$"{p.RelativeHumidityPercent:0.##}");
-        AddRow("Razón de humedad (g/kg aire seco)",p=>$"{p.HumidityRatioKgPerKg*1000:0.###}");
-        AddRow("Temperatura de bulbo húmedo (°C)",p=>$"{p.WetBulbC:0.##}");
-        AddRow("Temperatura de rocío (°C)",p=>double.IsFinite(p.DewPointC)?$"{p.DewPointC:0.##}":"—");
-        AddRow("Entalpía (kJ/kg aire seco)",p=>$"{p.EnthalpyKJPerKgDryAir:0.###}");
-        AddRow("Volumen específico (m³/kg aire seco)",p=>$"{p.SpecificVolumeM3PerKgDryAir:0.####}");
-        AddRow("Entropía específica relativa (kJ/(kg aire seco·K))",p=>$"{MoistAirSpecificEntropy.FromDryBulbAndHumidityRatio(p.DryBulbC,p.HumidityRatioKgPerKg,p.PressureKPa):0.###}");
-        AddRow("Presión absoluta (kPa)",p=>$"{p.PressureKPa:0.###}");
+        AddRow("Razón de humedad ("+EducationalUnits.HumidityUnit(units)+")",p=>$"{EducationalUnits.W(p.HumidityRatioKgPerKg,units):0.###}");
+        AddRow("Temperatura de bulbo húmedo ("+EducationalUnits.TemperatureUnit(units)+")",p=>$"{EducationalUnits.T(p.WetBulbC,units):0.##}");
+        AddRow("Temperatura de rocío ("+EducationalUnits.TemperatureUnit(units)+")",p=>double.IsFinite(p.DewPointC)?$"{EducationalUnits.T(p.DewPointC,units):0.##}":"—");
+        AddRow("Entalpía ("+EducationalUnits.EnthalpyUnit(units)+")",p=>$"{EducationalUnits.H(p.EnthalpyKJPerKgDryAir,units):0.###}");
+        AddRow("Volumen específico ("+EducationalUnits.VolumeUnit(units)+")",p=>$"{EducationalUnits.V(p.SpecificVolumeM3PerKgDryAir,units):0.####}");
+        AddRow("Entropía específica relativa ("+EducationalUnits.EntropyUnit(units)+")",p=>$"{PsychrometricUnits.EntropyFromSI(MoistAirSpecificEntropy.FromDryBulbAndHumidityRatio(p.DryBulbC,p.HumidityRatioKgPerKg,p.PressureKPa),units):0.###}");
+        AddRow("Presión absoluta ("+EducationalUnits.PressureUnit(units)+")",p=>$"{EducationalUnits.P(p.PressureKPa,units):0.###}");
         return grid;
     }
 
@@ -265,7 +263,30 @@ public partial class AshraeStudyPanel : UserControl
             FormatMath(description,extra.Units+". "+extra.Derivation+" "+extra.Origin);
             ExtraEquationsPanel.Children.Add(description);
         }
-        FormulaSubstitution.Text=ExampleSubstitution(equation,_state,_pressureKPa);
+        FormulaSubstitution.Text=_units==UnitSystem.IP?ImperialSubstitution(equation,_state,_pressureKPa):ExampleSubstitution(equation,_state,_pressureKPa);
+    }
+
+    private static string ImperialSubstitution(AshraeEquation e,ChartPoint? state,double pressure)
+    {
+        if(state is null)return "Elija condiciones válidas para sustituir valores.";
+        const UnitSystem u=UnitSystem.IP;
+        double w=state.HumidityRatioKgPerKg,t=EducationalUnits.T(state.DryBulbC,u),
+            p=EducationalUnits.P(pressure,u),ps=EducationalUnits.P(SaturationVaporPressure.GetPressureKPa(state.DryBulbC),u),
+            pv=p*w/(.621945+w);
+        return e.Key switch
+        {
+            "TK"=>$"T = {t:0.###} + 459,67 = {t+459.67:0.###} °R.",
+            "W"=>$"W = {w:0.######} lb/lb da = {EducationalUnits.W(w,u):0.###} gr/lb da; pᵥ = {pv:0.######} psia; P = {p:0.###} psia.",
+            "pv"=>$"pᵥ = {pv:0.######} psia; W = {w:0.######} lb/lb da.",
+            "RH"=>$"φ = 100 × {pv:0.######} / {ps:0.######} = {state.RelativeHumidityPercent:0.###} %.",
+            "Ws"=>ps<p?$"Wₛ = {.621945*ps/(p-ps):0.######} lb/lb da.":"No existe Wₛ monofásica a estas condiciones.",
+            "h"=>$"t = {t:0.###} °F; W = {w:0.######} lb/lb da; h = {EducationalUnits.Enth(state.EnthalpyKJPerKgDryAir,u)}.",
+            "v"=>$"T = {t+459.67:0.###} °R; P = {p:0.###} psia; v = {EducationalUnits.V(state.SpecificVolumeM3PerKgDryAir,u):0.######} ft³/lb da.",
+            "Tdp"=>$"pᵥ = {pv:0.######} psia; rocío = {EducationalUnits.Temp(state.DewPointC,u)}.",
+            "Tbh"=>$"Tbh = {EducationalUnits.Temp(state.WetBulbC,u)}; P = {p:0.###} psia.",
+            "Mdot"=>$"Para V̇ = 105944 ft³/h, ṁ = {105944/EducationalUnits.V(state.SpecificVolumeM3PerKgDryAir,u):0.###} lb/h.",
+            _=>"Utilice los estados de la tabla y las ecuaciones del proceso en unidades IP."
+        };
     }
 
     private static string ExampleSubstitution(AshraeEquation e,ChartPoint? point,double p)
@@ -301,12 +322,12 @@ public partial class AshraeStudyPanel : UserControl
         ConstructionStepTitle.Text=$"Paso {step.Number} de {AshraeStudyCatalog.ConstructionSteps.Count}: {step.Title}";
         ConstructionWhat.Text=step.WhatToDo;
         ConstructionWhy.Text=step.WhyThisMatters;
-        ConstructionExample.Text=step.NumericalExample;
+        ConstructionExample.Text=EducationalUnits.ConstructionExample(step,_units);
         ConstructionBasis.Text=step.Basis;
         ConstructionEquations.Children.Clear();
         string key=step.Number switch {2=>"Wmass",4=>"Ws",6=>"RH",7=>"hInverse",8=>"Tbh",9=>"vInverse",10=>"Tdp",_=>""};
         if(AshraeStudyCatalog.FindEquation(key) is AshraeEquation equation)
-            ConstructionEquations.Children.Add(RenderMathematicalFraction(equation));
+            ConstructionEquations.Children.Add(RenderMathematicalFraction(EducationalUnits.Equation(equation,_units)));
         DrawChart(step.Number);
     }
 
@@ -332,15 +353,15 @@ public partial class AshraeStudyPanel : UserControl
         {
             double x=X(i);
             DrawLine(x,top,x,height-bottom,i%10==0?Brushes.LightGray:Brushes.Gainsboro);
-            if(i%10==0)AddText(i.ToString(CultureInfo.CurrentCulture),x-7,height-bottom+4,Brushes.DimGray);
+            if(i%10==0)AddText(EducationalUnits.T(i,_units).ToString("0.#",CultureInfo.CurrentCulture),x-7,height-bottom+4,Brushes.DimGray);
         }
         for(double g=0;g<=maxW*1000+.001;g+=tickG)
         {
             DrawLine(left,Y(g/1000.0),width-right,Y(g/1000.0),Brushes.LightGray);
-            AddText(g.ToString(CultureInfo.CurrentCulture),10,Y(g/1000.0)-6,Brushes.DimGray);
+            AddText(EducationalUnits.W(g/1000.0,_units).ToString("0.#",CultureInfo.CurrentCulture),10,Y(g/1000.0)-6,Brushes.DimGray);
         }
-        AddText("Tbs [°C]",width*.46,height-15,Brushes.Black);
-        AddText("W [g/kgda]",1,0,Brushes.Black);
+        AddText("Tbs ["+EducationalUnits.TemperatureUnit(_units)+"]",width*.46,height-15,Brushes.Black);
+        AddText(_units==UnitSystem.IP?"W [gr/lbda]":"W [g/kgda]",1,0,Brushes.Black);
         if(untilStep<4)return;
         for(int humidityPercent=100;humidityPercent>=10;humidityPercent-=10)
         {
