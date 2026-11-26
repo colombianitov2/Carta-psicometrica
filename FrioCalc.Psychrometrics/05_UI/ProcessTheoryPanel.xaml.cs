@@ -25,6 +25,9 @@ public partial class ProcessTheoryPanel : UserControl
     private bool _recomputing;
     private double _pressureKPa = AtmosphericPressure.StandardSeaLevelKPa;
     private TheoryLesson? _currentLesson;
+    private readonly Dictionary<string,int> _questionIndices=new();
+    private string _quizVariable="";
+    private VariableQuestion? _quizQuestion;
     private TheoryLesson? _previousLesson;
     private string _previousKind="";
     private double _previousTemperature=double.NaN;
@@ -272,13 +275,10 @@ public partial class ProcessTheoryPanel : UserControl
             "\n\nCondiciones del modelo: "+EducationalUnits.EngineeringConditions(kind,_units));
         TheoryWarningText.Text=_units==UnitSystem.IP?EducationalUnits.UnitText(lesson.Warning).Replace("2700 Btu/lb","1160,791 Btu/lb"):lesson.Warning;
         TheorySourceText.Text=lesson.References;
-        TheoryQuestionText.Text=lesson.Question;
+        // El cuestionario pertenece al diccionario de variables, no al proceso.
         TheoryValues.Text=_units==UnitSystem.IP?EducationalUnits.ImperialSteps(lesson,intensity):FormatStateSummary(lesson);
         RenderStateResults(lesson);
-        int oldSelected=TheoryAnswerCombo.SelectedIndex;
-        TheoryAnswerCombo.ItemsSource=lesson.Answers.ToArray();
-        TheoryAnswerCombo.SelectedIndex=-1;
-        TheoryFeedbackText.Text="Seleccione la respuesta y compruébela.";
+        // Conservar pregunta y respuesta al mover controles de la simulación.
         TheoryStepsText.Visibility=Visibility.Visible;
         TheoryFormulaText.Visibility=Visibility.Collapsed;
         TheorySourceText.Visibility=Visibility.Collapsed;
@@ -359,7 +359,7 @@ public partial class ProcessTheoryPanel : UserControl
         TheoryWarningText.Text="Revise la presión, el punto de rocío y el dominio físico.";
         TheoryStateTable.Children.Clear();
         TheoryValues.Text="No se dibuja un punto fuera de saturación o de las hipótesis.";
-        TheoryFeedbackText.Text="";
+        RefreshVariableQuiz();
         DiagramCanvas.Children.Clear();
         LessonChanged?.Invoke(null);
     }
@@ -397,17 +397,47 @@ public partial class ProcessTheoryPanel : UserControl
         foreach(string eq in eqs.Split('|'))
             if(AshraeStudyCatalog.FindEquation(eq) is AshraeEquation equation)
                 VariableEquationsPanel.Children.Add(AshraeStudyPanel.RenderMathematicalFraction(EducationalUnits.Equation(equation,_units)));
+        RefreshVariableQuiz();
     }
+
+    // [5.5C.7] Cada variable tiene su banco y su posición independiente.
+    private void RefreshVariableQuiz(bool next=false)
+    {
+        string key=(VariableSelector.SelectedItem as TheoryVariable)?.Key??"";
+        var questions=VariableQuizCatalog.For(key);
+        if(!next&&key==_quizVariable&&_quizQuestion is not null)return;
+        _quizVariable=key;
+        if(questions.Count==0)
+        {
+            _quizQuestion=null;TheoryQuestionText.Text="Seleccione una variable.";
+            TheoryAnswerCombo.ItemsSource=null;TheoryFeedbackText.Text="";
+            NextVariableQuestionButton.IsEnabled=false;
+            VariableQuestionCounter.Text="";
+            return;
+        }
+        int index=_questionIndices.TryGetValue(key,out var old)?old:0;
+        if(next)index=(index+1)%questions.Count;
+        _questionIndices[key]=index;
+        _quizQuestion=questions[index];
+        TheoryQuestionText.Text=_quizQuestion.Prompt;
+        TheoryAnswerCombo.ItemsSource=_quizQuestion.Answers;
+        TheoryAnswerCombo.SelectedIndex=-1;
+        VariableQuestionCounter.Text=$"Pregunta {index+1} de {questions.Count}";
+        TheoryFeedbackText.Text="Seleccione la respuesta y compruébela.";
+        NextVariableQuestionButton.IsEnabled=questions.Count>1;
+    }
+
+    private void NextVariableQuestion_Click(object sender,RoutedEventArgs e)=>RefreshVariableQuiz(true);
 
     private void CheckTheoryAnswer_Click(object sender,RoutedEventArgs e)
     {
-        if(_currentLesson is null)return;
+        if(_quizQuestion is null)return;
         int choice=TheoryAnswerCombo.SelectedIndex;
         TheoryFeedbackText.Text=choice<0
             ?"Seleccione primero una respuesta."
-            :choice==_currentLesson.CorrectAnswer
-                ?"CORRECTO. "+_currentLesson.AnswerExplanation
-                :"REVISE EL RAZONAMIENTO. "+_currentLesson.AnswerExplanation;
+            :choice==_quizQuestion.CorrectIndex
+                ?"CORRECTO. "+_quizQuestion.Explanation
+                :"REVISE EL RAZONAMIENTO. "+_quizQuestion.Explanation;
     }
 
     private void ResetTheoryExample_Click(object sender,RoutedEventArgs e)

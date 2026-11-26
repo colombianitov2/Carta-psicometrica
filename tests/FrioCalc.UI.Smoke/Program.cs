@@ -115,15 +115,36 @@ internal static class Program
             Check(values.Text.Contains("INDETERMINADO") &&
                 warning.Text.Contains("no se debe dibujar"),
                 "FCS no crea salida inexistente");
+            variableSelector.SelectedItem=TheoryLessonService.Variables.Single(v=>v.Key=="SHR");
             Check(options.Items.Count==3 && question.Text.Contains("FCS"),
-                "Cuestionario depende del proceso");
-            options.SelectedIndex=1;
+                "Cuestionario depende de la variable seleccionada");
+            options.SelectedIndex=0;
             var quiz=typeof(ProcessTheoryPanel).GetMethod("CheckTheoryAnswer_Click",
                 System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance);
             Check(quiz!=null,"Verificación de quiz enlazada");
             quiz!.Invoke(teaching,new object[]{teaching,new RoutedEventArgs(Button.ClickEvent)});
             Check(feedback.Text.Contains("CORRECTO"),"Cuestionario responde a elección del estudiante");
+            var fcsQuestion=question.Text;
             variableSelector.SelectedIndex=4; // W.
+            var firstWQuestion=question.Text;
+            Check(firstWQuestion!=fcsQuestion && firstWQuestion.Contains("humedad absoluta") &&
+                options.SelectedIndex==-1,"Cambiar variable actualiza pregunta y limpia respuesta");
+            var nextVariableQuestion=(Button)teaching.FindName("NextVariableQuestionButton");
+            nextVariableQuestion.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Check(question.Text!=firstWQuestion && options.Items.Count==3,
+                "Siguiente pregunta recorre el banco de la variable");
+            var secondWQuestion=question.Text;
+            options.SelectedIndex=2;
+            quiz.Invoke(teaching,new object[]{teaching,new RoutedEventArgs(Button.ClickEvent)});
+            Check(feedback.Text.Contains("CORRECTO"),"La respuesta correcta pertenece a la pregunta nueva");
+            foreach(var variable in TheoryLessonService.Variables)
+            {
+                variableSelector.SelectedItem=variable;
+                Check(options.Items.Count==3&&question.Text==VariableQuizCatalog.For(variable.Key)[variable.Key=="W"?1:0].Prompt,
+                    "Pregunta vinculada a "+variable.Key);
+            }
+            variableSelector.SelectedIndex=4;
+            Check(question.Text==secondWQuestion,"Cada variable conserva posición al volver");
             Check(VisibleText(variableInfo).Contains("Humedad")&&((StackPanel)teaching.FindName("VariableEquationsPanel")).Children.Count>0 && !VisibleText(variableInfo).Contains("Referencia:"),
                 "Inspector de propiedades representa la ecuación sin referencias intercaladas");
             // [UI.10] Ejercicio real A03/23 enlaza ambas corrientes y
@@ -133,6 +154,7 @@ internal static class Program
                 "Enlace docente A03/23 conserva caudales de ambas corrientes");
             Check(processTopics.SelectedIndex==5,
                 "A03/23 selecciona mezcla adiabática");
+            Check(question.Text==secondWQuestion,"Cambiar proceso no reemplaza pregunta de variable");
             var secondStream=(StackPanel)teaching.FindName("SecondStreamControls");
             var secondDry=(Slider)teaching.FindName("SecondDryBulbSlider");
             var secondHum=(Slider)teaching.FindName("SecondHumiditySlider");

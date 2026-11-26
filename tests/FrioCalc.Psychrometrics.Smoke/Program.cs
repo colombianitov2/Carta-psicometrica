@@ -671,6 +671,16 @@ static class Program
                 graphicalRange.GetPlotRect(850,620).Height>400,
                 "Margen inferior reserva etiquetas de volumen específico sin reducir excesivamente la carta");
 
+            foreach(var variable in TheoryLessonService.Variables)
+            {
+                var questions=VariableQuizCatalog.For(variable.Key);
+                Check(questions.Count>=3&&questions.Select(q=>q.Prompt).Distinct().Count()==questions.Count,
+                    "Banco variado de "+variable.Key);
+                foreach(var item in questions)
+                    Check(item.Answers.Length==3&&item.CorrectIndex>=0&&item.CorrectIndex<3&&
+                        !string.IsNullOrWhiteSpace(item.Explanation)&&TheoryCourseCatalog.Find(item.TopicId)!=null,
+                        "Pregunta con respuesta, explicación y tema fuente");
+            }
             Console.WriteLine($"PRUEBAS SUPERADAS: {_checks}");
             return 0;
         }

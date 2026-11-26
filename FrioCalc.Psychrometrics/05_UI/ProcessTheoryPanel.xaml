@@ -105,15 +105,20 @@
                     Padding="10" Margin="0,0,0,15">
                 <StackPanel><TextBlock x:Name="VariableExplanationText" TextWrapping="Wrap" FontSize="12"/><StackPanel x:Name="VariableEquationsPanel"/></StackPanel>
             </Border>
-            <TextBlock Text="COMPRUEBE SU COMPRENSIÓN" FontWeight="SemiBold" Margin="0,0,0,7"/>
+            <DockPanel Margin="0,0,0,7">
+                <TextBlock x:Name="VariableQuestionCounter" DockPanel.Dock="Right" Foreground="#64748B" VerticalAlignment="Center"/>
+                <TextBlock Text="COMPRUEBE SU COMPRENSIÓN" FontWeight="SemiBold" TextWrapping="Wrap"/>
+            </DockPanel>
             <TextBlock x:Name="TheoryQuestionText" TextWrapping="Wrap" Margin="0,0,0,7"/>
             <ComboBox x:Name="TheoryAnswerCombo" Height="30" Margin="0,0,0,8"/>
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+            <WrapPanel Margin="0,0,0,6">
                 <Button Content="Comprobar respuesta" Click="CheckTheoryAnswer_Click"
-                        Padding="10,6" Margin="0,0,8,0"/>
+                        Padding="10,6" Margin="0,0,8,4"/>
+                <Button x:Name="NextVariableQuestionButton" Content="Siguiente pregunta" Click="NextVariableQuestion_Click"
+                        Padding="10,6" Margin="0,0,8,4"/>
                 <Button Content="Reiniciar ejemplo" Click="ResetTheoryExample_Click"
-                        Padding="10,6"/>
-            </StackPanel>
+                        Padding="10,6" Margin="0,0,0,4"/>
+            </WrapPanel>
             <TextBlock x:Name="TheoryFeedbackText" FontWeight="SemiBold" TextWrapping="Wrap"
                        FontSize="12.5" Margin="0,0,0,10"/>
             <TextBlock Visibility="Collapsed" Text="TRAZABILIDAD DE LA EXPLICACIÓN" FontWeight="SemiBold"
