@@ -718,6 +718,69 @@ internal static class Program
                 .Any(t=>t.Text.Contains("%") && t.Visibility==Visibility.Visible),
                 "Se pueden restaurar números de humedad relativa");
 
+            // [UI.17] Una curva de HR con solo dos muestras visibles debe
+            // dibujarse sin intervalo inválido en la selección de etiqueta.
+            var narrowCanvas=new Canvas{Width=900,Height=600};
+            narrowCanvas.Measure(new Size(900,600));
+            narrowCanvas.Arrange(new Rect(0,0,900,600));
+            narrowCanvas.UpdateLayout();
+            var narrowGeometry=new ChartGeometry();
+            Rect narrowPlot=narrowGeometry.GetPlotRect(900,600);
+            narrowGeometry.ZoomAt(narrowPlot,new Point(narrowPlot.Left+narrowPlot.Width/2,
+                narrowPlot.Top+narrowPlot.Height/2),.001);
+            narrowGeometry.PanBy(25-narrowGeometry.MinDryBulbC,0);
+            // La malla adaptativa usa 80 intervalos en un rango de 2 °C.
+            double tEnd=narrowGeometry.MaxDryBulbC;
+            double wA=RelativeHumidity.HumidityRatioFromDryBulbAndRelativeHumidity(tEnd-.05,.90,101.325);
+            double wB=RelativeHumidity.HumidityRatioFromDryBulbAndRelativeHumidity(tEnd-.025,.90,101.325);
+            narrowGeometry.PanBy(0,(wA+wB)/2-narrowGeometry.MinHumidityRatioKgPerKg);
+            RelativeHumidityLayer.Draw(narrowCanvas,narrowGeometry,101.325);
+            Check(narrowCanvas.Children.OfType<Polyline>().Any(p=>p.Points.Count==2),
+                "HR: dos vértices visibles sin excepción al etiquetar");
+
+            // [UI.18] Pantalla completa: mover la misma instancia y crear
+            // estados allí, conservarlos al regresar, sin cambiar su identidad.
+            var fullButton=(Button)mainChart.FindName("FullScreenButton");
+            var resetButton=(Button)mainChart.FindName("ResetChartViewButton");
+            var fullHost=(Grid)window.FindName("ChartFullScreenHost");
+            var originalChartParent=(Panel)mainChart.Parent;
+            Check(fullButton.Visibility==Visibility.Visible && fullHost.Visibility==Visibility.Collapsed,
+                "Botón de pantalla completa en la carta principal");
+            fullButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            window.UpdateLayout();
+            Check(fullHost.Visibility==Visibility.Visible && ReferenceEquals(mainChart.Parent,fullHost)
+                && tabs.Visibility==Visibility.Collapsed && mainChart.PointSelectionEnabled,
+                "Pantalla completa reutiliza la carta y oculta la interfaz");
+            mainChart.ResetVisibleView();
+            var fullCanvas=(Canvas)mainChart.FindName("ChartCanvas");
+            Rect fullPlot=new ChartGeometry().GetPlotRect(fullCanvas.ActualWidth,fullCanvas.ActualHeight);
+            Check(!fullPlot.IsEmpty,"Carta ampliada dispone de superficie interactiva");
+            var fullPoint=new Point(fullPlot.Left+fullPlot.Width*.55,fullPlot.Bottom-fullPlot.Height*.08);
+            clickMethod!.Invoke(mainChart,new object[]{fullPoint});
+            Check(mainChart.ActivePoints.Count==1 && processChart.ActivePoints.Count==1,
+                "Punto creado en pantalla completa llega al modelo compartido");
+            int preservedId=mainChart.ActivePoints[0].Id;
+            Check(mainChart.TryAddPointFromConditions(new Dictionary<StateProperty,double>{
+                {StateProperty.DryBulb,30},{StateProperty.RelativeHumidity,50}},out _),
+                "Segundo estado válido en la vista ampliada");
+            var fullRoute=new PsychrometricProcess(999,"Prueba pantalla completa","#008080",
+                ProcessType.Automatic,mainChart.ActivePoints.Select(p=>p.Id).ToArray(),null);
+            mainChart.SetProcesses(new[]{fullRoute});
+            Check(fullCanvas.Children.OfType<Line>().Any(l=>l.ToolTip is string tip && tip.Contains(fullRoute.Name)),
+                "Tramo visible en pantalla completa");
+            fullButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            window.UpdateLayout();
+            Check(ReferenceEquals(mainChart.Parent,originalChartParent)
+                && tabs.Visibility==Visibility.Visible && fullHost.Visibility==Visibility.Collapsed
+                && mainChart.ActivePoints.Any(p=>p.Id==preservedId)
+                && mainChart.ActivePoints.Count==2 &&
+                fullCanvas.Children.OfType<Line>().Any(l=>l.ToolTip is string tip && tip.Contains(fullRoute.Name)),
+                "Regreso conserva puntos, proceso y carta original");
+            resetButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Check(mainChart.ActivePoints.Count==2 &&
+                fullCanvas.Children.OfType<Line>().Any(l=>l.ToolTip is string tip && tip.Contains(fullRoute.Name)),
+                "Restablecer encuadre no borra datos");
+
             writer.WriteLine($"PRUEBAS UI SUPERADAS: {checks}");
             window.Close();
             app.Shutdown();

@@ -260,7 +260,7 @@ public partial class MainWindow
     // [5.1C.11] Selección ordenada para la segunda carta.
     private void ChartPageScroll_SizeChanged(object sender,SizeChangedEventArgs e)
     {
-        if(PsychrometricChart is not null && e.NewSize.Height>0)
+        if(!_isChartFullScreen && PsychrometricChart is not null && e.NewSize.Height>0)
             PsychrometricChart.Height=Math.Max(330,e.NewSize.Height*.76);
     }
 

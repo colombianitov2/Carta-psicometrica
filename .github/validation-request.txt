@@ -1,1 +1,1 @@
-Revalidación Beta 4: título oficial y versión dinámica en pruebas de interfaz
+Validación de regresión: curva de humedad relativa con dos vértices, navegación agrupada y pantalla completa con instancia compartida.

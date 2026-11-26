@@ -89,18 +89,60 @@ public partial class PsychrometricChartView : UserControl
     private bool _panMoved;
 
     private bool _updatingScrollBars;
-    // [2.1C.9.1] Coalescence del cálculo de Δh durante navegación.
-    private readonly System.Windows.Threading.DispatcherTimer _deviationRefreshTimer = new() { Interval = TimeSpan.FromMilliseconds(140) };
+    // [2.1C.9.1] Limitar redibujos durante la navegación; Δh y s* se
+    // recuperan al terminar el gesto, sin modificar el modelo termodinámico.
+    private readonly System.Windows.Threading.DispatcherTimer _navigationRefreshTimer =
+        new(System.Windows.Threading.DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(33) };
+    private readonly System.Windows.Threading.DispatcherTimer _deviationRefreshTimer =
+        new(System.Windows.Threading.DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(180) };
 
     private void RefreshDuringNavigation()
     {
-        if (_enthalpyDeviationVisible && !_geometry.IsStandardChartMode)
+        if (_geometry.IsStandardChartMode) return;
+        if (_enthalpyDeviationVisible || _specificEntropyVisible)
         {
             _deviationRefreshTimer.Stop();
             _deviationRefreshTimer.Start();
         }
+        if (!_navigationRefreshTimer.IsEnabled) _navigationRefreshTimer.Start();
+    }
+
+    // [2.1C.9.2] Controles de vista: no recrean la carta ni sus colecciones.
+    public event Action? FullScreenRequested;
+    public event Action<bool>? FullScreenPointSelectionRequested;
+    public bool PointSelectionEnabled => _pointSelectionEnabled;
+
+    public void EnableViewControls()
+    {
+        FullScreenButton.Visibility = Visibility.Visible;
+        ResetChartViewButton.Visibility = Visibility.Visible;
+    }
+
+    public void SetFullScreenPresentation(bool enabled)
+    {
+        EndPanning();
+        FullScreenButton.Content = enabled ? "⛶ Salir" : "⛶";
+        FullScreenButton.ToolTip = enabled ? "Salir de pantalla completa (Esc)" : "Pantalla completa";
+        System.Windows.Automation.AutomationProperties.SetName(FullScreenButton,
+            enabled ? "Salir de pantalla completa" : "Pantalla completa");
+        FullScreenSelectPointsToggle.IsChecked = _pointSelectionEnabled;
+        FullScreenSelectPointsToggle.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void FullScreen_Click(object sender, RoutedEventArgs e) => FullScreenRequested?.Invoke();
+    private void FullScreenSelectPoints_Click(object sender, RoutedEventArgs e) =>
+        FullScreenPointSelectionRequested?.Invoke(FullScreenSelectPointsToggle.IsChecked == true);
+
+    public void ResetVisibleView()
+    {
+        EndPanning();
+        _navigationRefreshTimer.Stop();
+        _deviationRefreshTimer.Stop();
+        _geometry.ResetVisibleRanges();
         RefreshChart();
     }
+
+    private void ResetChartView_Click(object sender, RoutedEventArgs e) => ResetVisibleView();
 
     // ------------------------------ Fin de sección 2.1C.2 ------------------------------
 
@@ -110,8 +152,24 @@ public partial class PsychrometricChartView : UserControl
     public PsychrometricChartView()
     {
         InitializeComponent();
-        _deviationRefreshTimer.Tick += (_, _) => { _deviationRefreshTimer.Stop(); RefreshChart(); };
-        Unloaded += (_, _) => _deviationRefreshTimer.Stop();
+        _navigationRefreshTimer.Tick += (_, _) =>
+        {
+            _navigationRefreshTimer.Stop();
+            RefreshChart();
+        };
+        _deviationRefreshTimer.Tick += (_, _) =>
+        {
+            if (_isPanning) return;
+            _deviationRefreshTimer.Stop();
+            _navigationRefreshTimer.Stop();
+            RefreshChart();
+        };
+        Unloaded += (_, _) =>
+        {
+            EndPanning();
+            _navigationRefreshTimer.Stop();
+            _deviationRefreshTimer.Stop();
+        };
 
         Loaded +=
             PsychrometricChartView_Loaded;
@@ -290,6 +348,7 @@ public partial class PsychrometricChartView : UserControl
     {
         _pointSelectionEnabled =
             isEnabled;
+        FullScreenSelectPointsToggle.IsChecked = isEnabled;
 
         ChartCanvas.Cursor =
             isEnabled
@@ -341,10 +400,11 @@ public partial class PsychrometricChartView : UserControl
             DrawWithLabelPreference("Saturation",()=>SaturationCurveLayer.Draw(ChartCanvas,_geometry,_pressureKPa));
         }
 
-        if (_specificEntropyVisible)
+        bool auxiliaryCurvesReady = !_deviationRefreshTimer.IsEnabled;
+        if (_specificEntropyVisible && auxiliaryCurvesReady)
             DrawWithLabelPreference("SpecificEntropy",()=>SpecificEntropyLayer.Draw(ChartCanvas,_geometry,_pressureKPa));
 
-        if (_enthalpyDeviationVisible && !_deviationRefreshTimer.IsEnabled)
+        if (_enthalpyDeviationVisible && auxiliaryCurvesReady)
         {
             DrawWithLabelPreference("EnthalpyDeviation",()=>EnthalpyDeviationLayer.Draw(ChartCanvas,_geometry,_pressureKPa));
         }
@@ -540,13 +600,10 @@ public partial class PsychrometricChartView : UserControl
             return;
         }
 
-        _isPanning =
-            true;
-
         _lastPanPoint = mousePoint;
         _panStartPoint = mousePoint;
         _panMoved = false;
-        ChartCanvas.CaptureMouse();
+        _isPanning = ChartCanvas.CaptureMouse();
 
         ChartCanvas.Cursor =
             Cursors.Hand;
@@ -569,6 +626,12 @@ public partial class PsychrometricChartView : UserControl
             return;
         }
 
+        // Recuperar el control si el botón se soltó fuera de la superficie.
+        if (e.LeftButton != MouseButtonState.Pressed)
+        {
+            EndPanning();
+            return;
+        }
         Point currentPoint = e.GetPosition(ChartCanvas);
         if (!_panMoved && (currentPoint-_panStartPoint).Length < 5.0)
         {
@@ -848,9 +911,7 @@ public partial class PsychrometricChartView : UserControl
         object sender,
         RoutedEventArgs e)
     {
-        PressureValueText.Text =
-            $"Presión: {_pressureKPa.ToString("0.###", CultureInfo.CurrentCulture)} kPa abs";
-
+        UpdatePressureLabel();
         RefreshChart();
     }
 

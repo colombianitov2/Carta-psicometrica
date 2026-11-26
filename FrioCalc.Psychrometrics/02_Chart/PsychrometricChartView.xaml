@@ -23,12 +23,22 @@
                        FontWeight="SemiBold"
                        VerticalAlignment="Center"/>
 
-            <TextBlock x:Name="PressureValueText"
-                       Grid.Column="1"
-                       FontSize="14"
-                       FontWeight="SemiBold"
-                       Foreground="#444444"
-                       VerticalAlignment="Center"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock x:Name="PressureValueText" FontSize="14"
+                           FontWeight="SemiBold" Foreground="#444444"
+                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <CheckBox x:Name="FullScreenSelectPointsToggle" Content="Seleccionar puntos"
+                          Visibility="Collapsed" VerticalAlignment="Center" Margin="0,0,8,0"
+                          Click="FullScreenSelectPoints_Click"/>
+                <Button x:Name="ResetChartViewButton" Content="Restablecer vista"
+                        Visibility="Collapsed" Padding="6,3" Margin="0,0,6,0"
+                        ToolTip="Restablecer el encuadre sin borrar puntos ni procesos"
+                        Click="ResetChartView_Click"/>
+                <Button x:Name="FullScreenButton" Content="⛶" FontSize="17"
+                        Visibility="Collapsed" MinWidth="32" Padding="5,2"
+                        ToolTip="Pantalla completa" AutomationProperties.Name="Pantalla completa"
+                        Click="FullScreen_Click"/>
+            </StackPanel>
 
         </Grid>
 
@@ -57,8 +67,7 @@
                 <Canvas x:Name="ChartCanvas"
                         Background="#F6F6F6"
                         Cursor="Hand"
-                        ToolTip="Rueda: ampliar o reducir. Mantener clic izquierdo y arrastrar: desplazar carta (salvo Carta estándar, que fija el encuadre). Clic derecho: crear o quitar punto en el modo de selección."
-                        MouseWheel="ChartCanvas_MouseWheel"
+                         MouseWheel="ChartCanvas_MouseWheel"
                         MouseLeftButtonDown="ChartCanvas_MouseLeftButtonDown"
                         MouseLeftButtonUp="ChartCanvas_MouseLeftButtonUp"
                         MouseRightButtonDown="ChartCanvas_MouseRightButtonDown"

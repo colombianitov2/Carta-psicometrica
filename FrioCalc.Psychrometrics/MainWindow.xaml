@@ -389,5 +389,8 @@
                 </ScrollViewer>
             </TabItem>
         </TabControl>
+        <!-- [5.1X.12] Alojamiento de la misma carta en pantalla completa. -->
+        <Grid x:Name="ChartFullScreenHost" Grid.ColumnSpan="3" Panel.ZIndex="100"
+              Visibility="Collapsed" Background="#F6F6F6"/>
     </Grid>
 </Window>

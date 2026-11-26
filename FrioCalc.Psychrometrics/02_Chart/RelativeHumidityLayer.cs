@@ -87,8 +87,11 @@ public static class RelativeHumidityLayer
                 Clip = new RectangleGeometry(plotRect)
             };
 
-        const double temperatureStepC =
-            0.20;
+        // Al acercar mucho la carta, mantener suficientes muestras sin
+        // cambiar las ecuaciones ni exigir un mínimo de tres vértices.
+        double temperatureStepC = Math.Min(0.20,
+            (geometry.MaxDryBulbC - geometry.MinDryBulbC) / 80.0);
+        if (!double.IsFinite(temperatureStepC) || temperatureStepC <= 0) return;
 
         for (
             double dryBulbC = geometry.MinDryBulbC;
@@ -162,7 +165,7 @@ public static class RelativeHumidityLayer
         labelIndex =
             Math.Clamp(
                 labelIndex,
-                1,
+                curve.Points.Count >= 3 ? 1 : 0,
                 curve.Points.Count - 2);
 
         DrawLabel(

@@ -19,6 +19,17 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         InitializeUpdates();
+        PsychrometricChart.EnableViewControls();
+        PsychrometricChart.FullScreenRequested += ToggleChartFullScreen;
+        PsychrometricChart.FullScreenPointSelectionRequested += PressureSelector.SetPointSelectionEnabled;
+        PreviewKeyDown += (_, e) =>
+        {
+            if (_isChartFullScreen && e.Key == System.Windows.Input.Key.Escape)
+            {
+                ToggleChartFullScreen();
+                e.Handled = true;
+            }
+        };
         SizeChanged+=(sender,args)=>ApplyResponsiveWorkspaceLayout();
 
         PressureSelector.PressureApplied +=
@@ -98,11 +109,85 @@ public partial class MainWindow : Window
     private void ApplyResponsiveWorkspaceLayout()
     {
         if(WorkspaceTabs is null||SettingsScrollViewer is null)return;
+        if(_isChartFullScreen) return;
         bool carta=WorkspaceTabs.SelectedIndex==0;
         SettingsScrollViewer.Visibility=carta?Visibility.Visible:Visibility.Collapsed;
         double windowWidth=ActualWidth>0?ActualWidth:Width;
         SettingsColumn.Width=new GridLength(carta?Math.Clamp(windowWidth*.29,285,355):0);
         SettingsGapColumn.Width=new GridLength(carta?8:0);
+    }
+
+    // [5.1C.12.1] La vista se traslada al host de pantalla completa,
+    // conservando el objeto, eventos, geometría, puntos, procesos y selección.
+    private bool _isChartFullScreen;
+    private System.Windows.Controls.Panel? _chartOriginalParent;
+    private int _chartOriginalIndex;
+    private double _chartOriginalHeight;
+    private Thickness _chartOriginalMargin;
+    private double _chartOriginalScrollOffset;
+    private WindowState _chartOriginalWindowState;
+    private WindowStyle _chartOriginalWindowStyle;
+    private ResizeMode _chartOriginalResizeMode;
+    private Rect _chartOriginalRestoreBounds;
+
+    private void ToggleChartFullScreen()
+    {
+        if (!_isChartFullScreen)
+        {
+            if (PsychrometricChart.Parent is not System.Windows.Controls.Panel parent) return;
+            _chartOriginalParent = parent;
+            _chartOriginalIndex = parent.Children.IndexOf(PsychrometricChart);
+            _chartOriginalHeight = PsychrometricChart.Height;
+            _chartOriginalMargin = PsychrometricChart.Margin;
+            _chartOriginalScrollOffset = ChartPageScroll.VerticalOffset;
+            _chartOriginalWindowState = WindowState;
+            _chartOriginalWindowStyle = WindowStyle;
+            _chartOriginalResizeMode = ResizeMode;
+            _chartOriginalRestoreBounds = RestoreBounds;
+            _isChartFullScreen = true;
+            PsychrometricChart.SetFullScreenPresentation(true);
+            parent.Children.Remove(PsychrometricChart);
+            PsychrometricChart.Height = double.NaN;
+            PsychrometricChart.Margin = new Thickness(8);
+            ChartFullScreenHost.Children.Add(PsychrometricChart);
+            WorkspaceTabs.Visibility = Visibility.Collapsed;
+            SettingsScrollViewer.Visibility = Visibility.Collapsed;
+            ChartFullScreenHost.Visibility = Visibility.Visible;
+            WindowState = System.Windows.WindowState.Normal;
+            WindowStyle = System.Windows.WindowStyle.None;
+            ResizeMode = System.Windows.ResizeMode.NoResize;
+            WindowState = System.Windows.WindowState.Maximized;
+        }
+        else
+        {
+            if (_chartOriginalParent is null) return;
+            PsychrometricChart.SetFullScreenPresentation(false);
+            ChartFullScreenHost.Children.Remove(PsychrometricChart);
+            ChartFullScreenHost.Visibility = Visibility.Collapsed;
+            PsychrometricChart.Height = _chartOriginalHeight;
+            PsychrometricChart.Margin = _chartOriginalMargin;
+            _chartOriginalParent.Children.Insert(_chartOriginalIndex, PsychrometricChart);
+            _chartOriginalParent = null;
+            WindowState = System.Windows.WindowState.Normal;
+            WindowStyle = _chartOriginalWindowStyle;
+            ResizeMode = _chartOriginalResizeMode;
+            if (!_chartOriginalRestoreBounds.IsEmpty &&
+                _chartOriginalRestoreBounds.Width > 0 && _chartOriginalRestoreBounds.Height > 0)
+            {
+                Left = _chartOriginalRestoreBounds.Left;
+                Top = _chartOriginalRestoreBounds.Top;
+                Width = _chartOriginalRestoreBounds.Width;
+                Height = _chartOriginalRestoreBounds.Height;
+            }
+            WindowState = _chartOriginalWindowState;
+            WorkspaceTabs.Visibility = Visibility.Visible;
+            _isChartFullScreen = false;
+            ApplyResponsiveWorkspaceLayout();
+            UpdateLayout();
+            ChartPageScroll.ScrollToVerticalOffset(_chartOriginalScrollOffset);
+        }
+        UpdateLayout();
+        PsychrometricChart.RefreshChart();
     }
 
     // ------------------------------ Sección 5.1C.3 - Aplicación de presión ------------------------------
