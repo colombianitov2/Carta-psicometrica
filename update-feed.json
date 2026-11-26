@@ -1,0 +1,218 @@
+{
+  "schema": 1,
+  "repository": "colombianitov2/Carta-psicometrica",
+  "releases": [
+    {
+      "draft": false,
+      "tag_name": "v1.0.0-beta.5",
+      "assets": [
+        {
+          "name": "Calculadora-refrigeracion-Parte-1-Carta-psicometrica-Beta5-win-x64-Portable.exe",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.5/Calculadora-refrigeracion-Parte-1-Carta-psicometrica-Beta5-win-x64-Portable.exe",
+          "size": 65082827,
+          "state": "uploaded",
+          "digest": "sha256:02565edf6da863363174f9190fdc8c8829e23c3d6312545436e3a73e3ff466e7"
+        },
+        {
+          "name": "Calculadora-refrigeracion-Parte-1-Carta-psicometrica-Beta5-win-x64-Portable.zip",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.5/Calculadora-refrigeracion-Parte-1-Carta-psicometrica-Beta5-win-x64-Portable.zip",
+          "size": 59593636,
+          "state": "uploaded",
+          "digest": "sha256:7a3b00fe851a9050dd90ab435f69ea8d569274667990878fd98f929d70a8c20e"
+        },
+        {
+          "name": "Calculadora-refrigeracion-Parte-1-Carta-psicometrica-Beta5-win-x64-Setup.exe",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.5/Calculadora-refrigeracion-Parte-1-Carta-psicometrica-Beta5-win-x64-Setup.exe",
+          "size": 60002819,
+          "state": "uploaded",
+          "digest": "sha256:55f7604e67512d0b6151e6c4016e86e5c4e07c316d5985ded290f12d4cab2ceb"
+        },
+        {
+          "name": "FrioCalc-Beta5-win-x64-Portable.exe",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.5/FrioCalc-Beta5-win-x64-Portable.exe",
+          "size": 65082827,
+          "state": "uploaded",
+          "digest": "sha256:02565edf6da863363174f9190fdc8c8829e23c3d6312545436e3a73e3ff466e7"
+        },
+        {
+          "name": "FrioCalc-Beta5-win-x64-Portable.zip",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.5/FrioCalc-Beta5-win-x64-Portable.zip",
+          "size": 59593548,
+          "state": "uploaded",
+          "digest": "sha256:776b399c5cdcd8160b73f59630bdaebe065191929297848d3aee5d7d6d9a8a42"
+        },
+        {
+          "name": "FrioCalc-Beta5-win-x64-Setup.exe",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.5/FrioCalc-Beta5-win-x64-Setup.exe",
+          "size": 60002819,
+          "state": "uploaded",
+          "digest": "sha256:55f7604e67512d0b6151e6c4016e86e5c4e07c316d5985ded290f12d4cab2ceb"
+        },
+        {
+          "name": "SHA256SUMS.txt",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.5/SHA256SUMS.txt",
+          "size": 744,
+          "state": "uploaded",
+          "digest": "sha256:7e1da6d10845d0fd162758aecdb9ee81dfdfb8aeffafa77ff30c7ee1ef1c5938"
+        }
+      ]
+    },
+    {
+      "draft": false,
+      "tag_name": "v1.0.0-beta.4",
+      "assets": [
+        {
+          "name": "Calculadora-refrigeracion-Parte-1-Carta-psicometrica-Beta4-win-x64-Portable.exe",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.4/Calculadora-refrigeracion-Parte-1-Carta-psicometrica-Beta4-win-x64-Portable.exe",
+          "size": 65059168,
+          "state": "uploaded",
+          "digest": "sha256:cb1102012d481854d4ce01838b7a661a4e4a5bbbea3b2c563018ac42dabd5132"
+        },
+        {
+          "name": "Calculadora-refrigeracion-Parte-1-Carta-psicometrica-Beta4-win-x64-Portable.zip",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.4/Calculadora-refrigeracion-Parte-1-Carta-psicometrica-Beta4-win-x64-Portable.zip",
+          "size": 59366277,
+          "state": "uploaded",
+          "digest": "sha256:886b233f5777c8e20be50bdaa46301cc1c81871626a59a27bd0ddf95d892deec"
+        },
+        {
+          "name": "Calculadora-refrigeracion-Parte-1-Carta-psicometrica-Beta4-win-x64-Setup.exe",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.4/Calculadora-refrigeracion-Parte-1-Carta-psicometrica-Beta4-win-x64-Setup.exe",
+          "size": 59976409,
+          "state": "uploaded",
+          "digest": "sha256:0924bd94843452f9cd12f9b18989380839ec84a5efd85fc034e0d63d629c7958"
+        },
+        {
+          "name": "FrioCalc-Beta4-win-x64-Portable.exe",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.4/FrioCalc-Beta4-win-x64-Portable.exe",
+          "size": 65059168,
+          "state": "uploaded",
+          "digest": "sha256:cb1102012d481854d4ce01838b7a661a4e4a5bbbea3b2c563018ac42dabd5132"
+        },
+        {
+          "name": "FrioCalc-Beta4-win-x64-Portable.zip",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.4/FrioCalc-Beta4-win-x64-Portable.zip",
+          "size": 59570586,
+          "state": "uploaded",
+          "digest": "sha256:0872bd7ccefbbf91043e5eecb3a503faaab45d7911fe744e0d3152605844eedb"
+        },
+        {
+          "name": "FrioCalc-Beta4-win-x64-Setup.exe",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.4/FrioCalc-Beta4-win-x64-Setup.exe",
+          "size": 59976409,
+          "state": "uploaded",
+          "digest": "sha256:0924bd94843452f9cd12f9b18989380839ec84a5efd85fc034e0d63d629c7958"
+        },
+        {
+          "name": "SHA256SUMS.txt",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.4/SHA256SUMS.txt",
+          "size": 741,
+          "state": "uploaded",
+          "digest": "sha256:eb805165093d6109e41558c7b1b172fd2a2870fe3d26c43030a59f4be0441f37"
+        }
+      ]
+    },
+    {
+      "draft": false,
+      "tag_name": "v1.0.0-beta.3",
+      "assets": [
+        {
+          "name": "FrioCalc-Beta3-win-x64-Portable.exe",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.3/FrioCalc-Beta3-win-x64-Portable.exe",
+          "size": 65058767,
+          "state": "uploaded",
+          "digest": "sha256:39fa8cbf0c323cb53d56dcea3237841fe1cbf02ff29a6725869880464334bbaa"
+        },
+        {
+          "name": "FrioCalc-Beta3-win-x64-Portable.zip",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.3/FrioCalc-Beta3-win-x64-Portable.zip",
+          "size": 59570332,
+          "state": "uploaded",
+          "digest": "sha256:153e106fee949c632a566ade2bf61174f61327b9c50d53a57e17e9c786ad70b1"
+        },
+        {
+          "name": "FrioCalc-Beta3-win-x64-Setup.exe",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.3/FrioCalc-Beta3-win-x64-Setup.exe",
+          "size": 59976270,
+          "state": "uploaded",
+          "digest": "sha256:2370624ce1286ce34d846ee35cc7d782e0ef7879dfa083f552ae0323d0946789"
+        },
+        {
+          "name": "SHA256SUMS.txt",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.3/SHA256SUMS.txt",
+          "size": 306,
+          "state": "uploaded",
+          "digest": "sha256:1c0674f01ede84464046fc984bc324f2975befefd688d1bc5f52f0c9eaa4cc27"
+        }
+      ]
+    },
+    {
+      "draft": false,
+      "tag_name": "v1.0.0-beta.2",
+      "assets": [
+        {
+          "name": "FrioCalc-Beta2-win-x64-Portable.exe",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.2/FrioCalc-Beta2-win-x64-Portable.exe",
+          "size": 65054952,
+          "state": "uploaded",
+          "digest": "sha256:fded912ea0ba21ded7076f380bc419cb794de80fec0bff95e7276a7d681737c1"
+        },
+        {
+          "name": "FrioCalc-Beta2-win-x64-Portable.zip",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.2/FrioCalc-Beta2-win-x64-Portable.zip",
+          "size": 59566472,
+          "state": "uploaded",
+          "digest": "sha256:dd2ffc53558c35fed07932c1a335322bf89e4cae9fc872b863e80fffb31976aa"
+        },
+        {
+          "name": "FrioCalc-Beta2-win-x64-Setup.exe",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.2/FrioCalc-Beta2-win-x64-Setup.exe",
+          "size": 59971623,
+          "state": "uploaded",
+          "digest": "sha256:1dedc2a4422baf0a78bacdcb95960193927a558683e4948fe138f6debcd08968"
+        },
+        {
+          "name": "SHA256SUMS.txt",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.2/SHA256SUMS.txt",
+          "size": 306,
+          "state": "uploaded",
+          "digest": "sha256:31bae2be973a6e38b3a0445f03242dc4b21ebed1da1938a0cbf592c7505b5d2d"
+        }
+      ]
+    },
+    {
+      "draft": false,
+      "tag_name": "v1.0.0-beta.1",
+      "assets": [
+        {
+          "name": "FrioCalc-Beta1-win-x64-Portable.exe",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.1/FrioCalc-Beta1-win-x64-Portable.exe",
+          "size": 65043606,
+          "state": "uploaded",
+          "digest": "sha256:605b818b0cd01d34a4c37ecb5550f1c02f1c09b3c6098c7fe9110bb46a6881c5"
+        },
+        {
+          "name": "FrioCalc-Beta1-win-x64-Portable.zip",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.1/FrioCalc-Beta1-win-x64-Portable.zip",
+          "size": 59554651,
+          "state": "uploaded",
+          "digest": "sha256:3a1bb8572bf790b4f0d39953d48990a883d296480cba040c452d34f753342139"
+        },
+        {
+          "name": "FrioCalc-Beta1-win-x64-Setup.exe",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.1/FrioCalc-Beta1-win-x64-Setup.exe",
+          "size": 59963561,
+          "state": "uploaded",
+          "digest": "sha256:ff3f712913c68ef579f84ddb0749a08b593545b0ed9345caa34afebc096d7286"
+        },
+        {
+          "name": "SHA256SUMS.txt",
+          "browser_download_url": "https://github.com/colombianitov2/Carta-psicometrica/releases/download/v1.0.0-beta.1/SHA256SUMS.txt",
+          "size": 306,
+          "state": "uploaded",
+          "digest": "sha256:c465f291494ce62ba8f12370009fd15cb5cee1881fa4c025913596b5ad07a7c0"
+        }
+      ]
+    }
+  ]
+}
