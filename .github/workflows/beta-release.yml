@@ -30,8 +30,9 @@ jobs:
           $version = "1.0.0-beta.$n"
           [xml]$project = Get-Content FrioCalc.Psychrometrics/FrioCalc.Psychrometrics.csproj
           if ($project.Project.PropertyGroup.Version -ne $version) { throw 'Versiones del proyecto y solicitud distintas' }
-          gh release view "v$version" --repo "$env:GITHUB_REPOSITORY" *> $null
-          if ($LASTEXITCODE -eq 0) { throw 'La publicación ya existe; no se sobrescribirá' }
+          $published = gh release list --repo "$env:GITHUB_REPOSITORY" --limit 100 --json tagName
+          if ($LASTEXITCODE -ne 0) { throw 'No se pudo verificar el registro de publicaciones' }
+          if (@(($published | ConvertFrom-Json) | Where-Object { $_.tagName -eq "v$version" }).Count -gt 0) { throw 'La publicación ya existe; no se sobrescribirá' }
           "BETA_NUMBER=$n" >> $env:GITHUB_ENV
           "RELEASE_TAG=v$version" >> $env:GITHUB_ENV
       - name: Install installer compiler if absent
