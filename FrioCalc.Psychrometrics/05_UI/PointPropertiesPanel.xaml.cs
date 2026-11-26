@@ -203,15 +203,16 @@ public partial class PointPropertiesPanel : UserControl
 
         double specificEntropy=MoistAirSpecificEntropy.FromDryBulbAndHumidityRatio(
             point.DryBulbC,point.HumidityRatioKgPerKg,point.PressureKPa);
-        AddProperty(content,"Entropía específica relativa s*",
+        // Etiqueta compacta: el símbolo no queda aislado en otra línea.
+        AddProperty(content,"Entropía relativa\u00A0(s*)",
             FormatValue(PsychrometricUnits.EntropyFromSI(specificEntropy,_currentUnits),"0.000",
                 _currentUnits == UnitSystem.SI ? "kJ/(kgda·K)" : "Btu/(lbda·°F)"));
-        AddProperty(content,"Método",point.Method);
+        AddProperty(content,"Método",DisplayMethod(point.Method));
         AddProperty(content,"Origen",point.Origin);
         if (point.InputConditions is { Count: > 0 })
         {
             string conditions=string.Join("; ",System.Linq.Enumerable.Select(point.InputConditions,
-                kv=>$"{kv.Key}: {kv.Value.ToString("0.####",CultureInfo.InvariantCulture)}"));
+                kv=>$"{DisplayProperty(kv.Key)}: {kv.Value.ToString("0.####",CultureInfo.CurrentCulture)}"));
             AddProperty(content,"Datos ingresados (SI)",conditions);
         }
 
@@ -224,8 +225,8 @@ public partial class PointPropertiesPanel : UserControl
         return
             new Border
             {
-                Width = 310.0,
-                MaxWidth = Math.Max(120.0, PointsWrapPanel.ActualWidth > 0 ? PointsWrapPanel.ActualWidth - 10 : 310),
+                Width = 340.0,
+                MaxWidth = Math.Max(120.0, PointsWrapPanel.ActualWidth > 0 ? PointsWrapPanel.ActualWidth - 10 : 340),
                 Margin = new Thickness(
                     0,
                     0,
@@ -276,7 +277,7 @@ public partial class PointPropertiesPanel : UserControl
             {
                 Width =
                     new GridLength(
-                        1.0, GridUnitType.Star)
+                        0.47, GridUnitType.Star)
             });
 
         row.ColumnDefinitions.Add(
@@ -284,7 +285,7 @@ public partial class PointPropertiesPanel : UserControl
             {
                 Width =
                     new GridLength(
-                        1.0,
+                        0.53,
                         GridUnitType.Star)
             });
 
@@ -298,7 +299,10 @@ public partial class PointPropertiesPanel : UserControl
                 FontSize =
                     11.5,
                 TextWrapping = TextWrapping.Wrap,
-                Margin = new Thickness(0,0,8,0)
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(0,0,8,0),
+                ToolTip = propertyName.StartsWith("Entropía", StringComparison.Ordinal)
+                    ? "Entropía específica relativa s*" : propertyName
             };
 
         TextBlock valueText =
@@ -311,7 +315,8 @@ public partial class PointPropertiesPanel : UserControl
                 FontWeight =
                     FontWeights.SemiBold,
                 TextWrapping =
-                    TextWrapping.Wrap
+                    TextWrapping.Wrap,
+                VerticalAlignment = VerticalAlignment.Top
             };
 
         Grid.SetColumn(
@@ -331,6 +336,28 @@ public partial class PointPropertiesPanel : UserControl
         panel.Children.Add(
             row);
     }
+
+    // [5.4C.5.1] Traducir solo el texto visible; conservar el identificador
+    // de método en ChartPoint para edición, sesiones y cálculos.
+    private static string DisplayMethod(string method) => method switch
+    {
+        "Automatic" => "Automático",
+        "Direct" => "Directo",
+        "Iterative" => "Iterativo",
+        _ => method
+    };
+
+    private static string DisplayProperty(StateProperty property) => property switch
+    {
+        StateProperty.DryBulb => "Bulbo seco",
+        StateProperty.WetBulb => "Bulbo húmedo",
+        StateProperty.DewPoint => "Punto de rocío",
+        StateProperty.RelativeHumidity => "Humedad relativa",
+        StateProperty.HumidityRatio => "Humedad absoluta",
+        StateProperty.Enthalpy => "Entalpía",
+        StateProperty.SpecificVolume => "Volumen específico",
+        _ => property.ToString()
+    };
 
     private static string FormatValue(
         double value,

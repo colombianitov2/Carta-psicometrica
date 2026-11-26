@@ -239,6 +239,13 @@ internal static class Program
             var pointContents=(StackPanel)pointCard.Child;
             Check(!pointContents.Children.OfType<CheckBox>().Any(x=>x.Content?.ToString()=="Incluir en proceso"),
                 "La tarjeta ya no contiene casilla de procesos");
+            var pointTexts=pointContents.Children.OfType<Grid>().SelectMany(row=>row.Children.OfType<TextBlock>()).ToArray();
+            Check(pointTexts.Any(t=>t.Text=="Automático") && pointTexts.All(t=>t.Text!="Automatic"),
+                "Método de resolución traducido, sin cambiar identificador interno");
+            Check(pointTexts.Any(t=>t.Text=="Entropía relativa\u00A0(s*):") &&
+                pointTexts.Any(t=>t.Text=="Bulbo seco:") &&
+                pointTexts.All(t=>!t.Text.StartsWith("DryBulb:")),
+                "Etiqueta de entropía compacta y propiedades de entrada en español");
             var available=(ListBox)window.FindName("AvailablePointsList");
             Check(available.Items.Count==1,"Punto disponible en la zona de procesos");
             properties.SetSelection(new[]{mainChart.ActivePoints[0].Id});
@@ -373,6 +380,31 @@ internal static class Program
             ListBox GroupList(Border card)=>((StackPanel)card.Child).Children.OfType<ListBox>().Single();
             var draftCard=groupCards.Children.OfType<Border>().Last();
             int groupId=(int)GroupList(draftCard).Tag;
+            var groupScroll=(ScrollViewer)window.FindName("ProcessGroupsScroll");
+            Check(groupScroll.VerticalScrollBarVisibility==ScrollBarVisibility.Auto &&
+                groupScroll.Content==groupCards && double.IsFinite(groupScroll.MaxHeight) &&
+                ScrollViewer.GetVerticalScrollBarVisibility(GroupList(draftCard))==ScrollBarVisibility.Auto &&
+                double.IsFinite(GroupList(draftCard).MaxHeight),
+                "Lista de grupos y tarjetas tienen desplazamiento vertical acotado");
+            System.Windows.Controls.Primitives.ToggleButton GroupToggle(Border card)=>
+                ((StackPanel)card.Child).Children.OfType<DockPanel>().Single().Children
+                    .OfType<System.Windows.Controls.Primitives.ToggleButton>().Single();
+            Button GroupPencil(Border card)=>((StackPanel)card.Child).Children.OfType<DockPanel>()
+                .Single().Children.OfType<Button>().Single();
+            GroupToggle(draftCard).IsChecked=false;
+            Check(GroupList(draftCard).Visibility==Visibility.Collapsed && GroupPencil(draftCard).Visibility==Visibility.Visible,
+                "Grupo contraído conserva el lápiz y oculta sus tarjetas");
+            GroupPencil(draftCard).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            ((TextBox)window.FindName("NewProcessNameTextBox")).Text="Borrador renombrado";
+            ((Button)window.FindName("RenameProcessButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            draftCard=groupCards.Children.OfType<Border>().Last();
+            Check(builder.Visibility==Visibility.Visible && GroupToggle(draftCard).IsChecked==false &&
+                GroupList(draftCard).Items.Count==0 &&
+                GroupPencil(draftCard).ToolTip?.ToString()=="Editar Borrador renombrado",
+                "Renombrar grupo vacío contraído conserva nombre, ID y estado visual");
+            GroupToggle(draftCard).IsChecked=true;
+            Check(GroupList(draftCard).Visibility==Visibility.Visible && (int)GroupList(draftCard).Tag==groupId,
+                "Expandir restaura el mismo grupo");
             var membership=typeof(MainWindow).GetMethod("UpdateBuilderMembership",
                 System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!;
             int firstState=mainChart.ActivePoints[1].Id,secondState=mainChart.ActivePoints[0].Id;
@@ -397,7 +429,19 @@ internal static class Program
                 mainChart.ActivePoints.Count==4,
                 "Arrastrar desde disponibles repite el estado inicial y cierra cuatro tramos sin mover la primera tarjeta");
             var groupCard=groupCards.Children.OfType<Border>().Last();
-            var pencil=((StackPanel)groupCard.Child).Children.OfType<DockPanel>().Single().Children.OfType<Button>().Single();
+            GroupToggle(groupCard).IsChecked=false;
+            Check(GroupList(groupCard).Visibility==Visibility.Collapsed && mainChart.ActivePoints.Count==4 &&
+                processesList.Items.Cast<string>().Last().Contains(closedRoute),
+                "Contraer un ciclo no altera sus puntos ni conexiones");
+            GroupPencil(groupCard).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            ((TextBox)window.FindName("NewProcessNameTextBox")).Text="Ciclo cerrado renombrado";
+            ((Button)window.FindName("RenameProcessButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            groupCard=groupCards.Children.OfType<Border>().Last();
+            Check(GroupToggle(groupCard).IsChecked==false && processesList.Items.Cast<string>().Last().Contains("Ciclo cerrado renombrado") &&
+                processesList.Items.Cast<string>().Last().Contains(closedRoute) && mainChart.ActivePoints.Count==4,
+                "Renombrar ciclo contraído no recalcula ni cambia el recorrido");
+            GroupToggle(groupCard).IsChecked=true;
+            var pencil=GroupPencil(groupCard);
             pencil.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Check(builder.Visibility==Visibility.Collapsed && groupEditor.Visibility==Visibility.Visible,
                 "Lápiz cambia a editor dentro de la misma pestaña");

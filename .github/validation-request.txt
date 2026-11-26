@@ -1,1 +1,1 @@
-Validación de regresión: curva de humedad relativa con dos vértices, navegación agrupada y pantalla completa con instancia compartida.
+Validación: tarjetas de propiedades localizadas, desplazamiento de grupos, expansión y renombre sin alterar datos.

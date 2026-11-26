@@ -38,7 +38,7 @@
                             <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Enthalpy}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,1,0,2"/>
                             <TextBlock Grid.Row="6" Text="Volumen específico:" Foreground="#64748B" TextWrapping="Wrap" Margin="0,1,7,2"/>
                             <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Volume}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,1,0,2"/>
-                            <TextBlock Grid.Row="7" Text="Entropía relativa:" Foreground="#64748B" TextWrapping="Wrap" Margin="0,1,7,2"/>
+                            <TextBlock Grid.Row="7" Text="Entropía relativa (s*):" ToolTip="Entropía específica relativa s*" Foreground="#64748B" TextWrapping="Wrap" Margin="0,1,7,2"/>
                             <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding Entropy}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,1,0,2"/>
                     </Grid>
                 </StackPanel>
@@ -93,7 +93,8 @@
                     <GridSplitter Grid.Row="1" Visibility="Collapsed" Height="0" HorizontalAlignment="Stretch" />
                     <ScrollViewer x:Name="ProcessPageScroll" Grid.Row="2" Margin="0,8,0,0"
                                   HorizontalScrollBarVisibility="Disabled" Background="Transparent"
-                                  VerticalScrollBarVisibility="Auto" AllowDrop="True" Drop="ProcessPage_Drop">
+                                  VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch"
+                                  AllowDrop="True" Drop="ProcessPage_Drop" SizeChanged="ProcessPageScroll_SizeChanged">
                         <StackPanel>
                             <TextBlock x:Name="ProcessPressureIndicator" Text="Presión: 101,325 kPa absolutos" TextWrapping="Wrap" Foreground="#53677B" Margin="0,0,0,8"/>
                             <StackPanel x:Name="ProcessBuilderView">
@@ -115,11 +116,12 @@
                                           Margin="0,0,12,4"/>
                             </WrapPanel>
 
-                            <Grid Margin="0,0,0,12">
+                            <Grid x:Name="ProcessWorkspaceGrid" Margin="0,0,0,12" ClipToBounds="True"
+                                  MaxWidth="{Binding ViewportWidth, ElementName=ProcessPageScroll}">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="14"/><ColumnDefinition Width="3*"/></Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="Puntos disponibles" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                                    <ListBox x:Name="AvailablePointsList" MinHeight="120" ItemTemplate="{StaticResource ProcessPointCardTemplate}" ItemContainerStyle="{StaticResource AvailableProcessPointItemStyle}" ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AllowDrop="True"
+                                    <ListBox x:Name="AvailablePointsList" MinHeight="120" MaxHeight="520" ItemTemplate="{StaticResource ProcessPointCardTemplate}" ItemContainerStyle="{StaticResource AvailableProcessPointItemStyle}" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.CanContentScroll="False" AllowDrop="True"
                                              PreviewMouseLeftButtonDown="ProcessList_MouseDown" PreviewMouseMove="ProcessList_MouseMove"
                                              Drop="AvailablePoints_Drop" MouseDoubleClick="AvailablePoints_DoubleClick">
                                         <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ListBox.ItemsPanel>
@@ -131,7 +133,12 @@
                                         <TextBlock Text="Lista de procesos" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                     </DockPanel>
                                     <TextBlock x:Name="ProcessBuilderStatus" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,8"/>
-                                    <StackPanel x:Name="ProcessCardsPanel"/>
+                                    <ScrollViewer x:Name="ProcessGroupsScroll" MaxHeight="480"
+                                                  VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                                                  HorizontalContentAlignment="Stretch" AllowDrop="True"
+                                                  Background="Transparent" Padding="0,0,4,0">
+                                        <StackPanel x:Name="ProcessCardsPanel"/>
+                                    </ScrollViewer>
                                 </StackPanel>
                             </Grid>
                             <Button Visibility="Collapsed" Content="Deshacer última acción" Click="UndoLastAction_Click" HorizontalAlignment="Left" Padding="10,6" Margin="0,0,0,6"/>
@@ -140,8 +147,14 @@
                             <StackPanel x:Name="ProcessEditor" Visibility="Collapsed">
                             <DockPanel Margin="0,0,0,12">
                                 <Button DockPanel.Dock="Right" Content="Volver sin guardar" Click="CloseProcessEditor_Click" Padding="8,5"/>
-                                <TextBlock x:Name="ProcessEditorHeading" Text="Editar grupo de procesos" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="ProcessEditorHeading" Text="Editar grupo de procesos" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap"/>
                             </DockPanel>
+                            <!-- [5.1X.13] Nombre accesible desde el lápiz, también en grupos contraídos o vacíos. -->
+                            <TextBlock Text="Nombre del grupo de procesos" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <WrapPanel Margin="0,0,0,14">
+                                <TextBox x:Name="NewProcessNameTextBox" MinWidth="245" Width="320" MinHeight="28" Margin="0,0,8,5" VerticalContentAlignment="Center"/>
+                                <Button x:Name="RenameProcessButton" Content="Guardar solo nombre y volver" Click="RenameProcess_Click" Padding="9,5" Margin="0,0,0,5"/>
+                            </WrapPanel>
                             <Grid Margin="0,0,0,12" x:Name="SequenceEditor">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
@@ -234,16 +247,9 @@
                             <CheckBox x:Name="CloseCycleCheckBox" Content="Añadir retorno al punto inicial al guardar, si el recorrido aún está abierto"
                                       ToolTip="Se conserva el orden de los estados; cierra el polígono y verifica el balance del recorrido."
                                       Margin="0,0,0,10"/>
-                            <TextBlock Text="Nombre del nuevo proceso (opcional)" FontSize="12" Margin="0,0,0,3"/>
-                            <TextBox x:Name="NewProcessNameTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"/>
                             <ListBox x:Name="SavedProcessesList" Visibility="Collapsed"
                                      SelectionChanged="SavedProcessesList_SelectionChanged"/>
-                            <TextBlock Text="Nombre para renombrar el proceso seleccionado" FontSize="11"
-                                       TextWrapping="Wrap" Margin="0,0,0,3"/>
-                            <TextBox x:Name="RenameProcessTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,7"/>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <Button Content="Renombrar" Click="RenameProcess_Click"
-                                        Padding="6" Margin="0,0,6,0"/>
                                 <Button Content="Mostrar / ocultar" Click="ToggleProcessVisibility_Click" Padding="6"/>
                             </StackPanel>
                             <Button Content="Restaurar datos guardados" Click="EditProcess_Click"

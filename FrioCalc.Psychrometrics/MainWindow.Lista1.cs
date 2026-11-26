@@ -244,7 +244,7 @@ public partial class MainWindow
             "Presión de trabajo: "+pressureKPa.ToString("0.###",CultureInfo.CurrentCulture)+" kPa absolutos";
         AshraeSimulatorPanel.SetPressure(pressureKPa);
         _savedProcesses.Clear();
-        _draftGroups.Clear();_lastBuilderGroupId=null;
+        _draftGroups.Clear();_collapsedProcessGroups.Clear();_lastBuilderGroupId=null;
         CloseGroupEditor();
         _selectedPointIds.Clear();
         _nextProcessId = 1;
@@ -596,12 +596,25 @@ public partial class MainWindow
 
     private void RenameProcess_Click(object sender, RoutedEventArgs e)
     {
-        int index=SavedProcessesList.SelectedIndex;
-        if(index<0||index>=_savedProcesses.Count||string.IsNullOrWhiteSpace(RenameProcessTextBox.Text)) return;
-        RememberHistory();
-        _savedProcesses[index]=_savedProcesses[index] with {Name=RenameProcessTextBox.Text.Trim()};
+        // El nombre es metadato: no exigir un par de estados ni recalcular.
+        if(_editingProcessId is not int id || string.IsNullOrWhiteSpace(NewProcessNameTextBox.Text)) return;
+        string name=NewProcessNameTextBox.Text.Trim();
+        int index=_savedProcesses.FindIndex(p=>p.Id==id);
+        if(index>=0)
+        {
+            if(_savedProcesses[index].Name!=name)
+            {
+                RememberHistory();
+                _savedProcesses[index]=_savedProcesses[index] with {Name=name};
+            }
+        }
+        else if(_draftGroups.TryGetValue(id,out var draft))
+            _draftGroups[id]=draft with {Name=name};
+        else return;
         UpdateProcessesInCharts();
-        SavedProcessesList.SelectedIndex=index;
+        PointPropertiesPanel.ClearSelection();
+        CloseGroupEditor();
+        WorkspaceTabs.SelectedIndex=1;
     }
 
     private void ToggleProcessVisibility_Click(object sender, RoutedEventArgs e)
@@ -654,7 +667,6 @@ public partial class MainWindow
             if(item.Tag?.ToString()==process.Type.ToString())
                 {ProcessTypeComboBox.SelectedItem=item;break;}
         OpenGroupEditor();
-        RenameProcessTextBox.Text=process.Name;
         RenderGroupResults(process,ProcessResultsPanel);
         ProcessResultText.Text="Proceso cargado para edición. Guardar conserva el identificador y actualiza los resultados.";
     }
@@ -751,7 +763,7 @@ public partial class MainWindow
             PsychrometricChart.SetSharedPoints(previous.Points);
             _savedProcesses.Clear();
             _savedProcesses.AddRange(previous.Processes);
-            _draftGroups.Clear();_lastBuilderGroupId=null;
+            _draftGroups.Clear();_collapsedProcessGroups.Clear();_lastBuilderGroupId=null;
             _nextProcessId=Math.Max(1,_savedProcesses.Count==0?1:_savedProcesses.Max(x=>x.Id)+1);
             OnPointsChanged(PsychrometricChart.ActivePoints);
             PointPropertiesPanel.ClearSelection();
@@ -818,7 +830,7 @@ public partial class MainWindow
             PsychrometricChart.SetSharedPoints(session.Points);
             OnPointsChanged(PsychrometricChart.ActivePoints);
             _savedProcesses.Clear();
-            _draftGroups.Clear();_lastBuilderGroupId=null;
+            _draftGroups.Clear();_collapsedProcessGroups.Clear();_lastBuilderGroupId=null;
             CloseGroupEditor();
             _savedProcesses.AddRange(session.Processes);
             _nextProcessId=Math.Max(1,_savedProcesses.Count==0 ? 1 : _savedProcesses.Max(p=>p.Id)+1);
