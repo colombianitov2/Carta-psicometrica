@@ -305,7 +305,38 @@ internal static class Program
             properties.SetSelection(mainChart.ActivePoints.Select(p=>p.Id).ToArray());
             Check(properties.SelectedPointIds.Count==2,"Dos puntos elegidos en orden");
             var typeSelector=(ComboBox)window.FindName("ProcessTypeComboBox");
+            var compatibilityText=(TextBlock)window.FindName("ProcessCompatibilityText");
+            var validatedSave=(Button)window.FindName("SaveProcessGroupButton");
+            typeSelector.SelectedIndex=3;
+            Check(!validatedSave.IsEnabled&&compatibilityText.Text.Contains("Proceso no posible")&&
+                compatibilityText.Text.Contains("P1 → P2"),
+                "Seleccionar enfriamiento con estados de calentamiento informa incompatibilidad sin guardar");
+            typeSelector.SelectedIndex=1;
+            Check(!validatedSave.IsEnabled&&compatibilityText.Text.Contains("W constante"),
+                "Calor sensible incompatible con cambio de humedad");
+            typeSelector.SelectedIndex=2;
+            Check(validatedSave.IsEnabled&&compatibilityText.Text.StartsWith("Compatible:"),
+                "Método de calentamiento y humidificación compatible");
+            typeSelector.SelectedIndex=4;
+            Check(!validatedSave.IsEnabled&&compatibilityText.Text.StartsWith("Datos insuficientes:"),
+                "Dos estados de humidificación por vapor requieren parámetros de equipo");
+            typeSelector.SelectedIndex=5;
+            Check(!validatedSave.IsEnabled&&compatibilityText.Text.StartsWith("Proceso no posible:"),
+                "Evaporación incompatible con calentamiento");
+            typeSelector.SelectedIndex=6;
+            Check(!validatedSave.IsEnabled&&compatibilityText.Text.Contains("desecante"),
+                "Desecante no permite aumento de W");
+            typeSelector.SelectedIndex=7;
+            Check(!validatedSave.IsEnabled&&compatibilityText.Text.StartsWith("Datos insuficientes:"),
+                "Mezcla sin caudales no se guarda");
+            typeSelector.SelectedIndex=8;
+            Check(!validatedSave.IsEnabled&&compatibilityText.Text.Contains("serpentín"),
+                "Bypass incompatible con calentamiento y adición de humedad");
+            typeSelector.SelectedIndex=9;
+            Check(!validatedSave.IsEnabled&&compatibilityText.Text.StartsWith("Datos insuficientes:"),
+                "Divisor sin tres estados no se guarda");
             typeSelector.SelectedIndex=0;
+            Check(validatedSave.IsEnabled,"Automático vuelve a habilitar el cálculo");
             ((TextBox)window.FindName("NewProcessNameTextBox")).Text="Auditoria P1-P2";
             var plotMethod=typeof(MainWindow).GetMethod("PlotProcess_Click",
                 System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance);

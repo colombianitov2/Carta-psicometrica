@@ -423,6 +423,51 @@ static class Program
             Check(!ProcessCalculator.TryBypassOutlet(airDry,15,.5,7007,"#446688",
                 out _,out _),"ADP que humidifica aire seco no es deshumidificación");
 
+            // [T8.4] Compatibilidad física de los diez métodos.
+            var high=Create(8101,33,80);
+            var low=Create(8102,21,40);
+            var warmDry=Create(8103,50,20);
+            var coldHumid=Create(8104,20,85);
+            Check(ProcessCompatibility.AssessPair(high,low,ProcessType.Automatic).CanCalculate,
+                "Automático acepta cambios de estado válidos");
+            Check(!ProcessCompatibility.AssessPair(high,low,ProcessType.HeatingHumidification).CanCalculate &&
+                ProcessCompatibility.AssessPair(high,low,ProcessType.CoolingDehumidification).CanCalculate,
+                "No confundir calentamiento con enfriamiento y retirada de agua");
+            Check(!ProcessCalculator.TryCalculate(high,low,ProcessType.Sensible,null,out _,out _),
+                "Calor sensible no admite variación de W");
+            Check(!ProcessCompatibility.AssessPair(high,low,ProcessType.SteamHumidification).CanCalculate,
+                "Vapor no retira humedad");
+            Check(!ProcessCompatibility.AssessPair(high,low,ProcessType.EvaporativeHumidification).CanCalculate,
+                "Evaporativo no deshumidifica");
+            Check(!ProcessCompatibility.AssessPair(low,high,ProcessType.Desiccant).CanCalculate,
+                "Desecante no añade humedad");
+            Check(ProcessCompatibility.AssessPair(low,high,ProcessType.HeatingHumidification).CanCalculate,
+                "Calentamiento y humidificación válidos");
+            var rhStart=Create(8105,20,80);
+            Check(warmDry.RelativeHumidityPercent<rhStart.RelativeHumidityPercent &&
+                warmDry.HumidityRatioKgPerKg>rhStart.HumidityRatioKgPerKg &&
+                ProcessCompatibility.AssessPair(rhStart,warmDry,ProcessType.HeatingHumidification).CanCalculate,
+                "HR disminuye aunque W aumenta: no confundir HR con masa de vapor");
+            Check(ProcessCompatibility.AssessPair(dryAir,evaporated!,ProcessType.EvaporativeHumidification).CanCalculate &&
+                !ProcessCompatibility.AssessPair(dryAir,coldHumid,ProcessType.EvaporativeHumidification).CanCalculate,
+                "Evaporación exige concordancia simultánea T-W, no solo signos");
+            Check(ProcessCompatibility.AssessPair(dryAir,steamed!,ProcessType.SteamHumidification).CanCalculate,
+                "Vapor compatible con balance de humedad y entalpía");
+            Check(ProcessCompatibility.AssessSelection(ProcessType.AdiabaticMixing,new[]{high}).Status==
+                ProcessCompatibilityStatus.Incomplete &&
+                ProcessCompatibility.AssessSelection(ProcessType.AdiabaticMixing,new[]{high,low}).CanCalculate,
+                "Mezcla exige mínimo dos corrientes");
+            Check(!ProcessCompatibility.AssessPair(low,high,ProcessType.Bypass).CanCalculate &&
+                !ProcessCalculator.TryBypassOutlet(high,-101,.5,8110,"#006688",out _,out _),
+                "Bypass rechaza calentamiento y ADP fuera de dominio sin excepción");
+            Check(ProcessCompatibility.AssessSelection(ProcessType.Branching,new[]{high,low}).Status==
+                ProcessCompatibilityStatus.Incomplete &&
+                ProcessCompatibility.AssessSelection(ProcessType.Branching,new[]{high,low,warmDry}).CanCalculate &&
+                !ProcessCompatibility.AssessSelection(ProcessType.Branching,new[]{high,low,warmDry,coldHumid}).CanCalculate,
+                "Divisor exige exactamente una entrada y dos salidas");
+            Check(!ProcessCompatibility.AssessPair(high,Create(8111,21,40,84.54),ProcessType.Automatic).CanCalculate,
+                "Presión común obligatoria incluso en automático");
+
             // [T9] Informes: propiedades y fuentes exportables en formato verificable.
             string markdown=ProcessReportService.BuildMarkdown(101.325,
                 new List<ChartPoint>{p,humidIn},Array.Empty<PsychrometricProcess>());

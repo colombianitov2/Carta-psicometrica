@@ -48,36 +48,12 @@ public static class ProcessCalculator
         double dw = outlet.HumidityRatioKgPerKg - inlet.HumidityRatioKgPerKg;
         double dh = outlet.EnthalpyKJPerKgDryAir - inlet.EnthalpyKJPerKgDryAir;
 
-        if (processType == ProcessType.Sensible && Math.Abs(dw) > 0.00015)
+        if (processType is ProcessType.Branching or ProcessType.Bypass or ProcessType.AdiabaticMixing)
         {
-            error = "Un proceso exclusivamente sensible debe mantener la humedad absoluta."; return false;
+            error = "Este modelo requiere información de equipo o de varias corrientes. No se calcula como proceso simple de dos estados."; return false;
         }
-        if (processType == ProcessType.HeatingHumidification && (dT < -.1 || dw < -.00015))
-        {
-            error = "Calentamiento y humidificación requiere temperatura y humedad no decrecientes."; return false;
-        }
-        if (processType == ProcessType.Desiccant && dw > .00015)
-        {
-            error = "La deshumidificación por desecante debe reducir W; revise los estados."; return false;
-        }
-        if (processType == ProcessType.CoolingDehumidification && (dT > .1 || dw > .00015))
-        {
-            error = "En enfriamiento y deshumidificación, T y W no deben aumentar."; return false;
-        }
-        if (processType == ProcessType.EvaporativeHumidification && (dT > .1 || dw < -.00015))
-        {
-            error = "La humidificación evaporativa ideal enfría el aire mientras aumenta su humedad."; return false;
-        }
-        if (processType == ProcessType.SteamHumidification && dw < -.00015)
-        {
-            error = "La inyección de vapor no puede retirar humedad."; return false;
-        }
-        if (processType == ProcessType.Branching || processType == ProcessType.Bypass ||
-            processType == ProcessType.AdiabaticMixing)
-        {
-            error = "Este modelo requiere información de equipo o de varias corrientes. No se calcula como proceso simple de dos estados.";
-            return false;
-        }
+        var compatibility=ProcessCompatibility.AssessPair(inlet,outlet,processType);
+        if(!compatibility.CanCalculate){error=compatibility.Message;return false;}
 
         // Convención: calor sensible a humedad inicial constante; diferencia de entalpía residual.
         // Para condensación se necesita un balance separado de la entalpía del condensado
@@ -120,6 +96,8 @@ public static class ProcessCalculator
     {
         output = null;
         diagnostic = "";
+        if (!ProcessCompatibility.IsValidState(inlet))
+        { diagnostic="Estado de entrada no válido.";return false; }
         if (!double.IsFinite(efficiency) || efficiency < 0 || efficiency > 1)
         { diagnostic = "La efectividad de saturación debe estar entre 0 y 1."; return false; }
         if (!double.IsFinite(inlet.WetBulbC))
@@ -148,10 +126,15 @@ public static class ProcessCalculator
         double bypassFactor, int id, string colorHex, out ChartPoint? output, out string diagnostic)
     {
         output = null; diagnostic="";
-        if (!double.IsFinite(apparatusDewPointC) || apparatusDewPointC > inlet.DryBulbC ||
+        if (!ProcessCompatibility.IsValidState(inlet))
+        { diagnostic="Estado de entrada no válido.";return false; }
+        if (!double.IsFinite(apparatusDewPointC) ||
+            apparatusDewPointC < SaturationVaporPressure.MinSupportedTemperatureC ||
+            apparatusDewPointC > SaturationVaporPressure.MaxSupportedTemperatureC ||
+            apparatusDewPointC > inlet.DryBulbC ||
             !double.IsFinite(bypassFactor) || bypassFactor < 0 || bypassFactor > 1)
         {
-            diagnostic="ADP debe ser menor o igual a Tbs de entrada; BF entre 0 y 1."; return false;
+            diagnostic="ADP debe estar dentro del dominio de saturación y ser menor o igual a Tbs de entrada; BF entre 0 y 1."; return false;
         }
         if (bypassFactor < 1.0 && double.IsFinite(inlet.DewPointC) &&
             apparatusDewPointC > inlet.DewPointC + 1e-7)
@@ -187,6 +170,8 @@ public static class ProcessCalculator
         double steamEnthalpyKJPerKg, int id, string colorHex, out ChartPoint? output, out string diagnostic)
     {
         output=null; diagnostic="";
+        if (!ProcessCompatibility.IsValidState(inlet))
+        { diagnostic="Estado de entrada no válido.";return false; }
         if (!double.IsFinite(waterAddedKgPerKgDryAir) || waterAddedKgPerKgDryAir < 0 ||
             !double.IsFinite(steamEnthalpyKJPerKg) || steamEnthalpyKJPerKg <= 0)
         {
@@ -210,6 +195,8 @@ public static class ProcessCalculator
         double outletDryBulbC,int id,string colorHex,out ChartPoint? outlet,out string diagnostic)
     {
         outlet=null;diagnostic="";
+        if (!ProcessCompatibility.IsValidState(inlet))
+        { diagnostic="Estado de entrada no válido.";return false; }
         if(!double.IsFinite(removedWaterKgPerKgDryAir)||removedWaterKgPerKgDryAir<0||
            !double.IsFinite(outletDryBulbC))
         {
@@ -241,6 +228,9 @@ public static class ProcessCalculator
         double dryAirMassFlowKgS,double firstFraction,out BranchBalance? balance,out string diagnostic)
     {
         balance=null;diagnostic="";
+        if(!ProcessCompatibility.IsValidState(inlet)||!ProcessCompatibility.IsValidState(first)||
+            !ProcessCompatibility.IsValidState(second))
+        { diagnostic="Hay un estado de rama no válido.";return false; }
         if(!double.IsFinite(dryAirMassFlowKgS)||dryAirMassFlowKgS<=0||
            !double.IsFinite(firstFraction)||firstFraction<=0||firstFraction>=1)
         {
@@ -277,6 +267,8 @@ public static class ProcessCalculator
         double p = streams[0].State.PressureKPa;
         foreach (var (state, flow) in streams)
         {
+            if (!ProcessCompatibility.IsValidState(state))
+            { diagnostic="Hay una corriente de entrada no válida.";return false; }
             if (!double.IsFinite(flow) || flow <= 0)
             { diagnostic = "Cada flujo de aire seco debe ser positivo."; return false; }
             if (Math.Abs(state.PressureKPa - p) > 1e-6)

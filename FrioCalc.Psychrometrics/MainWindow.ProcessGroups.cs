@@ -86,6 +86,7 @@ public partial class MainWindow
         EditorAvailablePointsList.ItemsSource=available;
         ProcessSelectionList.ItemsSource=CardsFor(_selectedPointIds,true);
         RefreshSegmentEditors();
+        UpdateProcessCompatibility();
     }
 
     private void ProcessList_MouseDown(object sender, MouseButtonEventArgs e)
@@ -378,16 +379,30 @@ public partial class MainWindow
             var methods=new ComboBox { ItemsSource=choices,DisplayMemberPath="Value",SelectedValuePath="Key",
                 SelectedValue=draft.Type,Margin=new Thickness(0,4,0,6),MinWidth=120,
                 MaxWidth=340,HorizontalAlignment=HorizontalAlignment.Left };
-            methods.SelectionChanged+=(_,_)=>{if(methods.SelectedValue is ProcessType kind)draft.Type=kind;};
+            var segmentAssessment=new TextBlock{TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,6)};
+            void UpdateSegmentAssessment()
+            {
+                var from=PsychrometricChart.ActivePoints.FirstOrDefault(p=>p.Id==key.Item1);
+                var to=PsychrometricChart.ActivePoints.FirstOrDefault(p=>p.Id==key.Item2);
+                var result=from is null||to is null?ProcessAssessment.Invalid("Falta un estado del tramo."):
+                    ProcessCompatibility.AssessPair(from,to,draft.Type);
+                ShowAssessment(segmentAssessment,result);
+            }
+            methods.SelectionChanged+=(_,_)=>{
+                if(methods.SelectedValue is ProcessType kind)draft.Type=kind;
+                UpdateSegmentAssessment();UpdateProcessCompatibility();
+            };
             fields.Children.Add(new TextBlock {Text="Método del tramo (Automático si no se especifica)"});
             fields.Children.Add(methods);
+            UpdateSegmentAssessment();
+            fields.Children.Add(segmentAssessment);
             var row=new WrapPanel();
             void Field(string label,string value,Action<string> setter)
             {
                 var panel=new StackPanel{Margin=new Thickness(0,0,12,4),Width=184};
                 panel.Children.Add(new TextBlock{Text=label,TextWrapping=TextWrapping.Wrap,FontSize=12});
                 var box=new TextBox{Text=value,Margin=new Thickness(0,3,0,0),MinHeight=26};
-                box.TextChanged+=(_,_)=>setter(box.Text);
+                box.TextChanged+=(_,_)=>{setter(box.Text);UpdateProcessCompatibility();};
                 panel.Children.Add(box);row.Children.Add(panel);
             }
             Field($"Caudal seco ({FlowUnit}), opcional",draft.Flow,v=>draft.Flow=v);

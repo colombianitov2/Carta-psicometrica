@@ -193,6 +193,10 @@
                                 <ComboBoxItem Content="Factor de bypass / ADP" Tag="Bypass"/>
                                 <ComboBoxItem Content="Divisor con dos ramas y estados conocidos" Tag="Branching"/>
                             </ComboBox>
+                            <Border BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="5" Padding="9" Margin="0,0,0,10">
+                                <TextBlock x:Name="ProcessCompatibilityText" Text="Seleccione estados para verificar el método."
+                                           TextWrapping="Wrap" FontWeight="SemiBold"/>
+                            </Border>
                             <StackPanel x:Name="SegmentEditorsPanel" Margin="0,0,0,10"/>
                             <TextBlock x:Name="DryFlowLabel" Text="Caudal másico de aire seco, kg/s (opcional salvo donde se requiera)"
                                        TextWrapping="Wrap" FontSize="12" Margin="0,0,0,3"/>
@@ -218,7 +222,7 @@
                             <TextBox x:Name="BranchFractionTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"
                                      ToolTip="Seleccione primero entrada, luego salidas de rama 1 y rama 2. Requiere flujo másico total."/>
                             </StackPanel>
-                             <TextBlock x:Name="PredictiveNotice" Visibility="Collapsed" Text="Para salida predictiva con un punto de entrada"
+                             <TextBlock x:Name="PredictiveNotice" Visibility="Collapsed" Text="Para calcular una salida o comprobar la salida seleccionada"
                                        FontWeight="SemiBold" FontSize="12" Margin="0,0,0,4"/>
                             <StackPanel x:Name="EffectivenessGroup" Visibility="Collapsed">
                              <TextBlock Text="Efectividad evaporativa ε (0–1)" FontSize="12" Margin="0,0,0,3"/>
@@ -242,7 +246,7 @@
                             <TextBlock x:Name="DesiccantTemperatureLabel" Text="Desecante: bulbo seco medido o especificado a la salida (°C)" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,3"/>
                             <TextBox x:Name="DesiccantTemperatureTextBox" Width="245" HorizontalAlignment="Left" Height="27" Margin="0,0,0,8"/>
                             </StackPanel>
-                             <TextBlock x:Name="PredictiveExplanation" Visibility="Collapsed" Text="Estos métodos generan un estado de salida usando exactamente los datos del equipo indicados. No hay parámetros predeterminados ocultos."
+                             <TextBlock x:Name="PredictiveExplanation" Visibility="Collapsed" Text="Con un estado de entrada se calcula la salida. Con dos estados se comprueba si los parámetros del equipo producen la salida seleccionada."
                                        TextWrapping="Wrap" FontSize="11" Foreground="#666" Margin="0,0,0,9"/>
                             <CheckBox x:Name="CloseCycleCheckBox" Content="Añadir retorno al punto inicial al guardar, si el recorrido aún está abierto"
                                       ToolTip="Se conserva el orden de los estados; cierra el polígono y verifica el balance del recorrido."

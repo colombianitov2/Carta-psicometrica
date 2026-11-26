@@ -1,1 +1,1 @@
-Validación: tarjetas de propiedades localizadas, desplazamiento de grupos, expansión y renombre sin alterar datos.
+Validación de compatibilidad de los diez modelos, dirección T-W, balances de equipo y diagnósticos reactivos del editor.

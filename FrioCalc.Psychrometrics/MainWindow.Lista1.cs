@@ -92,6 +92,7 @@ public partial class MainWindow
         PressureSelector.SetPointSelectionEnabled(true);
         RefreshSelectionList();
         RefreshGroupCards();
+        InitializeProcessValidation();
     }
 
     // [5.1C.8.2] Mostrar únicamente parámetros del método seleccionado.
@@ -117,6 +118,7 @@ public partial class MainWindow
         if(type!="Automatic" && CloseCycleCheckBox.IsChecked==true)
             CloseCycleCheckBox.IsChecked=false;
         if(SegmentEditorsPanel is not null) SegmentEditorsPanel.Visibility=type=="Automatic"?Visibility.Visible:Visibility.Collapsed;
+        UpdateProcessCompatibility();
     }
 
     // [5.1C.9.1] Familias de líneas independientes en la segunda carta.
@@ -315,6 +317,13 @@ public partial class MainWindow
 
     private void PlotProcess_Click(object sender, RoutedEventArgs e)
     {
+        var assessment=AssessProcessEditor(out var prediction);
+        ShowAssessment(ProcessCompatibilityText,assessment);
+        if(!assessment.CanCalculate)
+        {
+            MessageBox.Show(assessment.Message,"Proceso no resuelto",MessageBoxButton.OK,MessageBoxImage.Warning);
+            return;
+        }
         string typeValue = (ProcessTypeComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "Automatic";
         if (!Enum.TryParse(typeValue, out ProcessType type)) type = ProcessType.Automatic;
         bool predictive = type is ProcessType.EvaporativeHumidification or ProcessType.SteamHumidification or ProcessType.Bypass ||
@@ -339,17 +348,8 @@ public partial class MainWindow
                 "Ciclo psicrométrico",MessageBoxButton.OK,MessageBoxImage.Warning);
             return;
         }
-        // [5.1C.12.1] No confundir una comparación de estados con predicción de equipo.
-        if (selected.Length > 1 && predictive)
-        {
-            MessageBox.Show("Para humidificación evaporativa, inyección de vapor o bypass, " +
-                "seleccione solo el punto de entrada y proporcione los datos de equipo requeridos. " +
-                "Para comparar dos estados conocidos, utilice el método Automático.",
-                "Modelo de equipo no determinado",MessageBoxButton.OK,MessageBoxImage.Warning);
-            return;
-        }
-
-
+        // La validación previa comprueba la salida indicada, o calcula una
+        // salida nueva cuando solamente se selecciona el estado de entrada.
         if (!TryReadOptionalFlow(DryFlowTextBox.Text, out double? massFlow, out string error))
         {
             MessageBox.Show(error, "Caudal inválido", MessageBoxButton.OK, MessageBoxImage.Warning); return;
@@ -358,7 +358,8 @@ public partial class MainWindow
         if (!TryReadSegmentSettings(type, out var segmentSettings, out error))
         { MessageBox.Show(error,"Datos del tramo",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
         double? condensateTemperature = null;
-        if (!string.IsNullOrWhiteSpace(CondensateTemperatureTextBox.Text))
+        if ((type is ProcessType.Automatic or ProcessType.CoolingDehumidification) &&
+            !string.IsNullOrWhiteSpace(CondensateTemperatureTextBox.Text))
         {
             if (!TryReadFinite(CondensateTemperatureTextBox.Text,out double condensateInput) ||
                 TemperatureToSI(condensateInput) < -50 || TemperatureToSI(condensateInput) > 100)
@@ -375,66 +376,30 @@ public partial class MainWindow
         double? desiccantGramsUsed = null, desiccantTUsed = null;
         List<double>? mixFlowsUsed = null;
         string predictionNote = "";
-        if (selected.Length == 1 && predictive)
+        if (predictive && prediction is not null)
         {
-            ChartPoint inlet = selected[0]!;
-            ChartPoint? predicted = null;
-            bool success;
-            if (type == ProcessType.EvaporativeHumidification)
+            ChartPoint inlet=selected[0]!;
+            saturationEffectiveness=prediction.Effectiveness;
+            bypassFactorUsed=prediction.Bypass;
+            steamGramsUsed=prediction.SteamGrams;
+            steamEnthalpyUsed=prediction.SteamEnthalpy;
+            adpUsed=prediction.Adp;
+            desiccantGramsUsed=prediction.RemovedGrams;
+            desiccantTUsed=prediction.OutletT;
+            predictionNote=prediction.Note;
+            if(selected.Length==1)
             {
-                if (!TryReadUnitInterval(EffectivenessTextBox.Text,out double efficiency))
-                { MessageBox.Show("Indique efectividad ε entre 0 y 1.","Humidificación",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
-                saturationEffectiveness=efficiency;
-                success = ProcessCalculator.TryEvaporativeOutlet(inlet,efficiency,0,inlet.ColorHex,
-                    out predicted,out predictionNote);
-            }
-            else if (type == ProcessType.Bypass)
-            {
-                if (!TryReadFinite(ApparatusDewPointTextBox.Text,out double adp) ||
-                    !TryReadUnitInterval(BypassFactorTextBox.Text,out double bf))
-                { MessageBox.Show($"Indique ADP numérico ({TempUnit}) y BF de 0 a 1.","Bypass",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
-                adp=TemperatureToSI(adp);
-                bypassFactorUsed=bf; adpUsed=adp;
-                success = ProcessCalculator.TryBypassOutlet(inlet,adp,bf,0,inlet.ColorHex,
-                    out predicted,out predictionNote);
-            }
-            else if (type == ProcessType.Desiccant)
-            {
-                if (!TryReadNonNegative(DesiccantRemovedTextBox.Text,out double removed) || removed < 0 ||
-                    !TryReadFinite(DesiccantTemperatureTextBox.Text,out double outputT))
+                var target=new Dictionary<StateProperty,double>
                 {
-                    MessageBox.Show($"Se necesitan ΔW retirada ≥ 0 {WaterUnit} y la Tbs de salida ({TempUnit}), " +
-                        "derivada de especificación o medición. No se inventa rendimiento del material.",
-                        "Desecante",MessageBoxButton.OK,MessageBoxImage.Warning);return;
-                }
-                removed=WaterToSI(removed);outputT=TemperatureToSI(outputT);
-                desiccantGramsUsed=removed; desiccantTUsed=outputT;
-                success=ProcessCalculator.TryDesiccantOutlet(inlet,removed/1000.0,outputT,
-                    0,inlet.ColorHex,out predicted,out predictionNote);
+                    [StateProperty.DryBulb]=prediction.Output.DryBulbC,
+                    [StateProperty.HumidityRatio]=prediction.Output.HumidityRatioKgPerKg
+                };
+                if(!PsychrometricChart.TryAddPointFromConditions(target,out error))
+                { MessageBox.Show(error,"Salida fuera de la carta",MessageBoxButton.OK,MessageBoxImage.Warning);return; }
+                generatedPointId=PsychrometricChart.ActivePoints.Last().Id;
+                _selectedPointIds.Add(generatedPointId.Value);
+                selected=new ChartPoint?[]{inlet,PsychrometricChart.ActivePoints.Last()};
             }
-            else
-            {
-                if (!TryReadNonNegative(SteamAddedTextBox.Text,out double waterGrams) ||
-                    !TryReadPositive(SteamEnthalpyTextBox.Text,out double steamEnthalpy))
-                { MessageBox.Show($"Indique vapor añadido ≥ 0 {WaterUnit} y entalpía positiva ({WaterEnthalpyUnit}).",
-                    "Humidificación por vapor",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
-                waterGrams=WaterToSI(waterGrams);steamEnthalpy=WaterEnthalpyToSI(steamEnthalpy);
-                steamGramsUsed=waterGrams; steamEnthalpyUsed=steamEnthalpy;
-                success = ProcessCalculator.TrySteamOutlet(inlet,waterGrams/1000.0,steamEnthalpy,
-                    0,inlet.ColorHex,out predicted,out predictionNote);
-            }
-            if (!success || predicted == null)
-            { MessageBox.Show(predictionNote,"Predicción no válida",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
-            var target = new Dictionary<StateProperty,double>
-            {
-                [StateProperty.DryBulb] = predicted.DryBulbC,
-                [StateProperty.HumidityRatio] = predicted.HumidityRatioKgPerKg
-            };
-            if (!PsychrometricChart.TryAddPointFromConditions(target,out error))
-            { MessageBox.Show(error,"Salida fuera de la carta",MessageBoxButton.OK,MessageBoxImage.Warning); return; }
-            generatedPointId=PsychrometricChart.ActivePoints.Last().Id;
-            _selectedPointIds.Add(generatedPointId.Value);
-            selected = new ChartPoint?[]{inlet,PsychrometricChart.ActivePoints.Last()};
         }
         if(closeCycle)
             selected=selected.Concat(new[]{selected[0]}).ToArray();
@@ -467,31 +432,9 @@ public partial class MainWindow
         }
         else if (type == ProcessType.AdiabaticMixing)
         {
-            var flows = new List<double>();
-            if (!string.IsNullOrWhiteSpace(MixFlowsListTextBox.Text))
-            {
-                foreach (string part in MixFlowsListTextBox.Text.Split(
-                    new[] {';','\n'},StringSplitOptions.RemoveEmptyEntries))
-                {
-                    if (!TryReadPositive(part,out double flowValue))
-                    {
-                        MessageBox.Show("Cada caudal de mezcla debe ser positivo, separado por punto y coma.",
-                            "Mezcla",MessageBoxButton.OK,MessageBoxImage.Warning);return;
-                    }
-                    flows.Add(VolumeFlowToSI(flowValue));
-                }
-            }
-            else if (selected.Length == 2 &&
-                TryReadPositive(MixFlowFirstTextBox.Text,out double v1) &&
-                TryReadPositive(MixFlowSecondTextBox.Text,out double v2))
-            {
-                flows.Add(VolumeFlowToSI(v1)); flows.Add(VolumeFlowToSI(v2));
-            }
-            if (flows.Count != selected.Length)
-            {
-                MessageBox.Show($"Introduzca {selected.Length} caudales ({VolumeFlowUnit}), uno por corriente seleccionada.",
-                    "Mezcla",MessageBoxButton.OK,MessageBoxImage.Warning);return;
-            }
+            var flowAssessment=ReadMixFlows(selected.Length,out var flows);
+            if(!flowAssessment.CanCalculate)
+            {MessageBox.Show(flowAssessment.Message,"Mezcla",MessageBoxButton.OK,MessageBoxImage.Warning);return;}
             var inlet = selected[0]!;
             var inputs = selected.Select((state,index) => (
                 State: state!,

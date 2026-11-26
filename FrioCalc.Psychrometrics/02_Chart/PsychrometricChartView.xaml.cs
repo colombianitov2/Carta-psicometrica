@@ -1058,6 +1058,11 @@ public partial class PsychrometricChartView : UserControl
         return true;
     }
 
+    public bool IsWithinActiveChartDomain(ChartPoint point) =>
+        point.DryBulbC>=_geometry.ActiveMinDryBulbC && point.DryBulbC<=_geometry.ActiveMaxDryBulbC &&
+        point.HumidityRatioKgPerKg>=_geometry.ActiveMinHumidityRatioKgPerKg &&
+        point.HumidityRatioKgPerKg<=_geometry.ActiveMaxHumidityRatioKgPerKg;
+
     public IReadOnlyList<ChartPoint> ActivePoints => _chartPoints.AsReadOnly();
 
     // ------------------------------ Sección 2.1C.18 - Cierre ------------------------------
