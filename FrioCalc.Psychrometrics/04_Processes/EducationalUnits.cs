@@ -39,6 +39,7 @@ public static class EducationalUnits
         return e.Key switch
         {
             "PwsIce"=>result with {Numerator="−10214,16462 T⁻¹ − 4,893242786 − 0,005376579444 T + 1,920237685·10⁻⁷ T² + 3,557583162·10⁻¹⁰ T³ − 9,034468831·10⁻¹⁴ T⁴ + 4,1635019 ln T",Origin="T en °R (valor numérico); L es logaritmo natural del valor numérico de p en psia; t ≤ 32,018 °F.",Derivation="Correlación del motor transformada a Rankine y psia."},
+            "PwsExp"=>result with {Units="psia",Origin="L es el logaritmo natural del valor numérico de la presión en psia."},
             "PwsWater"=>result with {Numerator="−10440,39708 T⁻¹ − 11,294649577 − 0,027022355 T + 1,289036049·10⁻⁵ T² − 2,478068073·10⁻⁹ T³ + 6,5459673 ln T",Origin="T en °R (valor numérico); L es logaritmo natural del valor numérico de p en psia; t > 32,018 °F.",Derivation="Correlación del motor transformada a Rankine y psia."},
             "TK"=>result with {Numerator="t + 459,67",Units="°R",Origin="t: temperatura en °F; T: temperatura absoluta en °R.",Derivation="Conversión de Fahrenheit a Rankine."},
             "h"=>result with {Numerator="0,240279·(t − 32) + W·[1075,236458 + 0,444253·(t − 32)]",Origin="t en °F; W en lb/lb de aire seco. Calores específicos en Btu/(lb·°R); 1075,236458 Btu/lb es la referencia a 32 °F.",Derivation="Conversión del modelo SI de la calculadora, conservando su referencia de entalpía a 32 °F."},

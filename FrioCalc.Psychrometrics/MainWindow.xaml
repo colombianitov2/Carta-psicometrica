@@ -321,7 +321,7 @@
                                 CornerRadius="6" Background="#FAFAFA" Margin="0,0,0,18">
                             <TextBlock x:Name="TheoryExampleResultText"
                                        Text="Seleccione una diapositiva para resolverla con la presión activa."
-                                       FontFamily="Consolas" TextWrapping="Wrap" FontSize="13"/>
+                                       FontFamily="Cambria Math" TextWrapping="Wrap" FontSize="13"/>
                         </Border>
                         <TextBlock Text="Fuentes: ASHRAE 2025 Handbook—Fundamentals, cap. 1; PsychroLib (psychrometrics.github.io/psychrolib); CoolProp (coolprop.org/fluid_properties/HumidAir.html). El término 'rendimiento de Hendrickson' de la presentación requiere corroboración terminológica antes de publicarse como norma."
                                    TextWrapping="Wrap" Foreground="#444"/>

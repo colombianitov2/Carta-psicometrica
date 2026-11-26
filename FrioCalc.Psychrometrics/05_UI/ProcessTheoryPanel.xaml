@@ -82,7 +82,7 @@
             <TextBlock Visibility="Collapsed" x:Name="TheoryFormulaText" TextWrapping="Wrap" FontFamily="Consolas"
                        FontSize="12.5" Margin="0,0,0,9"/>
             <TextBlock Text="DESARROLLO CON SUS DATOS" FontWeight="SemiBold" Margin="0,0,0,4"/>
-            <TextBlock x:Name="TheoryStepsText" TextWrapping="Wrap" FontFamily="Consolas"
+            <TextBlock x:Name="TheoryStepsText" TextWrapping="Wrap" FontFamily="Cambria Math"
                        FontSize="12.5" Margin="0,0,0,10"/>
             <Border Visibility="Collapsed" Padding="10" Background="#FEF5E7" CornerRadius="4" Margin="0,0,0,10">
                 <TextBlock x:Name="TheoryWarningText" TextWrapping="Wrap" FontSize="12.5"/>

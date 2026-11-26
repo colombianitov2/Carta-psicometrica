@@ -120,12 +120,12 @@ public partial class AshraeStudyPanel : UserControl
         {
             var unit=EducationalUnits.Study(rawUnit,_units);
             UnitHeading.Text=unit.Title;
-            UnitDefinition.Text=unit.Definition;
-            UnitDerivation.Text=unit.Derivation;
-            UnitOrigin.Text=unit.Origin;
-            UnitInterpretation.Text=unit.Interpretation;
+            FormatMath(UnitDefinition,unit.Definition);
+            FormatMath(UnitDerivation,unit.Derivation);
+            FormatMath(UnitOrigin,unit.Origin);
+            FormatMath(UnitInterpretation,unit.Interpretation);
             UnitLimitation.Text="";
-            UnitExample.Text=unit.Example;
+            FormatMath(UnitExample,unit.Example);
             BibliographyReference.Text="";
             _updating=true;
             FormulaSelector.ItemsSource=unit.EquationKey.Split('|')
@@ -187,7 +187,7 @@ public partial class AshraeStudyPanel : UserControl
         AddRow("Propiedad",_=>"",true);
         AddRow("Temperatura de bulbo seco ("+EducationalUnits.TemperatureUnit(units)+")",p=>$"{EducationalUnits.T(p.DryBulbC,units):0.##}");
         AddRow("Humedad relativa (%)",p=>$"{p.RelativeHumidityPercent:0.##}");
-        AddRow("Razón de humedad ("+EducationalUnits.HumidityUnit(units)+")",p=>$"{EducationalUnits.W(p.HumidityRatioKgPerKg,units):0.###}");
+        AddRow("Humedad absoluta ("+EducationalUnits.HumidityUnit(units)+")",p=>$"{EducationalUnits.W(p.HumidityRatioKgPerKg,units):0.###}");
         AddRow("Temperatura de bulbo húmedo ("+EducationalUnits.TemperatureUnit(units)+")",p=>$"{EducationalUnits.T(p.WetBulbC,units):0.##}");
         AddRow("Temperatura de rocío ("+EducationalUnits.TemperatureUnit(units)+")",p=>double.IsFinite(p.DewPointC)?$"{EducationalUnits.T(p.DewPointC,units):0.##}":"—");
         AddRow("Entalpía ("+EducationalUnits.EnthalpyUnit(units)+")",p=>$"{EducationalUnits.H(p.EnthalpyKJPerKgDryAir,units):0.###}");
@@ -198,26 +198,7 @@ public partial class AshraeStudyPanel : UserControl
     }
 
     public static void FormatMath(TextBlock block,string text)
-    {
-        var subscripts=Regex.Matches(text,@"([_^])(?:\{([^}]+)\}|([a-zA-Z0-9]+))");
-        if(subscripts.Count==0)
-        {
-            // Plain text uses the Text dependency property, also keeping bindings and automation in sync.
-            block.Inlines.Clear();
-            block.Text=text;
-            return;
-        }
-        block.Inlines.Clear();
-        int pos=0;
-        foreach(Match match in subscripts)
-        {
-            block.Inlines.Add(new Run(text.Substring(pos,match.Index-pos)));
-            block.Inlines.Add(new Run(match.Groups[2].Success?match.Groups[2].Value:match.Groups[3].Value)
-            {BaselineAlignment=match.Groups[1].Value=="^"?BaselineAlignment.Superscript:BaselineAlignment.Subscript,FontSize=block.FontSize*.75});
-            pos=match.Index+match.Length;
-        }
-        block.Inlines.Add(new Run(text.Substring(pos)));
-    }
+        => MathematicalText.Format(block,text);
 
     private static TextBlock MathText(string text,double size)
     {
@@ -263,7 +244,7 @@ public partial class AshraeStudyPanel : UserControl
             FormatMath(description,extra.Units+". "+extra.Derivation+" "+extra.Origin);
             ExtraEquationsPanel.Children.Add(description);
         }
-        FormulaSubstitution.Text=_units==UnitSystem.IP?ImperialSubstitution(equation,_state,_pressureKPa):ExampleSubstitution(equation,_state,_pressureKPa);
+        FormatMath(FormulaSubstitution,_units==UnitSystem.IP?ImperialSubstitution(equation,_state,_pressureKPa):ExampleSubstitution(equation,_state,_pressureKPa));
     }
 
     private static string ImperialSubstitution(AshraeEquation e,ChartPoint? state,double pressure)
@@ -278,13 +259,13 @@ public partial class AshraeStudyPanel : UserControl
             "TK"=>$"T = {t:0.###} + 459,67 = {t+459.67:0.###} °R.",
             "W"=>$"W = {w:0.######} lb/lb da = {EducationalUnits.W(w,u):0.###} gr/lb da; pᵥ = {pv:0.######} psia; P = {p:0.###} psia.",
             "pv"=>$"pᵥ = {pv:0.######} psia; W = {w:0.######} lb/lb da.",
-            "RH"=>$"φ = 100 × {pv:0.######} / {ps:0.######} = {state.RelativeHumidityPercent:0.###} %.",
+            "RH"=>$"φ = ⟦100 × {pv:0.######}¦{ps:0.######}⟧ = {state.RelativeHumidityPercent:0.###} %.",
             "Ws"=>ps<p?$"Wₛ = {.621945*ps/(p-ps):0.######} lb/lb da.":"No existe Wₛ monofásica a estas condiciones.",
             "h"=>$"t = {t:0.###} °F; W = {w:0.######} lb/lb da; h = {EducationalUnits.Enth(state.EnthalpyKJPerKgDryAir,u)}.",
             "v"=>$"T = {t+459.67:0.###} °R; P = {p:0.###} psia; v = {EducationalUnits.V(state.SpecificVolumeM3PerKgDryAir,u):0.######} ft³/lb da.",
             "Tdp"=>$"pᵥ = {pv:0.######} psia; rocío = {EducationalUnits.Temp(state.DewPointC,u)}.",
             "Tbh"=>$"Tbh = {EducationalUnits.Temp(state.WetBulbC,u)}; P = {p:0.###} psia.",
-            "Mdot"=>$"Para V̇ = 105944 ft³/h, ṁ = {105944/EducationalUnits.V(state.SpecificVolumeM3PerKgDryAir,u):0.###} lb/h.",
+            "Mdot"=>$"Para V̇ = 105944 ft³/h, ṁ = ⟦105944¦{EducationalUnits.V(state.SpecificVolumeM3PerKgDryAir,u):0.######}⟧ = {105944/EducationalUnits.V(state.SpecificVolumeM3PerKgDryAir,u):0.###} lb/h.",
             _=>"Utilice los estados de la tabla y las ecuaciones del proceso en unidades IP."
         };
     }
@@ -297,17 +278,17 @@ public partial class AshraeStudyPanel : UserControl
             pv=p*w/(.621945+w);
         return e.Key switch
         {
-            "W"=>$"pᵥ={pv:0.######} kPa; P={p:0.###} kPa. W=(0,621945×{pv:0.######})/({p:0.###}−{pv:0.######})={w:0.######} kg/kgda = {w*1000:0.###} g/kgda.",
-            "pv"=>$"pᵥ=({p:0.###}×{w:0.######})/(0,621945+{w:0.######})={pv:0.######} kPa.",
-            "RH"=>$"φ=100×{pv:0.######}/{ps:0.######}={point.RelativeHumidityPercent:0.###}%. La presión de saturación corresponde a {t:0.###}°C.",
+            "W"=>$"pᵥ={pv:0.######} kPa; P={p:0.###} kPa. W=⟦0,621945×{pv:0.######}¦{p:0.###}−{pv:0.######}⟧={w:0.######} kg/kgda = {w*1000:0.###} g/kgda.",
+            "pv"=>$"pᵥ=⟦{p:0.###}×{w:0.######}¦0,621945+{w:0.######}⟧={pv:0.######} kPa.",
+            "RH"=>$"φ=⟦100×{pv:0.######}¦{ps:0.######}⟧={point.RelativeHumidityPercent:0.###}%. La presión de saturación corresponde a {t:0.###}°C.",
             "Ws"=>ps>=p?"No hay Ws monofásico a esta P y T.":
-                 $"Wₛ=(0,621945×{ps:0.######})/({p:0.###}−{ps:0.######})={.621945*ps/(p-ps)*1000:0.###} g/kgda.",
+                 $"Wₛ=⟦0,621945×{ps:0.######}¦{p:0.###}−{ps:0.######}⟧={.621945*ps/(p-ps)*1000:0.###} g/kgda.",
             "h"=>$"h≈1,006×{t:0.###}+{w:0.######}×(2501+1,86×{t:0.###})={point.EnthalpyKJPerKgDryAir:0.###} kJ/kgda (modelo aproximado).",
-            "v"=>$"v≈R_da×{t+273.15:0.###}×(1+1,607858×{w:0.######})/{p:0.###}={point.SpecificVolumeM3PerKgDryAir:0.######} m³/kgda, unidades coherentes.",
+            "v"=>$"v≈⟦R_da×{t+273.15:0.###}×(1+1,607858×{w:0.######})¦{p:0.###}⟧={point.SpecificVolumeM3PerKgDryAir:0.######} m³/kgda, unidades coherentes.",
             "Tdp"=>double.IsFinite(point.DewPointC)?
                  $"pᵥ={pv:0.######} kPa; resolver p_ws(Trocío)={pv:0.######} ⇒ Trocío={point.DewPointC:0.###} °C.":
                  "Con W=0 el punto de rocío no está definido.",
-            "Mdot"=>$"Si V̇=3000 m³/h, ṁ_da=(3000/3600)/{point.SpecificVolumeM3PerKgDryAir:0.######}={(3000.0/3600)/point.SpecificVolumeM3PerKgDryAir:0.###} kgda/s.",
+            "Mdot"=>$"Si V̇=3000 m³/h, ṁ_da=⟦⟦3000¦3600⟧¦{point.SpecificVolumeM3PerKgDryAir:0.######}⟧={(3000.0/3600)/point.SpecificVolumeM3PerKgDryAir:0.###} kgda/s.",
             "MixW"=>"Para dos entradas reales calcule ṁ_i=V̇_i/v_i y después sustituya cada W_i. No promedie m³/h.",
             "SHR"=>"Ejemplo de recinto: Q_sensible=150 kW y Q_total=200 kW, FCS=150/200=0,75. No fija estado de impulsión.",
             "BF"=>"Ejemplo: BF=0,20, h₂=0,20·h₁+0,80·h_ADP. Sin ADP no hay estado de salida.",
@@ -320,10 +301,10 @@ public partial class AshraeStudyPanel : UserControl
     {
         if(!_ready || ConstructionExpander.Visibility!=Visibility.Visible || ConstructionStepSelector.SelectedItem is not ChartConstructionStep step)return;
         ConstructionStepTitle.Text=$"Paso {step.Number} de {AshraeStudyCatalog.ConstructionSteps.Count}: {step.Title}";
-        ConstructionWhat.Text=step.WhatToDo;
-        ConstructionWhy.Text=step.WhyThisMatters;
-        ConstructionExample.Text=EducationalUnits.ConstructionExample(step,_units);
-        ConstructionBasis.Text=step.Basis;
+        FormatMath(ConstructionWhat,step.WhatToDo);
+        FormatMath(ConstructionWhy,step.WhyThisMatters);
+        FormatMath(ConstructionExample,EducationalUnits.ConstructionExample(step,_units));
+        FormatMath(ConstructionBasis,step.Basis);
         ConstructionEquations.Children.Clear();
         string key=step.Number switch {2=>"Wmass",4=>"Ws",6=>"RH",7=>"hInverse",8=>"Tbh",9=>"vInverse",10=>"Tdp",_=>""};
         if(AshraeStudyCatalog.FindEquation(key) is AshraeEquation equation)

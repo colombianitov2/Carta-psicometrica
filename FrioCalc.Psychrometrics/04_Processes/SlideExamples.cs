@@ -41,7 +41,7 @@ public static class SlideExamples
             double q=m*(end.EnthalpyKJPerKgDryAir-start.EnthalpyKJPerKgDryAir);
             return $"DIAPOSITIVA 6 — Enfriamiento sensible a W constante.\n" +
                 $"Supuesto declarado: P={p:0.###} kPa abs. Caudal de entrada 5 m³/s.\n" +
-                $"ṁda=V̇/v1=5/{start.SpecificVolumeM3PerKgDryAir:0.#####}={m:0.###} kgda/s.\n" +
+                $"ṁda=V̇/v1=⟦5¦{start.SpecificVolumeM3PerKgDryAir:0.#####}⟧={m:0.###} kgda/s.\n" +
                 $"W=0,010 kg/kgda, h1={start.EnthalpyKJPerKgDryAir:0.###} y h2={end.EnthalpyKJPerKgDryAir:0.###} kJ/kgda.\n" +
                 $"Q̇=ṁda(h2−h1)={q:0.###} kW (signo negativo: carga de refrigeración).";
         }
@@ -170,7 +170,7 @@ public static class SlideExamples
                 $"4. C: W={coilOut.HumidityRatioKgPerKg*1000:0.###} g/kgda; h_C={coilOut.EnthalpyKJPerKgDryAir:0.###} kJ/kgda.\n"+
                 $"5. S: Tbs=11+1,5={supply.DryBulbC:0.###} °C; h_S={supply.EnthalpyKJPerKgDryAir:0.###} kJ/kgda.\n"+
                 $"6. cp_s≈1,006+1,86·W_S={cpMix:0.######} kJ/(kgda·K); ΔT_local={deltaT:0.###} °C.\n"+
-                $"7. ṁ_da=RSH/[cp_s·(T_R−T_S)]={rshKW:0.###}/({cpMix:0.######}·{deltaT:0.###})={massDryAir:0.###} kgda/s.\n"+
+                $"7. ṁ_da=RSH/[cp_s·(T_R−T_S)]=⟦{rshKW:0.###}¦{cpMix:0.######}·{deltaT:0.###}⟧={massDryAir:0.###} kgda/s.\n"+
                 $"8. RLH estimada≈ṁ_da·(W_R−W_S)·2501={latentEstimated:0.###} kW (dato del enunciado: 50 kW; diferencia={latentDeviation:+0.###;-0.###;0} kW).\n"+
                 $"   Transferencia total de recinto a partir de h≈{totalFromRoomStates:0.###} kW (RSH+RLH del enunciado=200 kW).\n"+
                 $"9. Agua condensada=ṁ_da·(W_M−W_C)={waterRemoved:0.######} kg/s; condensado líquido a 11 °C SUPUESTO.\n"+

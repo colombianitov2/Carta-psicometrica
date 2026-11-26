@@ -178,7 +178,7 @@ public sealed class VariableReferencePanel : UserControl
                     var visual=AshraeStudyPanel.RenderMathematicalFraction(eq);
                     void Fit(UIElement element)
                     {
-                        if(element is TextBlock math){math.MaxWidth=270;math.FontSize=17;}
+                        if(element is TextBlock math){math.MaxWidth=400;math.FontSize=17;}
                         else if(element is Panel panel)foreach(UIElement child in panel.Children)Fit(child);
                     }
                     Fit(visual);formulas.Children.Add(visual);

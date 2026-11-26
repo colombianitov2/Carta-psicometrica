@@ -60,6 +60,7 @@ public partial class MainWindow
             AshraeSimulatorPanel.SetUnits(units);
             ProcessTheoryPanel.SetUnits(units);
             VariableReferencePanel.SetUnits(units);
+            BibliographyPanel.SetUnits(units);
             SetProcessEditorUnits(units);
             RefreshProcessGroupLists();
             RefreshGroupCards();
@@ -817,7 +818,7 @@ public partial class MainWindow
     {
         string solution=SlideExamples.Evaluate(slide,PressureSelector.CurrentPressureKPa);
         string explore=ProcessTheoryPanel.LoadSlideExample(slide);
-        TheoryExampleResultText.Text=solution+"\n\nLABORATORIO INTERACTIVO: "+explore;
+        UI.AshraeStudyPanel.FormatMath(TheoryExampleResultText,solution+"\n\nLABORATORIO INTERACTIVO: "+explore);
     }
 
     // [5.1C.17] Informe con ecuaciones, supuestos, estados, procesos y bibliografía.

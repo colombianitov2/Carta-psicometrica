@@ -87,7 +87,7 @@ internal static class Program
             var options=(ComboBox)teaching.FindName("TheoryAnswerCombo");
             var feedback=(TextBlock)teaching.FindName("TheoryFeedbackText");
             Check(processTopics.Items.Count>=10,"Zona 2 incluye diez escenarios docentes");
-            Check(explanation.Text.Contains("Calefacción")&&formulas.Text.Contains("W2"),
+            Check(explanation.Text.Contains("Calefacción")&&formulas.Inlines.OfType<Run>().Any(r=>r.Text=="2"&&r.BaselineAlignment==BaselineAlignment.Subscript),
                 "Zona 2 explica el proceso inicial con fórmula");
             double former=drySlider.Value;
             drySlider.Value=former+3;
@@ -209,10 +209,10 @@ internal static class Program
                 "A03/36: enunciado y procedencia completos");
             slideSelector.SelectedItem=15;
             Check(curriculum.CurrentTopic?.FirstSlide==15 &&
-                chapterEquation.Text.Contains("m_cond"),
+                chapterEquation.Inlines.OfType<InlineUIContainer>().Any(),
                 "Ir a diapositiva 15 actualiza fórmula de condensado");
             chapterSelector.SelectedItem=TheoryCourseCatalog.Find("BASE-03");
-            Check(chapterEquation.Text.Contains("W_sat") &&
+            Check(chapterEquation.Inlines.OfType<Run>().Any(r=>r.Text=="sat"&&r.BaselineAlignment==BaselineAlignment.Subscript) &&
                 courseChart.Children.OfType<Polyline>().Any(),
                 "Carta guiada resalta envolvente de saturación");
             var topicRequest=typeof(TheoryCoursePanel).GetMethod("ExploreTopic_Click",
@@ -934,6 +934,41 @@ internal static class Program
                 EducationalUnits.Equation(AshraeStudyCatalog.FindEquation("Atmospheric")!,UnitSystem.IP).Numerator.Contains("e^{"),
                 "Ecuaciones exponenciales SI/IP sin texto exp");
 
+            // [UI.20] Formato real del desarrollo numérico y de las expresiones históricas.
+            var workedMath=new TextBlock();
+            AshraeStudyPanel.FormatMath(workedMath,"ṁda=(10000/3600)/v1; HR=100·p_v/p_ws(Tbs).");
+            var fractionVisuals=workedMath.Inlines.OfType<InlineUIContainer>().ToArray();
+            Check(fractionVisuals.Length==2 && fractionVisuals[0].Child is StackPanel nested &&
+                nested.Children[1] is Border && ((TextBlock)nested.Children[0]).Inlines.OfType<InlineUIContainer>().Any(),
+                "Divisiones de ejemplos, incluidas anidadas, con barra matemática real");
+            var dimensionText=new TextBlock();
+            AshraeStudyPanel.FormatMath(dimensionText,"Energía en kJ/kg de aire seco; caudal en kg/s.");
+            Check(dimensionText.Text.Contains("kJ/kg")&&dimensionText.Text.Contains("kg/s")&&
+                !dimensionText.Inlines.OfType<InlineUIContainer>().Any(),"No confundir unidades con operaciones");
+            var equationText=new TextBlock();
+            AshraeStudyPanel.FormatMath(equationText,"W2=W1; c_p,da; 10⁻⁵");
+            Check(equationText.Inlines.OfType<Run>().Count(r=>r.BaselineAlignment==BaselineAlignment.Subscript)>=3 &&
+                equationText.Inlines.OfType<Run>().Any(r=>r.BaselineAlignment==BaselineAlignment.Superscript&&r.Text=="−5"),
+                "Índices de estados, subíndices compuestos y potencias tipográficas");
+            foreach(var unit in new[]{UnitSystem.SI,UnitSystem.IP})
+            {
+                ashrae.SetUnits(unit);
+                foreach(var topic in AshraeStudyCatalog.Units)
+                {
+                    ashrae.SelectUnit(topic.Id);
+                    Check(formulaVisual.Content is WrapPanel,"Ecuación visible en fundamento "+topic.Id+" "+unit);
+                }
+                simulator.SetUnits(unit);
+                for(int step=1;step<=AshraeStudyCatalog.ConstructionSteps.Count;step++)
+                    simulator.SelectConstructionStep(step);
+                teaching.SetUnits(unit);
+                foreach(var variable in TheoryLessonService.Variables)
+                {
+                    variableSelector.SelectedItem=variable;
+                    Check(((StackPanel)teaching.FindName("VariableEquationsPanel")).Children.Count>0,
+                        "Diccionario renderiza ecuaciones de "+variable.Key+" "+unit);
+                }
+            }
             writer.WriteLine($"PRUEBAS UI SUPERADAS: {checks}");
             window.Close();
             app.Shutdown();

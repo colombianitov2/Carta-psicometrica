@@ -244,8 +244,8 @@ public partial class ProcessTheoryPanel : UserControl
         }
         else change+="No puede determinarse un estado de impulsión sin información adicional.";
         if(!unchanged || string.IsNullOrWhiteSpace(TheoryChangeText.Text))TheoryChangeText.Text=change;
-        TheoryExplanation.Text=lesson.Title+" — "+lesson.Explanation;
-        TheoryFormulaText.Text=lesson.Equations;
+        AshraeStudyPanel.FormatMath(TheoryExplanation,lesson.Title+" — "+lesson.Explanation);
+        AshraeStudyPanel.FormatMath(TheoryFormulaText,lesson.Equations);
         string equationKeys=kind switch
         {
             "Heating" or "Cooling" => "h|Heat|Sensible",
@@ -276,7 +276,7 @@ public partial class ProcessTheoryPanel : UserControl
         TheoryWarningText.Text=_units==UnitSystem.IP?EducationalUnits.UnitText(lesson.Warning).Replace("2700 Btu/lb","1160,791 Btu/lb"):lesson.Warning;
         TheorySourceText.Text=lesson.References;
         // El cuestionario pertenece al diccionario de variables, no al proceso.
-        TheoryValues.Text=_units==UnitSystem.IP?EducationalUnits.ImperialSteps(lesson,intensity):FormatStateSummary(lesson);
+        AshraeStudyPanel.FormatMath(TheoryValues,_units==UnitSystem.IP?EducationalUnits.ImperialSteps(lesson,intensity):FormatStateSummary(lesson));
         RenderStateResults(lesson);
         // Conservar pregunta y respuesta al mover controles de la simulación.
         TheoryStepsText.Visibility=Visibility.Visible;

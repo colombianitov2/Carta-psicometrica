@@ -80,9 +80,10 @@ public static class WordProcessReport
     private static IEnumerable<XElement> MathRuns(string value)
     {
         XElement Run(string t)=>new XElement(M+"r",new XElement(M+"t",new XAttribute(XNamespace.Xml+"space","preserve"),t));
+        value=MathematicalNotation.NormalizeSymbols(value);
         int offset=0;
         // OMML editable: subíndices y superíndices reales.
-        foreach(Match match in Regex.Matches(value,@"([\p{L}*̇]+)([_^])(?:\{([^}]+)\}|([a-zA-Z0-9]+))"))
+        foreach(Match match in Regex.Matches(value,@"([\p{L}\p{N}*̇]+)([_^])(?:\{([^}]+)\}|([a-zA-Z0-9]+))"))
         {
             if(match.Index>offset)yield return Run(value.Substring(offset,match.Index-offset));
             bool super=match.Groups[2].Value=="^";

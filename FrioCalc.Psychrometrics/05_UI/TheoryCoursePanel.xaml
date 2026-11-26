@@ -40,7 +40,7 @@
                 </Viewbox>
             </Border>
             <TextBlock Text="RELACIÓN O ECUACIÓN" FontWeight="SemiBold" Margin="0,0,0,5"/>
-            <TextBlock x:Name="TopicEquation" FontFamily="Consolas" TextWrapping="Wrap"
+            <TextBlock x:Name="TopicEquation" FontFamily="Cambria Math" TextWrapping="Wrap"
                        FontSize="12.5" Margin="0,0,0,12"/>
             <TextBlock Text="PROCEDIMIENTO Y EJEMPLO DE USO" FontWeight="SemiBold" Margin="0,0,0,5"/>
             <TextBlock x:Name="TopicProcedure" TextWrapping="Wrap" Margin="0,0,0,12"/>

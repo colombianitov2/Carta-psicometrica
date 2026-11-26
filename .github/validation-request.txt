@@ -1,1 +1,1 @@
-Validación: balances específicos y potencias, método por tramo, grupos sincronizados, encabezados fijos de variables y exponentes matemáticos.
+Validación de notación matemática unificada y preguntas independientes por variable.

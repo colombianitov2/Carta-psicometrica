@@ -100,18 +100,18 @@ public partial class TheoryCoursePanel : UserControl
         if(!_ready || CurrentTopic is not TheoryTopic t)return;
         TopicHeading.Text=t.Title;
         TopicSlideLabel.Text=t.SlideLabel;
-        TopicSummary.Text=t.Summary;
-        TopicPhysics.Text=t.PhysicalExplanation;
-        TopicChartExplanation.Text=t.ChartReading;
-        TopicEquation.Text=t.Equation;
-        TopicProcedure.Text=t.Procedure;
+        AshraeStudyPanel.FormatMath(TopicSummary,t.Summary);
+        AshraeStudyPanel.FormatMath(TopicPhysics,t.PhysicalExplanation);
+        AshraeStudyPanel.FormatMath(TopicChartExplanation,t.ChartReading);
+        AshraeStudyPanel.FormatMath(TopicEquation,t.Equation);
+        AshraeStudyPanel.FormatMath(TopicProcedure,t.Procedure);
         TopicLimits.Text="LÍMITES / PRECAUCIONES: "+t.Limits;
         TopicReference.Text=t.Source;
         ExploreTopicButton.IsEnabled=!string.IsNullOrEmpty(t.LessonKind);
         SolveTopicExerciseButton.IsEnabled=t.Group=="A03" &&
             Enumerable.Range(t.FirstSlide,t.LastSlide-t.FirstSlide+1)
                 .Any(s=>new[]{6,7,14,15,22,23,24,32,36}.Contains(s));
-        LiveStateExplanation.Text=ExplainLiveState(t);
+        AshraeStudyPanel.FormatMath(LiveStateExplanation,ExplainLiveState(t));
         DrawMiniChart(t);
     }
 
