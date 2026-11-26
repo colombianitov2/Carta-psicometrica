@@ -468,6 +468,40 @@ static class Program
             Check(!ProcessCompatibility.AssessPair(high,Create(8111,21,40,84.54),ProcessType.Automatic).CanCalculate,
                 "Presión común obligatoria incluso en automático");
 
+            // [T8.5] Balance específico sin caudal y sin inventar temperatura del condensado.
+            Check(PointPropertyCalculator.TryCreatePoint(8201,"P8201","#006688",101.325,74.919,.033946,out var hotExample)&&hotExample is not null,
+                "Entrada del ejercicio");
+            Check(PointPropertyCalculator.TryCreatePoint(8202,"P8202","#006688",101.325,33,.01,out var coldExample)&&coldExample is not null,
+                "Salida del ejercicio");
+            Check(ProcessCalculator.TryCalculate(hotExample!,coldExample!,ProcessType.Automatic,null,
+                out var specificExample,out _),"Balance específico sin caudal");
+            Check(Math.Abs(specificExample.DeltaEnthalpyKJPerKgDryAir+106.177)<.02 &&
+                Math.Abs(specificExample.SensibleSpecificKJPerKgDryAir+specificExample.LatentSpecificKJPerKgDryAir-
+                    specificExample.DeltaEnthalpyKJPerKgDryAir)<1e-10 &&
+                specificExample.ThermalPowerKW is null && specificExample.SensiblePowerKW is null &&
+                specificExample.CoilCoolingSpecificKJPerKgDryAir is null &&
+                Math.Abs(specificExample.CondensateSpecificKgPerKgDryAir!.Value-.023946)<1e-10,
+                "Ejercicio: componentes específicas y agua retirada sin caudal");
+            Check(ProcessCalculator.TryCalculate(hotExample!,coldExample!,ProcessType.CoolingDehumidification,null,33,
+                out var specificCoil,out _) && specificCoil.CoilCoolingLoadKW is null &&
+                Math.Abs(specificCoil.CoilCoolingSpecificKJPerKgDryAir!.Value-(-specificCoil.DeltaEnthalpyKJPerKgDryAir-.023946*4.186*33))<1e-10,
+                "Carga específica de serpentín con temperatura pero sin caudal");
+            Check(ProcessCalculator.TryCalculate(hotExample!,coldExample!,ProcessType.CoolingDehumidification,2,33,
+                out var flowedExample,out _) && Math.Abs(flowedExample.CoilCoolingLoadKW!.Value-2*specificCoil.CoilCoolingSpecificKJPerKgDryAir!.Value)<1e-10,
+                "Caudal convierte balance específico a potencia");
+            Check(ProcessCalculator.TryCalculate(hotExample!,coldExample!,ProcessType.Desiccant,1,out var desExample,out _) &&
+                desExample.CondensateSpecificKgPerKgDryAir is null && desExample.CondensateMassFlowKgS is null,
+                "Agua retirada por desecante no se identifica como condensado");
+            var presentationGroup=new PsychrometricProcess(8203,"Prueba balances","#006688",ProcessType.Automatic,new[]{8201,8202},null);
+            var balanceRows=ProcessResultPresentation.SegmentRows(presentationGroup,null,hotExample!,coldExample!,specificExample,UnitSystem.SI);
+            Check(balanceRows.Any(row=>row.Label=="Método seleccionado"&&row.Value.StartsWith("Automático")) &&
+                balanceRows.Any(row=>row.Label.StartsWith("Componente sensible específica")&&row.Value!="Falta caudal") &&
+                balanceRows.Any(row=>row.Label.StartsWith("Potencia sensible")&&row.Value=="Falta caudal"),
+                "Presentación distingue energía específica, potencia y método");
+            var balanceReport=ProcessReportService.BuildMarkdown(101.325,new[]{hotExample!,coldExample!},new[]{presentationGroup},UnitSystem.IP);
+            Check(balanceReport.Contains("Componente sensible específica (Btu/lb aire seco)")&&
+                balanceReport.Contains("Método seleccionado")&&balanceReport.Contains("Falta caudal"),"Word comparte resultados SI/IP");
+
             // [T9] Informes: propiedades y fuentes exportables en formato verificable.
             string markdown=ProcessReportService.BuildMarkdown(101.325,
                 new List<ChartPoint>{p,humidIn},Array.Empty<PsychrometricProcess>());

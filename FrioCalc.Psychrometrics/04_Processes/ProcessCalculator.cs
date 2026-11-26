@@ -13,7 +13,14 @@ public sealed record ProcessResult(
     double? LatentPowerKW, double? SensibleHeatFactor,
     string Diagnostic,
     double? CondensateMassFlowKgS = null,
-    double? CoilCoolingLoadKW = null);
+    double? CoilCoolingLoadKW = null)
+{
+    // [4.2.2] Magnitudes específicas disponibles incluso sin caudal.
+    public double SensibleSpecificKJPerKgDryAir { get; init; }
+    public double LatentSpecificKJPerKgDryAir { get; init; }
+    public double? CondensateSpecificKgPerKgDryAir { get; init; }
+    public double? CoilCoolingSpecificKJPerKgDryAir { get; init; }
+}
 
 public static class ProcessCalculator
 {
@@ -68,24 +75,30 @@ public static class ProcessCalculator
         // FCS (SHR) solo se presenta si las partes tienen signos coherentes.
         if (ratio is double shr && (!double.IsFinite(shr) || shr < -1e-6 || shr > 1.000001)) ratio = null;
 
-        double? condensate = dryAirMassFlowKgS is double flow && dw < -1e-12 ? -flow * dw : null;
-        double? coilCooling = null;
-        if (condensateTempC is double tCond && condensate is double removed)
-        {
-            // Entalpía del condensado líquido con referencia a 0 °C. Prohibido inferir tCond.
-            const double waterHeatKJPerKgK = 4.186;
-            coilCooling = dryAirMassFlowKgS!.Value *
-                (inlet.EnthalpyKJPerKgDryAir - outlet.EnthalpyKJPerKgDryAir)
-                - removed * waterHeatKJPerKgK * tCond;
-        }
+        // La retirada de vapor no identifica por sí sola el mecanismo de
+        // deshumidificación. En Automático se trata de una hipótesis de serpentín.
+        bool cooling=(processType is ProcessType.Automatic or ProcessType.CoolingDehumidification)
+            && dT < -1e-5 && dw < -1e-9;
+        double? condensateSpecific=cooling?-dw:null;
+        double? condensate=dryAirMassFlowKgS*condensateSpecific;
+        double? coilCoolingSpecific=null;
+        if(condensateTempC is double tc && condensateSpecific is double removed)
+            coilCoolingSpecific=-dh-removed*4.186*tc;
+        double? coilCooling=dryAirMassFlowKgS*coilCoolingSpecific;
         string note = dryAirMassFlowKgS is null
             ? "Se conocen cambios específicos, pero falta el caudal de aire seco para determinar potencias y flujo de agua."
             : "Potencias con referencia de entalpía de aire húmedo; para deshumidificación, verificar adicionalmente entalpía del condensado.";
         if (processType == ProcessType.Desiccant) note += " La regeneración y los balances del desecante requieren datos del equipo.";
         if (processType == ProcessType.SteamHumidification) note += " Verificar entalpía y consumo del vapor inyectado.";
-        if (coilCooling.HasValue) note += $" Balance de condensado a {condensateTempC:0.###} °C incluido.";
+        if (coilCoolingSpecific.HasValue) note += $" Balance de condensado líquido a {condensateTempC:0.###} °C incluido.";
         result = new ProcessResult(dT, dw, dh, total, dryAirMassFlowKgS * dw,
-            sensible, latent, ratio, note,condensate,coilCooling);
+            sensible, latent, ratio, note,condensate,coilCooling)
+        {
+            SensibleSpecificKJPerKgDryAir=sensibleSpecific,
+            LatentSpecificKJPerKgDryAir=latentSpecific,
+            CondensateSpecificKgPerKgDryAir=condensateSpecific,
+            CoilCoolingSpecificKJPerKgDryAir=coilCoolingSpecific
+        };
         return true;
     }
 

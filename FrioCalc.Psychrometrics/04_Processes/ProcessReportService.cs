@@ -47,7 +47,7 @@ public static class ProcessReportService
         if (processes.Count == 0) sb.AppendLine("No se han registrado procesos.");
         foreach (var process in processes)
         {
-            sb.AppendLine($"### {process.Name} — {process.Type}");
+            sb.AppendLine($"### {process.Name} — {ProcessResultPresentation.MethodName(process.Type)}");
             sb.AppendLine($"Secuencia: {string.Join(" → ",process.PointIds.Select(id=>"P"+id))}. Color {process.ColorHex}; visible: {(process.Visible?"sí":"no")}.");
             sb.AppendLine($"Flujo másico de aire seco: {(process.DryAirMassFlowKgS is double m?M(m)+" "+mUnit:"no aportado")}.");
             sb.AppendLine();
@@ -80,15 +80,13 @@ public static class ProcessReportService
             }
             if (process.Type != ProcessType.AdiabaticMixing && process.Type != ProcessType.Branching)
             {
-                sb.AppendLine($"|Tramo|ΔT {t}|ΔW {w}|Δh {h}|Potencia ({q})|FCS calculado|FCS indicado|Condensado ({mUnit})|Carga serpentín ({q})|");
-                sb.AppendLine("|---|---:|---:|---:|---:|---:|---:|---:|---:|");
                 for (int i = 0; i < process.PointIds.Count - 1; i++)
                 {
                     ChartPoint? from=points.FirstOrDefault(p=>p.Id==process.PointIds[i]);
                     ChartPoint? to=points.FirstOrDefault(p=>p.Id==process.PointIds[i+1]);
                     if (from is null || to is null)
                     {
-                        sb.AppendLine("|Estado faltante|—|—|—|—|—|");
+                        sb.AppendLine("Estado faltante: no se puede calcular el tramo.");
                         continue;
                     }
                     var segment=ProcessSegmentSetting.Find(process.SegmentSettings,process.PointIds,i);
@@ -96,10 +94,15 @@ public static class ProcessReportService
                     if (!ProcessCalculator.TryCalculate(from,to,method,segment?.DryAirMassFlowKgS??process.DryAirMassFlowKgS,
                         segment?.CondensateTemperatureC??process.CondensateTemperatureC,out ProcessResult result,out string error))
                     {
-                        sb.AppendLine($"|{from.Name}→{to.Name}: {error}|—|—|—|—|—|");
+                        sb.AppendLine($"{from.Name} → {to.Name}: {error}");
                         continue;
                     }
-                    sb.AppendLine($"|{from.Name}→{to.Name}|{F(result.DeltaTemperatureC*(ip?1.8:1))}|{W(result.DeltaHumidityRatioKgPerKg)}|{H(result.DeltaEnthalpyKJPerKgDryAir)}|{(result.ThermalPowerKW.HasValue?Q(result.ThermalPowerKW.Value):"sin caudal")}|{(result.SensibleHeatFactor.HasValue?F(result.SensibleHeatFactor.Value):"indefinido")}|{(segment?.SensibleHeatFactor is double f?F(f):"—")}|{(result.CondensateMassFlowKgS is double mc?M(mc):"—")}|{(result.CoilCoolingLoadKW is double qc?Q(qc):"—")}|");
+                    sb.AppendLine($"### Tramo {i+1}: {from.Name} → {to.Name}");
+                    sb.AppendLine("|Magnitud|Resultado|");
+                    sb.AppendLine("|---|---|");
+                    foreach(var row in ProcessResultPresentation.SegmentRows(process,segment,from,to,result,units))
+                        sb.AppendLine($"|{row.Label}|{row.Value}|");
+                    sb.AppendLine();
 
                 }
             }
