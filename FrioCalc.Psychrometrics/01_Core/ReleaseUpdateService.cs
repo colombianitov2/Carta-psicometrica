@@ -20,6 +20,9 @@ public static class ReleaseUpdateService
     public static bool IsCompatibleProductName(string? name) =>
         name == LegacyProductName || name == OfficialProductName;
     public const string ReleasesPage = "https://github.com/" + Repository + "/releases";
+    // [1.12.1] Canal estático publicado después de verificar los binarios de
+    // cada release. No usa la cuota de la API de GitHub ni necesita credenciales.
+    public const string UpdateFeedUrl = "https://raw.githubusercontent.com/" + Repository + "/update-feed/update-feed.json";
     private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromMinutes(5) };
     static ReleaseUpdateService() => Client.DefaultRequestHeaders.UserAgent.ParseAdd("CalculadoraRefrigeracionParte1/1.0");
 
@@ -58,7 +61,7 @@ public static class ReleaseUpdateService
         get
         {
             var value = typeof(ReleaseUpdateService).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-            return ReleaseVersion.TryParse(value,out var version) ? version : new(1,0,0,4);
+            return ReleaseVersion.TryParse(value,out var version) ? version : new(1,0,0,5);
         }
     }
 
@@ -78,16 +81,51 @@ public static class ReleaseUpdateService
     // Incluye betas: /releases/latest excluye las versiones preliminares.
     public static async Task<UpdateRelease?> CheckAsync(bool installed, CancellationToken cancellationToken)
     {
+        // El canal se actualiza exclusivamente después de publicar un release.
+        // Si no está disponible (por ejemplo, un fallo de CDN), usar la API
+        // como respaldo. No confundir un fallo de red con ausencia de versión.
+        using(var feedTimeout=CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+        {
+            feedTimeout.CancelAfter(TimeSpan.FromSeconds(8));
+            try
+            {
+                using var request=new HttpRequestMessage(HttpMethod.Get,UpdateFeedUrl);
+                request.Headers.CacheControl=new System.Net.Http.Headers.CacheControlHeaderValue{NoCache=true};
+                using var response=await Client.SendAsync(request,feedTimeout.Token);
+                response.EnsureSuccessStatusCode();
+                return ReadUpdateFeed(await response.Content.ReadAsStringAsync(feedTimeout.Token),CurrentVersion,installed);
+            }
+            catch(OperationCanceledException) when(!cancellationToken.IsCancellationRequested) { }
+            catch(Exception ex) when(ex is HttpRequestException or JsonException or InvalidDataException or InvalidOperationException or KeyNotFoundException) { }
+        }
         UpdateRelease? best = null;
         for (int page = 1; ; page++)
         {
             using var response = await Client.GetAsync($"https://api.github.com/repos/{Repository}/releases?per_page=100&page={page}",cancellationToken);
+            if(response.StatusCode is System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.TooManyRequests)
+            {
+                throw new HttpRequestException("El servicio de versiones de GitHub no está disponible temporalmente (403/429). Use Ver versiones publicadas para consultar el instalador oficial; no es necesario desinstalar la calculadora.",null,response.StatusCode);
+            }
             response.EnsureSuccessStatusCode();
             using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
             var candidate = FindUpdate(document.RootElement,CurrentVersion,installed);
             if (candidate is not null && (best is null || candidate.Version.CompareTo(best.Version)>0)) best = candidate;
             if (document.RootElement.GetArrayLength()<100) return best;
         }
+    }
+
+    public static UpdateRelease? ReadUpdateFeed(string json,ReleaseVersion current,bool installed)
+    {
+        using var document=JsonDocument.Parse(json);
+        var root=document.RootElement;
+        if(root.ValueKind!=JsonValueKind.Object ||
+            !root.TryGetProperty("schema",out var schema)||schema.ValueKind!=JsonValueKind.Number||!schema.TryGetInt32(out int n)||n!=1 ||
+            !root.TryGetProperty("repository",out var repository)||repository.ValueKind!=JsonValueKind.String||repository.GetString()!=Repository ||
+            !root.TryGetProperty("releases",out var releases)||releases.ValueKind!=JsonValueKind.Array||releases.GetArrayLength()==0)
+            throw new InvalidDataException("El canal de versiones no tiene un formato válido.");
+        // Se usa la misma selección de versión, URL oficial, tamaño y SHA-256
+        // que la consulta de la API. El archivo estático no sustituye esos controles.
+        return FindUpdate(releases,current,installed);
     }
 
     public static UpdateRelease? FindUpdate(JsonElement releases, ReleaseVersion current, bool installed)

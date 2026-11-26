@@ -36,7 +36,8 @@ public partial class MainWindow
                 else UpdateStatusText.Text+=" Abra la versión publicada de la calculadora para instalarla automáticamente.";
             }
         }
-        catch(Exception ex) { UpdateStatusText.Text="No se pudo consultar GitHub: "+ex.Message; }
+        catch(OperationCanceledException) { UpdateStatusText.Text="La consulta de versiones agotó el tiempo de conexión. Puede consultar los instaladores oficiales en Ver versiones publicadas."; }
+        catch(Exception ex) { UpdateStatusText.Text="No se pudo comprobar si hay una actualización: "+ex.Message; }
         finally { CheckUpdatesButton.IsEnabled=true; }
     }
 

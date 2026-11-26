@@ -1,4 +1,4 @@
-name: FrioCalc Beta 3 - Windows x64
+name: Calculadora de refrigeración - Publicación Beta Windows x64
 on:
   workflow_dispatch:
   push:
@@ -9,7 +9,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: friocalc-beta-release
+  group: friocalc-release
   cancel-in-progress: false
 jobs:
   publish:
@@ -20,6 +20,20 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Determine requested version and protect existing releases
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $n = (Get-Content .github/beta-release-request.txt -Raw).Trim()
+          if ($n -notmatch '^[1-9][0-9]{0,3}$') { throw 'Número de Beta inválido' }
+          $version = "1.0.0-beta.$n"
+          [xml]$project = Get-Content FrioCalc.Psychrometrics/FrioCalc.Psychrometrics.csproj
+          if ($project.Project.PropertyGroup.Version -ne $version) { throw 'Versiones del proyecto y solicitud distintas' }
+          gh release view "v$version" --repo "$env:GITHUB_REPOSITORY" *> $null
+          if ($LASTEXITCODE -eq 0) { throw 'La publicación ya existe; no se sobrescribirá' }
+          "BETA_NUMBER=$n" >> $env:GITHUB_ENV
+          "RELEASE_TAG=v$version" >> $env:GITHUB_ENV
       - name: Install installer compiler if absent
         shell: pwsh
         run: |
@@ -28,31 +42,122 @@ jobs:
             choco install innosetup --yes --no-progress
             if ($LASTEXITCODE -ne 0) { throw 'Inno Setup installation failed' }
           }
-      - name: Build, test and package Beta 3
+      - name: Build, test and package release
         shell: pwsh
         run: |
-          ./06_Tools/Publicar-FrioCalc-Beta1.ps1 -BetaNumber 3 -OutputDirectory "$env:RUNNER_TEMP\friocalc-beta3"
-      - name: Preserve release packages
-        uses: actions/upload-artifact@v4
-        with:
-          name: FrioCalc-Beta3-win-x64
-          path: |
-            ${{ runner.temp }}/friocalc-beta3/FrioCalc-Beta3-win-x64-*.exe
-            ${{ runner.temp }}/friocalc-beta3/FrioCalc-Beta3-win-x64-Portable.zip
-            ${{ runner.temp }}/friocalc-beta3/SHA256SUMS.txt
-          if-no-files-found: error
-      - name: Publish GitHub prerelease
+          ./06_Tools/Publicar-FrioCalc-Beta1.ps1 -BetaNumber ([int]$env:BETA_NUMBER) -OutputDirectory "$env:RUNNER_TEMP\friocalc-next"
+      - name: Verify actual upgrade from previous installed and portable release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $out = "$env:RUNNER_TEMP\friocalc-beta3"
-          gh release create v1.0.0-beta.3 --repo "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --title "FrioCalc Beta 3" --prerelease --notes "Beta 3 para Windows x64: Actualizador, correcciones de ciclos, unidades del editor e informe Word, fundamentos y variables. Portable y versión instalable, .NET 10 incluido. Binarios sin firma Authenticode." "$out\FrioCalc-Beta3-win-x64-Portable.exe" "$out\FrioCalc-Beta3-win-x64-Portable.zip" "$out\FrioCalc-Beta3-win-x64-Setup.exe" "$out\SHA256SUMS.txt"
-          if ($LASTEXITCODE -ne 0) { throw 'GitHub Release publication failed' }
+          $ErrorActionPreference = 'Stop'
+          $n = [int]$env:BETA_NUMBER
+          $prior = $n - 1
+          $old = Join-Path $env:RUNNER_TEMP 'friocalc-prior'
+          $next = Join-Path $env:RUNNER_TEMP 'friocalc-next'
+          New-Item -ItemType Directory $old | Out-Null
+          gh release download "v1.0.0-beta.$prior" --repo "$env:GITHUB_REPOSITORY" --dir $old --pattern "FrioCalc-Beta$prior-win-x64-*.exe" --pattern 'SHA256SUMS.txt'
+          if ($LASTEXITCODE -ne 0) { throw 'No se descargó la versión anterior' }
+          $manifest = Get-Content (Join-Path $old 'SHA256SUMS.txt')
+          foreach ($item in Get-ChildItem $old -Filter '*.exe') {
+            $matches = @($manifest | Where-Object { $_ -match ('^[0-9a-fA-F]{64}  '+[regex]::Escape($item.Name)+'$') })
+            if ($matches.Count -ne 1 -or (Get-FileHash $item.FullName).Hash.ToLowerInvariant() -ne $matches[0].Substring(0,64).ToLowerInvariant()) { throw "SHA-256 anterior incorrecto: $item" }
+          }
+          $oldExe = Join-Path $old "FrioCalc-Beta$prior-win-x64-Portable.exe"
+          $newExe = Join-Path $next "FrioCalc-Beta$n-win-x64-Portable.exe"
+          $target = Join-Path $old 'upgrade-target.exe'
+          Copy-Item $oldExe $target
+          $former = Start-Process $target -PassThru
+          try {
+            Start-Sleep -Seconds 2
+            if ($former.HasExited) { throw 'La versión anterior portable no inicia' }
+            $helper = Start-Process $newExe -ArgumentList @('--apply-portable-update',"$($former.Id)",('"' + $target + '"')) -PassThru
+            if (!$former.HasExited) { Stop-Process -Id $former.Id }
+            if (!$helper.WaitForExit(60000) -or $helper.ExitCode -ne 0) { throw 'Error de actualización portable' }
+            if ((Get-FileHash $target).Hash -ne (Get-FileHash $newExe).Hash) { throw 'EXE actualizado incorrecto' }
+            $bak = @(Get-ChildItem $old -Filter 'upgrade-target.exe.previous-*.bak')
+            if ($bak.Count -ne 1 -or (Get-FileHash $bak[0].FullName).Hash -ne (Get-FileHash $oldExe).Hash) { throw 'Respaldo de la versión anterior incorrecto' }
+          } finally {
+            if (!$former.HasExited) { Stop-Process -Id $former.Id }
+            Get-Process -Name 'upgrade-target' -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $target } | Stop-Process
+          }
+          $installDir = Join-Path $env:RUNNER_TEMP 'friocalc-upgrade-install'
+          $oldSetup = Join-Path $old "FrioCalc-Beta$prior-win-x64-Setup.exe"
+          $newSetup = Join-Path $next "FrioCalc-Beta$n-win-x64-Setup.exe"
+          $registry = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{BFE39269-7325-4B56-A122-8623E6CD85DF}_is1'
+          $exe = Join-Path $installDir 'FrioCalc.Psychrometrics.exe'
+          try {
+            $args = @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-',('/DIR="' + $installDir + '"'))
+            $formerSetup = Start-Process $oldSetup -ArgumentList $args -Wait -PassThru
+            if ($formerSetup.ExitCode -ne 0 -or !(Test-Path $exe) -or !(Test-Path $registry)) { throw 'Instalación anterior incorrecta' }
+            $updated = Start-Process $newSetup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-') -Wait -PassThru
+            if ($updated.ExitCode -ne 0 -or !(Test-Path $exe) -or !(Test-Path $registry)) { throw 'Actualización instalada incorrecta' }
+            if ((Get-Item $exe).VersionInfo.FileVersion -ne "1.0.0.$n" -or (Get-FileHash $exe).Hash -ne (Get-FileHash $newExe).Hash) { throw 'La instalación no corresponde a la versión publicada' }
+            Write-Host 'Actualización cruzada portable e instalada: aprobada.'
+          } finally {
+            $uninstaller = Join-Path $installDir 'unins000.exe'
+            if (Test-Path $uninstaller) { Start-Process $uninstaller -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait }
+          }
+      - name: Prepare official filenames and checksums
+        shell: pwsh
+        run: |
+          $out = "$env:RUNNER_TEMP\friocalc-next"
+          $n = $env:BETA_NUMBER
+          $stem = "Calculadora-refrigeracion-Parte-1-Carta-psicometrica-Beta$n-win-x64"
+          Copy-Item "$out\FrioCalc-Beta$n-win-x64-Portable.exe" "$out\$stem-Portable.exe"
+          Copy-Item "$out\FrioCalc-Beta$n-win-x64-Setup.exe" "$out\$stem-Setup.exe"
+          Compress-Archive -LiteralPath "$out\$stem-Portable.exe" -DestinationPath "$out\$stem-Portable.zip"
+          Get-ChildItem $out -File | Where-Object {$_.Extension -in '.exe','.zip'} | ForEach-Object {
+            "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant())  $($_.Name)"
+          } | Set-Content "$out\SHA256SUMS.txt" -Encoding ASCII
+      - name: Preserve packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: calculadora-beta-windows-x64
+          path: |
+            ${{ runner.temp }}/friocalc-next/*.exe
+            ${{ runner.temp }}/friocalc-next/*.zip
+            ${{ runner.temp }}/friocalc-next/SHA256SUMS.txt
+          if-no-files-found: error
+      - name: Publish validated prerelease
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $out = "$env:RUNNER_TEMP\friocalc-next"
+          $files = @(Get-ChildItem $out -File | Where-Object {$_.Extension -in '.exe','.zip' -or $_.Name -eq 'SHA256SUMS.txt'} | ForEach-Object FullName)
+          if ($files.Count -ne 7) { throw 'Faltan paquetes de la publicación' }
+          gh release create "$env:RELEASE_TAG" --repo "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --title "Calculadora de refrigeración - Parte 1 - Beta $env:BETA_NUMBER" --draft --prerelease --notes "Windows x64, .NET 10 incluido. Mejoras de carta, grupos de procesos, validaciones, balances, notación matemática y diccionario interactivo. Canal de actualizaciones independiente de la cuota de la API. Compilación, pruebas y actualización cruzada verificadas. Binarios sin firma Authenticode." @files
+          if ($LASTEXITCODE -ne 0) { throw 'No se crearon todos los activos' }
+          gh release edit "$env:RELEASE_TAG" --repo "$env:GITHUB_REPOSITORY" --draft=false
+          if ($LASTEXITCODE -ne 0) { throw 'No se publicó la versión validada' }
       - name: Preserve UI screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: friocalc-beta3-ui-snapshots
+          name: calculadora-beta-ui-snapshots
           path: ui-snapshots
           if-no-files-found: warn
+  update-feed:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish static public update feed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # La rama de metadatos se mantiene aparte del código de desarrollo.
+          if ! gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/update-feed" >/dev/null 2>&1; then
+            gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref=refs/heads/update-feed -f sha="$GITHUB_SHA" >/dev/null
+          fi
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases?per_page=100" > releases.json
+          jq --arg repo "$GITHUB_REPOSITORY" '{schema:1,repository:$repo,releases:(add | map(select(.draft==false) | {draft,tag_name,assets:[.assets[]|select(.state=="uploaded")|{name,browser_download_url,size,state,digest}]}))}' releases.json > update-feed.json
+          jq -e '.releases|length>0' update-feed.json >/dev/null
+          existing=$(gh api "repos/$GITHUB_REPOSITORY/contents/update-feed.json?ref=update-feed" --jq .sha 2>/dev/null || true)
+          content=$(base64 -w0 update-feed.json)
+          args=(--method PUT "repos/$GITHUB_REPOSITORY/contents/update-feed.json" -f message="Refresh published release feed" -f branch=update-feed -f content="$content")
+          if [ -n "$existing" ]; then args+=(-f sha="$existing"); fi
+          gh api "${args[@]}" >/dev/null

@@ -40,6 +40,16 @@ static class Program
             var releaseJson=System.Text.Json.JsonSerializer.SerializeToElement(releases);
             Check(ReleaseUpdateService.FindUpdate(releaseJson,beta2,false)?.Executable.Name=="FrioCalc-Beta10-win-x64-Portable.exe","Selecciona paquete portable");
             Check(ReleaseUpdateService.FindUpdate(releaseJson,beta2,true)?.Executable.Name=="FrioCalc-Beta10-win-x64-Setup.exe","Selecciona instalador");
+            string staticFeed=System.Text.Json.JsonSerializer.Serialize(new{schema=1,repository=ReleaseUpdateService.Repository,releases});
+            Check(ReleaseUpdateService.ReadUpdateFeed(staticFeed,beta2,true)?.Executable.Name=="FrioCalc-Beta10-win-x64-Setup.exe","Canal estático sin API: instalador");
+            Check(ReleaseUpdateService.ReadUpdateFeed(staticFeed,beta2,false)?.Executable.Name=="FrioCalc-Beta10-win-x64-Portable.exe","Canal estático sin API: portable");
+            Check(ReleaseUpdateService.ReadUpdateFeed(staticFeed,beta10,true) is null,"Canal estático no reinstala la misma versión");
+            bool foreignFeedRejected=false;
+            try { ReleaseUpdateService.ReadUpdateFeed(staticFeed.Replace(ReleaseUpdateService.Repository,"otro/proyecto"),beta2,true); }
+            catch(System.IO.InvalidDataException){foreignFeedRejected=true;}
+            Check(foreignFeedRejected,"Canal estático rechaza repositorio ajeno");
+            string invalidAssets=staticFeed.Replace(ReleaseUpdateService.ReleasesPage,"https://example.com/releases");
+            Check(ReleaseUpdateService.ReadUpdateFeed(invalidAssets,beta2,true) is null,"Canal estático no autoriza activos ajenos");
             using var renamedRelease = System.Text.Json.JsonDocument.Parse(releaseJson.GetRawText().Replace(ReleaseUpdateService.ReleasesPage, ReleaseUpdateService.RenamedReleasesPage));
             Check(ReleaseUpdateService.FindUpdate(renamedRelease.RootElement,beta2,false)?.Executable.Url.AbsoluteUri.StartsWith(ReleaseUpdateService.RenamedReleasesPage+"/download/")==true,"Compatible con ruta oficial renombrada");
             using var foreignRelease = System.Text.Json.JsonDocument.Parse(releaseJson.GetRawText().Replace(ReleaseUpdateService.ReleasesPage, "https://github.com/otro/proyecto/releases"));

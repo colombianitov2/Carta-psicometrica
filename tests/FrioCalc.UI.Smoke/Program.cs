@@ -230,8 +230,12 @@ internal static class Program
             Check(exerciseRequest!=null,"Enlace a ejercicio resuelto disponible");
             chapterSelector.SelectedItem=TheoryCourseCatalog.Find("A03-19");
             exerciseRequest!.Invoke(curriculum,new object[]{curriculum,new RoutedEventArgs(Button.ClickEvent)});
-            Check(((TextBlock)window.FindName("TheoryExampleResultText")).Text.Contains("DIAPOSITIVA 36"),
-                "Curso A03/36 produce cálculo auditable");
+            var solvedExercise=(TextBlock)window.FindName("TheoryExampleResultText");
+            string exerciseText=VisibleText(solvedExercise);
+            Check(exerciseText.Contains("DIAPOSITIVA 36") &&
+                exerciseText.Contains("LABORATORIO INTERACTIVO") &&
+                solvedExercise.Inlines.OfType<InlineUIContainer>().Any(),
+                "Curso A03/36 produce cálculo auditable con fracciones: "+exerciseText);
             curriculum.ShowSlide(1);
             Check(curriculum.CurrentTopic?.FirstSlide==1,"Volver a inicio de presentación");
 
@@ -803,7 +807,7 @@ internal static class Program
             var bibliographyFraction=(ContentControl)bibliography.FindName("EntryEquationVisual");
             Check(bibliographyFraction.Content is WrapPanel,
                 "Bibliografía W renderiza numerador sobre denominador");
-            Check(((TextBlock)bibliography.FindName("EntryEquationProvenance")).Text.Contains("Deducción"),
+            Check(VisibleText((TextBlock)bibliography.FindName("EntryEquationProvenance")).Contains("Deducción"),
                 "Catálogo técnico conserva la deducción");
             var visibleBibliography=(ItemsControl)window.FindName("BibliographyTopics");
             Check(visibleBibliography.Items.Count==24 && bibliography.Visibility==Visibility.Collapsed &&
