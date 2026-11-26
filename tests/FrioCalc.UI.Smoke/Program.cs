@@ -460,6 +460,37 @@ internal static class Program
                 mainChart.ActivePoints.Count==4,
                 "Arrastrar desde disponibles repite el estado inicial y cierra cuatro tramos sin mover la primera tarjeta");
             var groupCard=groupCards.Children.OfType<Border>().Last();
+            var chartGroups=(StackPanel)window.FindName("MainProcessResultsPanel");
+            var chartGroup=chartGroups.Children.OfType<Border>().Single(card=>Equals(card.Tag,groupId));
+            StackPanel GroupResults(Border card)=>((StackPanel)card.Child).Children.OfType<StackPanel>().Single();
+            var resultLabels=GroupResults(groupCard).Children.OfType<Grid>().SelectMany(grid=>grid.Children.OfType<Border>())
+                .Select(cell=>cell.Child).OfType<TextBlock>().Select(t=>t.Text).ToArray();
+            Check(resultLabels.Any(s=>s=="Método seleccionado") &&
+                resultLabels.Any(s=>s.StartsWith("Componente sensible específica")) &&
+                resultLabels.Any(s=>s.StartsWith("Componente latente específica")) &&
+                resultLabels.Any(s=>s.StartsWith("Potencia sensible")),
+                "Tablas de tramos incluyen método, energía sensible y latente");
+            GroupToggle(chartGroup).IsChecked=false;
+            Check(GroupResults(chartGroup).Visibility==Visibility.Collapsed &&
+                GroupResults(groupCard).Visibility==Visibility.Collapsed &&
+                GroupList(groupCard).Visibility==Visibility.Collapsed &&
+                GroupToggle(groupCard).IsChecked==false,
+                "Contraer desde carta oculta tablas y tarjetas del grupo en ambas vistas");
+            GroupToggle(groupCard).IsChecked=true;
+            Check(GroupToggle(chartGroup).IsChecked==true&&GroupResults(chartGroup).Visibility==Visibility.Visible,
+                "Expandir desde procesos restaura también la carta");
+            GroupToggle(chartGroup).IsChecked=false;
+            GroupPencil(chartGroup).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Check(tabs.SelectedIndex==1&&groupEditor.Visibility==Visibility.Visible,
+                "Lápiz de carta abre el editor del mismo grupo");
+            ((TextBox)window.FindName("NewProcessNameTextBox")).Text="Ciclo renombrado desde carta";
+            ((Button)window.FindName("RenameProcessButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            groupCard=groupCards.Children.OfType<Border>().Last();
+            chartGroup=chartGroups.Children.OfType<Border>().Single(card=>Equals(card.Tag,groupId));
+            Check(tabs.SelectedIndex==0&&GroupPencil(chartGroup).ToolTip?.ToString()=="Editar Ciclo renombrado desde carta" &&
+                GroupToggle(groupCard).IsChecked==false&&GroupToggle(chartGroup).IsChecked==false &&
+                processesList.Items.Cast<string>().Last().Contains(closedRoute),
+                "Renombrar desde carta regresa a carta y conserva grupo contraído y recorrido");
             GroupToggle(groupCard).IsChecked=false;
             Check(GroupList(groupCard).Visibility==Visibility.Collapsed && mainChart.ActivePoints.Count==4 &&
                 processesList.Items.Cast<string>().Last().Contains(closedRoute),

@@ -1,1 +1,1 @@
-Validación de compatibilidad de los diez modelos, dirección T-W, balances de equipo y diagnósticos reactivos del editor.
+Validación: balances específicos y potencias, método por tramo, grupos sincronizados, encabezados fijos de variables y exponentes matemáticos.

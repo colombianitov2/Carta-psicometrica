@@ -533,8 +533,8 @@ public partial class MainWindow
         ProcessResultText.Text = description;
         SelectedProcessSummaryMainText.Text = $"Proceso: {name}\n" + description;
         PointPropertiesPanel.ClearSelection();
+        if(!_returnToChartAfterGroupEditor)WorkspaceTabs.SelectedIndex=1;
         CloseGroupEditor();
-        WorkspaceTabs.SelectedIndex = 1;
     }
 
     private void RenameProcess_Click(object sender, RoutedEventArgs e)
@@ -556,8 +556,8 @@ public partial class MainWindow
         else return;
         UpdateProcessesInCharts();
         PointPropertiesPanel.ClearSelection();
+        if(!_returnToChartAfterGroupEditor)WorkspaceTabs.SelectedIndex=1;
         CloseGroupEditor();
-        WorkspaceTabs.SelectedIndex=1;
     }
 
     private void ToggleProcessVisibility_Click(object sender, RoutedEventArgs e)
@@ -620,7 +620,7 @@ public partial class MainWindow
         int index = SavedProcessesList.SelectedIndex;
         if(index < 0 || index >= _savedProcesses.Count) return;
         PsychrometricProcess p = _savedProcesses[index];
-        string heading=$"{p.Name} · {p.Type} · {string.Join(" → ",p.PointIds.Select(id=>"P"+id))}";
+        string heading=$"{p.Name} · {ProcessResultPresentation.MethodName(p.Type)} · {string.Join(" → ",p.PointIds.Select(id=>"P"+id))}";
         string detail=string.IsNullOrWhiteSpace(p.Report)
             ? "No hay informe calculado para este proceso importado."
             : p.Report;
@@ -647,7 +647,7 @@ public partial class MainWindow
         PsychrometricChart.SetProcesses(_savedProcesses);
         ProcessChart.SetProcesses(_savedProcesses);
         SavedProcessesList.ItemsSource = _savedProcesses.Select(p =>
-            $"{p.Name} {(p.Visible ? "" : "[Oculto]")} · {p.Type} · {string.Join(" → ",p.PointIds.Select(id => "P"+id))}").ToArray();
+            $"{p.Name} {(p.Visible ? "" : "[Oculto]")} · {ProcessResultPresentation.MethodName(p.Type)} · {string.Join(" → ",p.PointIds.Select(id => "P"+id))}").ToArray();
         RefreshGroupCards();
         if(_editingProcessId is int existing) SavedProcessesList.SelectedIndex=_savedProcesses.FindIndex(p=>p.Id==existing);
     }

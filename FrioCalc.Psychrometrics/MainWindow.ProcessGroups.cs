@@ -24,6 +24,8 @@ public partial class MainWindow
     private readonly Dictionary<int,PsychrometricProcess> _draftGroups=new();
     // Estado exclusivamente visual, separado de los datos del proceso.
     private readonly HashSet<int> _collapsedProcessGroups=new();
+    private readonly Dictionary<int,List<Action<bool>>> _groupPresentations=new();
+    private bool _returnToChartAfterGroupEditor;
     private int? _lastBuilderGroupId;
 
     private void ProcessPageScroll_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -336,9 +338,12 @@ public partial class MainWindow
 
     private void CloseGroupEditor()
     {
+        bool returnToChart=_returnToChartAfterGroupEditor;
+        _returnToChartAfterGroupEditor=false;
         ProcessEditor.Visibility=Visibility.Collapsed;ProcessBuilderView.Visibility=Visibility.Visible;
         _editingProcessId=null;_selectedPointIds.Clear();_segmentDrafts.Clear();
         RefreshProcessGroupLists();RefreshGroupCards();ProcessPageScroll.ScrollToTop();
+        if(returnToChart)WorkspaceTabs.SelectedIndex=0;
     }
 
     private void CloseProcessEditor_Click(object sender,RoutedEventArgs e)
@@ -452,36 +457,15 @@ public partial class MainWindow
         _collapsedProcessGroups.IntersectWith(_savedProcesses.Select(p=>p.Id).Concat(_draftGroups.Keys));
         double groupScrollOffset=ProcessGroupsScroll.VerticalOffset;
         ProcessCardsPanel.Children.Clear();MainProcessResultsPanel.Children.Clear();
+        _groupPresentations.Clear();
         foreach(var group in _savedProcesses.Concat(_draftGroups.Values).OrderBy(p=>p.Id))
         {
             bool pending=_draftGroups.ContainsKey(group.Id);
             var color=(Brush)new BrushConverter().ConvertFromString(group.ColorHex)!;
             var body=new StackPanel();
-            var header=new DockPanel{Margin=new Thickness(0,0,0,7),LastChildFill=true};
-            bool expanded=!_collapsedProcessGroups.Contains(group.Id);
-            var expandToggle=new System.Windows.Controls.Primitives.ToggleButton
-            {
-                Content=expanded?"▾":"▸", IsChecked=expanded, Width=30, Height=30,
-                Margin=new Thickness(0,0,7,0), ToolTip=expanded?"Contraer grupo":"Expandir grupo",
-                VerticalAlignment=VerticalAlignment.Center
-            };
-            DockPanel.SetDock(expandToggle,Dock.Left);
-            var pencil=new Button{Content="✎",ToolTip="Editar "+group.Name,Width=32,Height=30,Margin=new Thickness(8,0,0,0)};
-            System.Windows.Automation.AutomationProperties.SetName(pencil,"Editar "+group.Name);
-            DockPanel.SetDock(pencil,Dock.Right);
-            pencil.Click+=(_,_)=>OpenBuilderGroupEditor(group.Id);
-            header.Children.Add(pencil);
-            header.Children.Add(expandToggle);
-            header.Children.Add(new TextBlock{Text=group.Name+(group.Visible?"":" (oculto)"),Foreground=color,
-                FontWeight=FontWeights.SemiBold,FontSize=15,TextWrapping=TextWrapping.Wrap,VerticalAlignment=VerticalAlignment.Center});
-            body.Children.Add(header);
+            body.Children.Add(CreateGroupHeader(group,color,false,out var expandToggle));
             var ids=group.PointIds.ToArray();
-            string summary=ids.Length==0?"Sin puntos · arrastre aquí los estados.":
-                ids.Length==1?$"1 punto · P{ids[0]} · sin tramo":
-                $"{ids.Length-1} tramo(s) · {string.Join(" → ",ids.Select(id=>"P"+id))}";
-            var summaryText=new TextBlock{Text=summary,
-                Foreground=Brushes.DimGray,TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,6)};
-            body.Children.Add(summaryText);
+            body.Children.Add(CreateGroupSummary(group));
             var list=new ListBox{Tag=group.Id,ItemsSource=CardsFor(ids,true,group.ColorHex),
                 ItemTemplate=(DataTemplate)FindResource("ProcessPointCardTemplate"),
                 ItemContainerStyle=(Style)FindResource("ProcessPointItemStyle"),
@@ -495,40 +479,104 @@ public partial class MainWindow
             list.Drop+=BuilderGroup_Drop;
             list.MouseDoubleClick+=BuilderGroup_DoubleClick;
             body.Children.Add(list);
-            Expander? results=null;
+            StackPanel? results=null;
             if(!pending)
             {
-                results=new Expander{Header="Resultados del grupo",Margin=new Thickness(0,8,0,0)};
-                var tables=new StackPanel();
-                RenderGroupResults(group,tables);
-                results.Content=tables;body.Children.Add(results);
-                if(group.Visible)RenderGroupResults(group,MainProcessResultsPanel,false);
+                results=new StackPanel{Margin=new Thickness(0,8,0,0)};
+                RenderGroupResults(group,results);
+                body.Children.Add(results);
+                if(group.Visible)AddMainChartGroup(group,color);
             }
-            // [5.1C.20.3] El encabezado, resumen y lápiz permanecen siempre;
-            // contraer no cambia los estados, tramos, visibilidad en carta ni color.
-            void SetExpanded(bool show)
-            {
-                if(show)_collapsedProcessGroups.Remove(group.Id);
-                else _collapsedProcessGroups.Add(group.Id);
-                list.Visibility=show?Visibility.Visible:Visibility.Collapsed;
-                if(results is not null)results.Visibility=show?Visibility.Visible:Visibility.Collapsed;
-                expandToggle.Content=show?"▾":"▸";
-                expandToggle.ToolTip=show?"Contraer "+group.Name:"Expandir "+group.Name;
-                System.Windows.Automation.AutomationProperties.SetName(expandToggle,
-                    show?"Contraer "+group.Name:"Expandir "+group.Name);
-            }
-            expandToggle.Checked+=(_,_)=>SetExpanded(true);
-            expandToggle.Unchecked+=(_,_)=>SetExpanded(false);
-            SetExpanded(expanded);
+            RegisterGroupPresentation(group,expandToggle,list,results);
             var border=new Border{Child=body,Tag=group.Id,AllowDrop=true,Padding=new Thickness(10),Margin=new Thickness(0,0,0,10),
                 Background=Brushes.White,BorderBrush=color,BorderThickness=new Thickness(1.5),CornerRadius=new CornerRadius(6)};
             border.Drop+=BuilderGroup_Drop;
             ProcessCardsPanel.Children.Add(border);
         }
         ProcessGroupsScroll.ScrollToVerticalOffset(groupScrollOffset);
-        if(_savedProcesses.Count==0)MainProcessResultsPanel.Children.Add(new TextBlock{Text="Todavía no hay un proceso calculado.",Foreground=Brushes.DimGray});
+        if(MainProcessResultsPanel.Children.Count==0)MainProcessResultsPanel.Children.Add(new TextBlock{
+            Text="No hay procesos visibles en la carta.",Foreground=Brushes.DimGray});
         if(ProcessCardsPanel.Children.Count==0)ProcessCardsPanel.Children.Add(new TextBlock{
             Text="Pulse + para crear un grupo.",TextWrapping=TextWrapping.Wrap,Foreground=Brushes.DimGray,Margin=new Thickness(0,6,0,0)});
+    }
+
+    // [5.1C.20.4] Encabezado común y expansión del grupo completo.
+    private DockPanel CreateGroupHeader(PsychrometricProcess group,Brush color,bool fromChart,
+        out System.Windows.Controls.Primitives.ToggleButton toggle)
+    {
+        var header=new DockPanel{Margin=new Thickness(0,0,0,7),LastChildFill=true};
+        toggle=new System.Windows.Controls.Primitives.ToggleButton{Width=30,Height=30,
+            Margin=new Thickness(0,0,7,0),VerticalAlignment=VerticalAlignment.Center};
+        DockPanel.SetDock(toggle,Dock.Left);
+        var pencil=new Button{Content="✎",ToolTip="Editar "+group.Name,Width=32,Height=30,Margin=new Thickness(8,0,0,0)};
+        System.Windows.Automation.AutomationProperties.SetName(pencil,"Editar "+group.Name);
+        DockPanel.SetDock(pencil,Dock.Right);
+        pencil.Click+=(_,_)=>{
+            _returnToChartAfterGroupEditor=fromChart;
+            WorkspaceTabs.SelectedIndex=1;
+            OpenBuilderGroupEditor(group.Id);
+        };
+        header.Children.Add(pencil);
+        header.Children.Add(toggle);
+        header.Children.Add(new TextBlock{Text=group.Name+(group.Visible?"":" (oculto)"),Foreground=color,
+            FontWeight=FontWeights.SemiBold,FontSize=15,TextWrapping=TextWrapping.Wrap,VerticalAlignment=VerticalAlignment.Center});
+        return header;
+    }
+
+    private static TextBlock CreateGroupSummary(PsychrometricProcess group)
+    {
+        var ids=group.PointIds;
+        string summary=ids.Count==0?"Sin puntos · arrastre aquí los estados.":
+            ids.Count==1?$"1 punto · P{ids[0]} · sin tramo":
+            $"{ids.Count-1} tramo(s) · "+string.Join(" → ",ids.Select(id=>"P"+id));
+        return new TextBlock{Text=summary+" · "+ProcessResultPresentation.MethodName(group.Type),
+            Foreground=Brushes.DimGray,TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,6)};
+    }
+
+    private void RegisterGroupPresentation(PsychrometricProcess group,
+        System.Windows.Controls.Primitives.ToggleButton toggle,params UIElement?[] content)
+    {
+        bool updating=false;
+        void Apply(bool expanded)
+        {
+            updating=true;
+            try
+            {
+                toggle.IsChecked=expanded;
+                toggle.Content=expanded?"▾":"▸";
+                toggle.ToolTip=expanded?"Contraer "+group.Name:"Expandir "+group.Name;
+                System.Windows.Automation.AutomationProperties.SetName(toggle,(string)toggle.ToolTip);
+                foreach(var element in content)
+                    if(element is not null)element.Visibility=expanded?Visibility.Visible:Visibility.Collapsed;
+            }
+            finally{updating=false;}
+        }
+        if(!_groupPresentations.TryGetValue(group.Id,out var presentations))
+            _groupPresentations[group.Id]=presentations=new List<Action<bool>>();
+        presentations.Add(Apply);
+        Apply(!_collapsedProcessGroups.Contains(group.Id));
+        void Set(bool expanded)
+        {
+            if(updating)return;
+            if(expanded)_collapsedProcessGroups.Remove(group.Id);else _collapsedProcessGroups.Add(group.Id);
+            foreach(var apply in presentations.ToArray())apply(expanded);
+        }
+        toggle.Checked+=(_,_)=>Set(true);
+        toggle.Unchecked+=(_,_)=>Set(false);
+    }
+
+    private void AddMainChartGroup(PsychrometricProcess group,Brush color)
+    {
+        var body=new StackPanel();
+        body.Children.Add(CreateGroupHeader(group,color,true,out var toggle));
+        body.Children.Add(CreateGroupSummary(group));
+        var results=new StackPanel();
+        RenderGroupResults(group,results);
+        body.Children.Add(results);
+        RegisterGroupPresentation(group,toggle,results);
+        MainProcessResultsPanel.Children.Add(new Border{Child=body,Tag=group.Id,Padding=new Thickness(10),
+            Margin=new Thickness(0,0,0,8),Background=Brushes.White,BorderBrush=color,
+            BorderThickness=new Thickness(1.5),CornerRadius=new CornerRadius(6)});
     }
 
     private void RenderGroupResults(PsychrometricProcess process,StackPanel host,bool clear=true)
@@ -539,7 +587,8 @@ public partial class MainWindow
         string Flow(double value)=> (value*(ip?7936.64143865559:1)).ToString("0.######");
         string Power(double value)=> (value*(ip?3412.14163312794:1)).ToString("0.###");
         if(clear)host.Children.Clear();
-        host.Children.Add(new TextBlock{Text=process.Name,FontWeight=FontWeights.Bold,Margin=new Thickness(0,8,0,5)});
+        host.Children.Add(new TextBlock{Text="Método del grupo: "+ProcessResultPresentation.MethodName(process.Type),
+            FontWeight=FontWeights.SemiBold,TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,4,0,5)});
         var points=process.PointIds.Distinct().Select(id=>PsychrometricChart.ActivePoints.FirstOrDefault(p=>p.Id==id))
             .OfType<ChartPoint>().ToArray();
         if(points.Length>0)
@@ -557,10 +606,6 @@ public partial class MainWindow
                 Grid.SetRow(cell,index);Grid.SetColumn(cell,j);table.Children.Add(cell);
             }
         }
-        var segmentTable=new Grid{Margin=new Thickness(0,0,0,8)};
-        foreach(double weight in new[]{1.2,1,1,1,1,1,1,1})segmentTable.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(weight,GridUnitType.Star)});
-        table=segmentTable;
-        Row("Tramo",$"ΔT ({EducationalUnits.TemperatureUnit(units)})",$"ΔW ({EducationalUnits.HumidityUnit(units)})",$"Δh ({EducationalUnits.EnthalpyUnit(units)})",$"Potencia ({powerUnit})","FCS calculado","FCS indicado",$"Condensado ({flowUnit})");
         if(process.Type!=ProcessType.AdiabaticMixing && process.Type!=ProcessType.Branching)
         {
             for(int i=0;i<process.PointIds.Count-1;i++)
@@ -569,12 +614,21 @@ public partial class MainWindow
                 if(from is null||to is null)continue;
                 var seg=ProcessSegmentSetting.Find(process.SegmentSettings,process.PointIds,i);
                 var type=seg?.Type??(process.Type==ProcessType.Bypass?ProcessType.Automatic:process.Type);
+                host.Children.Add(new TextBlock{Text=$"Tramo {i+1}: {from.Name} → {to.Name}",
+                    FontWeight=FontWeights.SemiBold,Margin=new Thickness(0,8,0,4)});
+                table=new Grid{Margin=new Thickness(0,0,0,8)};
+                table.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(1.2,GridUnitType.Star)});
+                table.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(1,GridUnitType.Star)});
+                Row("Magnitud","Resultado");
                 if(ProcessCalculator.TryCalculate(from,to,type,seg?.DryAirMassFlowKgS??process.DryAirMassFlowKgS,
-                    seg?.CondensateTemperatureC??process.CondensateTemperatureC,out var r,out _))
-                    Row(from.Name+" → "+to.Name,EducationalUnits.DT(r.DeltaTemperatureC,units).ToString("0.###"),EducationalUnits.W(r.DeltaHumidityRatioKgPerKg,units).ToString("0.###"),
-                        EducationalUnits.H(r.DeltaEnthalpyKJPerKgDryAir,units).ToString("0.###"),r.ThermalPowerKW is double power?Power(power):"Sin caudal",r.SensibleHeatFactor?.ToString("0.###")??"—",seg?.SensibleHeatFactor?.ToString("0.###")??"—",r.CondensateMassFlowKgS is double condensate?Flow(condensate):"—");
+                    seg?.CondensateTemperatureC??process.CondensateTemperatureC,out var r,out var error))
+                {
+                    foreach(var row in ProcessResultPresentation.SegmentRows(process,seg,from,to,r,units))
+                        Row(row.Label,row.Value);
+                }
+                else Row("Proceso no resuelto",error);
+                host.Children.Add(table);
             }
-            host.Children.Add(segmentTable);
         }
         else
         {
