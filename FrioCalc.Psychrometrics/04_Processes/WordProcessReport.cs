@@ -31,7 +31,7 @@ public static class WordProcessReport
             if(line=="## Bibliografía")
             {
                 body.Add(Paragraph("Ecuaciones",2));
-                foreach(var key in new[]{"W","RH","h","v","Mdot","Heat","Condensate","Coil","MixW","MixH","SHR","BF","BFW"})
+                foreach(var key in new[]{"W","RH","PwsExp","Atmospheric","h","v","Mdot","Heat","Condensate","Coil","MixW","MixH","SHR","BF","BFW"})
                     if(AshraeStudyCatalog.FindEquation(key) is AshraeEquation formula)
                     {
                         body.Add(Paragraph(formula.Title,3));
@@ -81,14 +81,14 @@ public static class WordProcessReport
     {
         XElement Run(string t)=>new XElement(M+"r",new XElement(M+"t",new XAttribute(XNamespace.Xml+"space","preserve"),t));
         int offset=0;
-        // Keep the base and subscript in a proper OMML subscript expression.
-        foreach(Match match in Regex.Matches(value,@"([\p{L}*̇]+)_\{([^}]+)\}|([\p{L}*̇]+)_([a-zA-Z0-9]+)"))
+        // OMML editable: subíndices y superíndices reales.
+        foreach(Match match in Regex.Matches(value,@"([\p{L}*̇]+)([_^])(?:\{([^}]+)\}|([a-zA-Z0-9]+))"))
         {
             if(match.Index>offset)yield return Run(value.Substring(offset,match.Index-offset));
-            bool braced=match.Groups[1].Success;
-            yield return new XElement(M+"sSub",
-                new XElement(M+"e",Run(match.Groups[braced?1:3].Value)),
-                new XElement(M+"sub",Run(match.Groups[braced?2:4].Value)));
+            bool super=match.Groups[2].Value=="^";
+            yield return new XElement(M+(super?"sSup":"sSub"),
+                new XElement(M+"e",Run(match.Groups[1].Value)),
+                new XElement(M+(super?"sup":"sub"),Run(match.Groups[3].Success?match.Groups[3].Value:match.Groups[4].Value)));
             offset=match.Index+match.Length;
         }
         if(offset<value.Length)yield return Run(value.Substring(offset));

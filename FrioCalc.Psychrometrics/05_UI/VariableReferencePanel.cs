@@ -15,6 +15,9 @@ public sealed class VariableReferencePanel : UserControl
     private sealed record Entry(string Symbol,string Name,string Definition,string Origin,string SI,string IP,string Formulas);
     private static readonly List<Entry> Entries=new();
     private readonly StackPanel _rows=new();
+    private readonly Grid _columnHeader=new(){HorizontalAlignment=HorizontalAlignment.Left};
+    private readonly ScrollViewer _bodyScroll=new(){VerticalScrollBarVisibility=ScrollBarVisibility.Visible,
+        HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled,HorizontalContentAlignment=HorizontalAlignment.Stretch};
     private readonly TextBox _search=new(){Margin=new Thickness(0,8,0,12),MinHeight=30};
     private UnitSystem _units=UnitSystem.SI;
 
@@ -88,6 +91,7 @@ public sealed class VariableReferencePanel : UserControl
         Add("T_{ref}","Temperatura absoluta de referencia","Temperatura fija respecto de la cual se calcula entropía relativa.","Referencia del modelo: 273,15 K = 491,67 °R; no temperatura de salida.","K","°R","EntropyT");
         Add("p_{da,ref}","Presión parcial seca de referencia","Presión absoluta parcial de aire seco en el estado de referencia.","Referencia del motor: 101,325 kPa = 14,69595 psia.",pressure,pressureIP,"EntropyPda");
         Add("p_{v,ref}","Presión parcial de vapor de referencia","Presión absoluta parcial de vapor en el estado de referencia.","Referencia del motor: 0,611657 kPa ≈ 0,088713 psia.",pressure,pressureIP,"EntropyPv");
+        Add("e","Número de Euler","Constante matemática, base de los logaritmos naturales. e ≈ 2,718281828.","Constante matemática; la potencia e elevada a x equivale a exp(x).",dim,dim,"PwsExp|Atmospheric");
         Add("ln","Logaritmo natural","Operador matemático de base e, aplicado a una razón positiva adimensional.","Integración de diferenciales de entropía ideal.",dim,dim,"Entropy");
         Add("t_{ent}","Temperatura de entrada del agua","Temperatura del agua que entra al equipo.","Sensor o dato del circuito de agua.",temp,tempIP,"WaterFlow");
         Add("t_{sal}","Temperatura de salida del agua","Temperatura del agua que sale del equipo.","Sensor o dato del circuito de agua.",temp,tempIP,"WaterFlow");
@@ -108,12 +112,23 @@ public sealed class VariableReferencePanel : UserControl
 
     public VariableReferencePanel()
     {
-        var host=new StackPanel{Margin=new Thickness(16),MaxWidth=1500};
+        var root=new Grid{Margin=new Thickness(16),MaxWidth=1500};
+        root.RowDefinitions.Add(new RowDefinition{Height=GridLength.Auto});
+        root.RowDefinitions.Add(new RowDefinition{Height=GridLength.Auto});
+        root.RowDefinitions.Add(new RowDefinition{Height=new GridLength(1,GridUnitType.Star)});
+        var host=new StackPanel();
         host.Children.Add(new TextBlock{Text="VARIABLES",FontSize=20,FontWeight=FontWeights.Bold});
         host.Children.Add(new TextBlock{Text="Símbolos, unidades, definición, obtención y ecuaciones según el modelo. da = aire seco; v = vapor cuando es subíndice; s = saturación; ref = referencia; 1, 2 y 3 identifican los estados.",TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,6,0,4)});
         host.Children.Add(new TextBlock{Text="Buscar por símbolo o nombre",FontWeight=FontWeights.SemiBold});
-        host.Children.Add(_search);host.Children.Add(_rows);
-        Content=new ScrollViewer{Content=host,VerticalScrollBarVisibility=ScrollBarVisibility.Auto,HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled};
+        host.Children.Add(_search);
+        root.Children.Add(host);
+        Grid.SetRow(_columnHeader,1);
+        _columnHeader.SetBinding(WidthProperty,new System.Windows.Data.Binding("ViewportWidth"){Source=_bodyScroll});
+        root.Children.Add(_columnHeader);
+        _bodyScroll.Content=_rows;
+        Grid.SetRow(_bodyScroll,2);
+        root.Children.Add(_bodyScroll);
+        Content=root;
         _search.TextChanged+=(_,_)=>Refresh();
         Loaded+=(_,_)=>Refresh();
     }
@@ -142,9 +157,10 @@ public sealed class VariableReferencePanel : UserControl
             var t=new TextBlock{TextWrapping=TextWrapping.Wrap,FontWeight=bold?FontWeights.SemiBold:FontWeights.Normal};
             AshraeStudyPanel.FormatMath(t,value);return t;
         }
-        var head=Row();
-        for(int i=0;i<headers.Length;i++)Cell(head,i,Txt(headers[i],true),true);
-        _rows.Children.Add(head);
+        _columnHeader.Children.Clear();
+        _columnHeader.ColumnDefinitions.Clear();
+        foreach(double weight in weights)_columnHeader.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(weight,GridUnitType.Star)});
+        for(int i=0;i<headers.Length;i++)Cell(_columnHeader,i,Txt(headers[i],true),true);
         string query=_search.Text.Trim();
         foreach(var e in Entries.Where(x=>query.Length==0 || (x.Name+" "+x.Symbol).Contains(query,StringComparison.CurrentCultureIgnoreCase)))
         {

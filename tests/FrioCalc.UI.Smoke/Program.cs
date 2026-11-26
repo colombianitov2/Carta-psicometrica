@@ -856,6 +856,31 @@ internal static class Program
                 fullCanvas.Children.OfType<Line>().Any(l=>l.ToolTip is string tip && tip.Contains(fullRoute.Name)),
                 "Restablecer encuadre no borra datos");
 
+            // [UI.19] Encabezado fijo y ecuaciones exponenciales.
+            tabs.SelectedIndex=4;
+            window.UpdateLayout();
+            var variableView=(VariableReferencePanel)window.FindName("VariableReferencePanel");
+            var variableRoot=(Grid)variableView.Content;
+            var variableHeader=variableRoot.Children.OfType<Grid>().Single(g=>Grid.GetRow(g)==1);
+            var variableScroll=variableRoot.Children.OfType<ScrollViewer>().Single();
+            var variableRows=(StackPanel)variableScroll.Content;
+            Check(variableHeader.Children.Count==5 && variableRows.Children.Count>10 &&
+                Grid.GetRow(variableScroll)==2 && Math.Abs(variableHeader.ActualWidth-variableScroll.ViewportWidth)<2,
+                "Encabezado fijo de Variables alineado con las filas");
+            var fixedY=variableHeader.TranslatePoint(new Point(),variableRoot).Y;
+            variableScroll.ScrollToVerticalOffset(250);
+            window.UpdateLayout();
+            Check(variableScroll.VerticalOffset>0 && Math.Abs(variableHeader.TranslatePoint(new Point(),variableRoot).Y-fixedY)<.1,
+                "Desplazar Variables conserva encabezado");
+            var mathBlock=new TextBlock();
+            AshraeStudyPanel.FormatMath(mathBlock,"e^{5,2559 ln(x)} + p_{ws}");
+            Check(mathBlock.Inlines.OfType<Run>().Any(x=>x.BaselineAlignment==BaselineAlignment.Superscript&&x.Text=="5,2559 ln(x)") &&
+                mathBlock.Inlines.OfType<Run>().Any(x=>x.BaselineAlignment==BaselineAlignment.Subscript&&x.Text=="ws"),
+                "Exponentes y subíndices matemáticos reales");
+            Check(AshraeStudyCatalog.FindEquation("PwsExp")!.Numerator=="e^{L}" &&
+                EducationalUnits.Equation(AshraeStudyCatalog.FindEquation("Atmospheric")!,UnitSystem.IP).Numerator.Contains("e^{"),
+                "Ecuaciones exponenciales SI/IP sin texto exp");
+
             writer.WriteLine($"PRUEBAS UI SUPERADAS: {checks}");
             window.Close();
             app.Shutdown();
